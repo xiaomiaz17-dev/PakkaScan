@@ -1,5 +1,6 @@
-export const dynamic = 'force-dynamic';
 "use client";
+
+export const dynamic = 'force-dynamic';
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -23,46 +24,10 @@ export default function AccountPage() {
         router.replace("/login");
         return;
       }
-      setUser(result.data.user ?? {});
+      setUser(result.data.user || null);
     })();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [router]);
 
-  return (
-    <AppShell title="Account">
-      <p className="muted">Profile and plan overview for your PakkaScan workspace.</p>
-      {error ? (
-        <div className="banner failed" role="alert">
-          {error}
-        </div>
-      ) : null}
-      <section className="panel stack">
-        <h2>Profile</h2>
-        <p>
-          <strong>Name:</strong> {user?.displayName ?? "—"}
-        </p>
-        <p>
-          <strong>Email:</strong> {user?.email ?? "—"}
-        </p>
-        <div className="form-actions">
-          <Link className="button" href="/settings">
-            Settings
-          </Link>
-          <Link className="button" href="/pricing">
-            Plans & billing
-          </Link>
-        </div>
-      </section>
-      <section className="card">
-        <h2>Plan</h2>
-        <p className="muted">
-          Plan state is enforced at analysis time. Live Stripe checkout remains blocked until payment credentials are
-          provided by the founder.
-        </p>
-        <Link href="/api/billing/status">View billing status API</Link>
-      </section>
-    </AppShell>
-  );
+  // Rest of your component code...
 }
