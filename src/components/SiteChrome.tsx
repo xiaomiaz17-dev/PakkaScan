@@ -1,11 +1,10 @@
 export function SiteHeader({ ctaHref = "/register", ctaLabel = "Upload or scan" }: { ctaHref?: string; ctaLabel?: string }) {
   const [open, setOpen] = useState(false);
   return (
-    <header className="site-header" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px 0' }}>
-      <div className="site-header-inner" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '900px', textAlign: 'center' }}>
+    <header className="site-header" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', padding: '24px 0' }}>
+      <div className="site-header-inner" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', textAlign: 'center' }}>
         <Link href="/" className="brand" aria-label={`${SITE.name} home`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textDecoration: 'none' }}>
-          <BrandMark size={36} />
-          <span style={{ fontSize: '24px', fontWeight: '800', marginTop: '8px', color: '#0f172a' }}>{SITE.name}</span>
+          <BrandMark size={32} />
         </Link>
         <button
           type="button"
