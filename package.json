@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "beta:api": "rm -rf dist-core && tsc -p tsconfig.core.json && node dist-core/src/runtime/http-server.js",
