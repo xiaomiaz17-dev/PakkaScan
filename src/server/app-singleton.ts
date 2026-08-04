@@ -29,11 +29,6 @@ export async function bootstrapPostgresApplication(): Promise<{
     const probe = await transport.query("SELECT 1 AS ok");
     if (!probe.rows.length) throw new Error("FATAL: PostgreSQL probe failed");
     
-    if (process.env.PAKKADEED_AUTO_MIGRATE === "1") {
-      const { applyBootstrapMigration } = await import("../storage/migrations");
-      await applyBootstrapMigration(transport);
-    }
-    
     const repository = new ApplicationPgRepository(transport);
     const health = await repository.probe();
     if (!health.ok) throw new Error(`FATAL: application repository probe failed: ${health.detail}`);
