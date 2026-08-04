@@ -26,8 +26,8 @@ function loadMigrationSql(filename: string): string {
 function splitStatements(sql: string): string[] {
   return sql
     .split(";")
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0 && !s.startsWith("--"));
+    .map((stmt) => stmt.trim())
+    .filter((stmt) => stmt.length > 0 && !stmt.startsWith("--"));
 }
 
 export async function applyBootstrapMigration(transport: SqlTransport): Promise<MigrationResult> {
