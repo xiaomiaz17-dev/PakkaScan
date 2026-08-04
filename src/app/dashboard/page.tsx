@@ -1,5 +1,8 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -35,7 +38,7 @@ export default function DashboardPage() {
     return () => { cancelled = true; };
   }, [router]);
 
-  if (!isMounted) return null; // Prevents server-side prerender evaluation crash
+  if (!isMounted) return null;
 
   return (
     <AppShell>
