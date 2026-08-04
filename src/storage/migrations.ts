@@ -26,8 +26,8 @@ function loadMigrationSql(filename: string): string {
 function splitStatements(sql: string): string[] {
   return sql
     .split(";")
-    .map((stmt) => stmt.trim())
-    .filter((stmt) => stmt.length > 0 && !stmt.startsWith("--"));
+    .map((statementText) => statementText.trim())
+    .filter((statementText) => statementText.length > 0 && !statementText.startsWith("--"));
 }
 
 export async function applyBootstrapMigration(transport: SqlTransport): Promise<MigrationResult> {
@@ -41,7 +41,6 @@ export async function applyBootstrapMigration(transport: SqlTransport): Promise<
       applied.push(file);
     } catch (error) {
       if (file === "002_application.sql") {
-        // Optional incremental marker
         continue;
       }
       throw error;
@@ -55,7 +54,6 @@ export async function verifyMigrationsApplied(transport: SqlTransport): Promise<
     const r = await transport.query(
       `SELECT 1 AS ok FROM information_schema.tables WHERE table_name = 'users' LIMIT 1`,
     );
-    // Memory transport may not support information_schema — fall back to probe tables
     if (r.rows.length) return true;
   } catch {
     /* fall through */
