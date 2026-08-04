@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PakkaScan — AI-powered legal due diligence for Pakistani property</title>
+<meta name="description" content="Parse Fards, Sale Deeds, Allotment Letters, Society NOCs and tenancy packs. Explainable findings, evidence hash, Property Passport." />
+<meta property="og:title" content="PakkaScan — Pakistani property due diligence" />
+<meta property="og:description" content="Registry vs Mutation checks, isolation, sample audit before you upload real deeds." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%230c1f14' d='M16 2L28 7v9c0 7.5-5.2 12.8-12 14C9.2 28.8 4 23.5 4 16V7l12-5z'/%3E%3Cpath stroke='%2334d399' stroke-width='2.2' fill='none' d='M11.5 16.2l3 3 6-7'/%3E%3C/svg%3E" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --bg:#f7faf7;--surface:#fff;--ink:#0c1f14;--muted:#5b6b62;--line:#d8e5dc;
+  --primary:#0d7a3f;--primary-hover:#0a6433;--accent:#0f9d58;
+  --pass:#0d7a3f;--warn:#c47f0a;--warn-ink:#8a5a08;--fail:#c62828;
+  --font:Inter,system-ui,sans-serif;--mono:"JetBrains Mono",monospace;--max:1120px;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.5}
+a{color:var(--primary);text-decoration:none}
+header{position:sticky;top:0;z-index:30;background:rgba(247,250,247,.94);border-bottom:1px solid var(--line);backdrop-filter:blur(12px)}
+.inner{max-width:var(--max);margin:0 auto;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.brand{display:inline-flex;align-items:center;gap:10px;font-weight:800;font-size:1.25rem;color:var(--ink);letter-spacing:-.03em}
+.brand:hover svg{transform:scale(1.03)}
+.brand svg{transition:transform .15s ease}
+nav{display:flex;gap:2px;flex-wrap:wrap;align-items:center}
+nav a{color:var(--muted);font-weight:600;font-size:.9rem;padding:8px 12px;border-radius:999px}
+nav a:hover{color:var(--ink);background:#eaf5ee}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:48px;padding:12px 20px;border-radius:999px;border:1px solid var(--line);background:#fff;font-weight:600;cursor:pointer;color:var(--ink);font-size:1rem}
+.btn.power{min-height:68px;padding:20px 44px;font-size:1.22rem;font-weight:700;color:#fff;border:none;
+  background:linear-gradient(135deg,#0f9d58,#0d7a3f);box-shadow:0 12px 32px -8px rgba(13,122,63,.45)}
+.btn.power:hover{background:linear-gradient(135deg,#14b866,#0f9d58)}
+.btn.power-xl{width:100%;max-width:440px}
+main{max-width:var(--max);margin:0 auto;padding:24px 16px 56px}
+.hero{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:36px 28px 28px;box-shadow:0 1px 3px rgba(12,31,20,.04)}
+.badge{display:inline-flex;padding:4px 10px;border-radius:999px;background:#e8f8ef;color:#0a6433;font-size:12px;font-weight:700}
+h1{font-size:clamp(1.9rem,4.2vw,2.8rem);letter-spacing:-.035em;line-height:1.12;margin:12px 0;max-width:18ch}
+.lead{color:var(--muted);max-width:40rem;font-size:1.08rem}
+.note{color:var(--muted);font-size:13px;margin:8px 0 14px}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}
+@media(max-width:800px){.tabs{grid-template-columns:1fr}}
+.tab{border:1px solid var(--line);background:#f3f8f4;border-radius:12px;padding:14px;text-align:left;cursor:pointer;font:inherit;color:inherit}
+.tab.active{border-color:#7bc49a;background:#e8f8ef;box-shadow:0 0 0 1px #7bc49a}
+.tab strong{display:block;font-size:.95rem}
+.tab small{color:var(--muted);font-size:12px}
+.actions{display:flex;flex-direction:column;align-items:flex-start;gap:12px;margin:18px 0 8px}
+.trust{display:flex;flex-wrap:wrap;gap:10px 14px;font-size:12px;font-weight:600;color:var(--muted);margin:8px 0}
+.regions{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 4px}
+.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 12px;font-size:12px;font-weight:600;color:var(--muted)}
+.chip strong{color:var(--ink)}
+.legend{display:flex;flex-wrap:wrap;gap:10px 16px;margin:12px 0;font-size:12px;font-weight:600;color:var(--muted)}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;text-transform:uppercase}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%}
+.pill.pass{background:#e8f8ef;color:#0a6433}.pill.pass::before{background:var(--pass)}
+.pill.warn{background:#fff8e8;color:var(--warn-ink)}.pill.warn::before{background:var(--warn)}
+.pill.fail{background:#fdecea;color:var(--fail)}.pill.fail::before{background:var(--fail)}
+.sim{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+@media(max-width:720px){.sim{grid-template-columns:1fr}}
+.panel{background:#0c1f14;color:#e8f0ea;border-radius:12px;padding:14px}
+.panel h3{margin:0 0 10px;font-size:12px;color:#9bb5a6;text-transform:uppercase;letter-spacing:.06em}
+.trap{display:flex;gap:10px;align-items:flex-start;margin:10px 0;font-size:13px;min-height:40px}
+.trap input{accent-color:var(--accent);margin-top:3px}
+.score{font-size:2.4rem;font-weight:800;letter-spacing:-.03em}
+.flag{margin-top:8px;padding:8px 10px;border-radius:8px;background:#143d28;border:1px solid #1f5c3a;font-size:12px}
+.callout{margin-top:24px;padding:22px;border:1px solid #7bc49a;border-radius:14px;background:#fff;box-shadow:0 0 0 1px rgba(13,122,63,.1)}
+.callout-row{display:flex;flex-wrap:wrap;justify-content:space-between;gap:16px;align-items:center}
+.callout h2{margin:6px 0;font-size:1.3rem}
+.pillars{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-top:28px}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:20px;box-shadow:0 1px 2px rgba(12,31,20,.04)}
+.card h3{margin:8px 0;font-size:1.1rem}.card p{color:var(--muted);margin:0}
+.card small{color:var(--muted);font-weight:700;letter-spacing:.04em;font-size:11px}
+.pricing{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-top:12px}
+.card.hot{border-color:#7bc49a;box-shadow:0 0 0 1px #7bc49a}
+footer{border-top:1px solid var(--line);margin-top:48px;background:#fff}
+.ft{max-width:var(--max);margin:0 auto;padding:28px 16px;display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));font-size:13px}
+.ft h4{margin:0 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.ft a{display:block;color:var(--muted);padding:4px 0}.ft a:hover{color:var(--ink)}
+.sticky-cta{display:none;position:fixed;bottom:0;left:0;right:0;padding:12px 16px;background:rgba(247,250,247,.96);border-top:1px solid var(--line);backdrop-filter:blur(10px);z-index:40}
+@media(max-width:700px){.sticky-cta{display:block}.sticky-cta .btn.power{width:100%;min-height:56px;font-size:1.05rem;padding:14px 20px}}
+.disclaimer{font-size:12px;color:var(--muted);max-width:36rem;margin:6px 0 0}
+</style>
+</head>
+<body>
+<header>
+  <div class="inner">
+    <a class="brand" href="#top">
+      <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden>
+        <path d="M16 2L28 7v9c0 7.5-5.2 12.8-12 14C9.2 28.8 4 23.5 4 16V7l12-5z" fill="#0c1f14"/>
+        <path d="M16 5.2L25 9v7.2c0 5.6-3.9 9.6-9 10.6-5.1-1-9-5-9-10.6V9l9-3.8z" fill="#143d28"/>
+        <path d="M11.5 16.2l3 3 6-7" stroke="#34d399" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="16" cy="16" r="11.2" stroke="#0d7a3f" stroke-width="1.2"/>
+      </svg>
+      PakkaScan
+    </a>
+    <nav>
+      <a href="#how">How it works</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#security">Security</a>
+      <a href="#sample">Sample</a>
+      <a class="btn power" href="#scan" style="min-height:48px;padding:12px 22px;font-size:1rem">Scan document</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <span class="badge">Closed beta · Pakistan property due diligence</span>
+    <h1>AI-powered legal due diligence for Pakistani property.</h1>
+    <p class="lead">Parse Fards, Sale Deeds, Allotment Letters, Society NOCs and tenancy packs. Uncover ownership gaps, forgery risks and missing mutations before you send a deposit.</p>
+    <p class="note"><strong>Registry (deed) is not the same as Mutation (Inteqal)</strong> on Jamabandi. PakkaScan checks both chains.</p>
+
+    <div class="tabs" role="tablist" aria-label="Property context">
+      <button type="button" class="tab" id="tab-society" onclick="setCtx('society')"><strong>🏢 Society</strong><small>DHA, CDA, private</small></button>
+      <button type="button" class="tab active" id="tab-revenue" onclick="setCtx('revenue')"><strong>🚜 Revenue land</strong><small>Fard, Registry</small></button>
+      <button type="button" class="tab" id="tab-tenancy" onclick="setCtx('tenancy')"><strong>📄 Tenancy</strong><small>Lease & rent</small></button>
+    </div>
+    <p class="note" id="hint"></p>
+
+    <div class="actions" id="scan">
+      <a class="btn power power-xl" href="mailto:support@pakkascan.com?subject=PakkaScan%20beta%20-%20scan%20request">Scan your property document →</a>
+      <a class="btn" href="#sample">View sample audit report</a>
+    </div>
+    <div class="trust">
+      <span>🔒 Encrypted at rest</span>
+      <span>🙈 PII redaction</span>
+      <span>📜 Evidence hash</span>
+      <span>🧱 Customer isolation</span>
+      <span>🚫 We don't sell your documents</span>
+    </div>
+    <p class="disclaimer">Decision-support only — not legal advice. Urdu interface planned for Phase 2.</p>
+    <div class="regions">
+      <span class="chip"><strong>Punjab</strong> · PLRA</span>
+      <span class="chip"><strong>Sindh</strong> · Revenue</span>
+      <span class="chip"><strong>Islamabad</strong> · CDA / DHA</span>
+    </div>
+
+    <div class="legend">
+      <span>Status: <span class="pill pass">Pass</span></span>
+      <span><span class="pill warn">Caution</span> review before funds</span>
+      <span><span class="pill fail">Fail</span> material risk</span>
+    </div>
+
+    <div class="sim">
+      <div class="panel">
+        <h3>Common traps</h3>
+        <div id="traps"></div>
+      </div>
+      <div class="panel">
+        <h3>Simulated result</h3>
+        <div style="color:#9bb5a6;font-size:12px">PakkaScore</div>
+        <div style="display:flex;gap:12px;align-items:baseline;flex-wrap:wrap">
+          <div class="score" id="score">60</div>
+          <span class="pill warn" id="scorePill">Caution</span>
+        </div>
+        <div id="flags"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="callout" id="sample">
+    <div class="callout-row">
+      <div>
+        <small style="font-weight:700;color:var(--muted);letter-spacing:.04em">SEE THE OUTPUT FIRST</small>
+        <h2>Sample audit report</h2>
+        <p style="color:var(--muted);margin:0;max-width:520px">Synthetic before/after findings, verification hash, Pass / Caution / Fail — no account required.</p>
+      </div>
+      <a class="btn power" href="#sample-body" style="min-height:56px">Open sample ↓</a>
+    </div>
+  </section>
+
+  <section class="card" id="sample-body" style="margin-top:16px">
+    <h3>Demo findings <span class="pill warn">Caution</span></h3>
+    <p style="color:var(--muted)">Verification ID: <code style="font-family:var(--mono)">VR-2026-DEMO01</code> · Hash: <code style="font-family:var(--mono)">0x8f3a…d5b2</code></p>
+    <ul>
+      <li>Mutation continuity — continuous <span class="pill pass">Pass</span></li>
+      <li>Owner name match — within tolerance <span class="pill pass">Pass</span></li>
+      <li>Active charge observation — clearance needed <span class="pill warn">Caution</span></li>
+    </ul>
+    <p class="disclaimer">Synthetic demo only. Not a real title. Not legal advice.</p>
+  </section>
+
+  <section class="pillars" id="how">
+    <article class="card"><small>DETERMINISTIC</small><h3>Rules you can audit</h3><p>Findings tied to document evidence — not opaque scores.</p></article>
+    <article class="card"><small>CHAIN AWARE</small><h3>Registry vs Mutation</h3><p>Deed without Inteqal is a classic trap. Both chains surface separately.</p></article>
+    <article class="card"><small>SIMPLE</small><h3>One property, clear status</h3><p>Pass, Caution or Fail — built for buyers and agents, not bureaucracy.</p></article>
+  </section>
+
+  <h2 id="pricing" style="margin-top:36px">Simple pricing</h2>
+  <div class="pricing">
+    <article class="card"><h3>Explore</h3><p><strong style="font-size:1.5rem">Rs 0</strong></p><p style="color:var(--muted)">Sample report & product tour</p><a class="btn" href="#sample">View sample</a></article>
+    <article class="card hot"><h3>Professional</h3><p><strong style="font-size:1.5rem">Rs 4,900</strong> / report</p><p style="color:var(--muted)">Full analysis & Property Passport</p><a class="btn power" href="mailto:support@pakkascan.com?subject=PakkaScan%20Professional%20report" style="min-height:52px;font-size:1rem">Request a report</a></article>
+    <article class="card"><h3>Team</h3><p><strong style="font-size:1.5rem">Custom</strong></p><p style="color:var(--muted)">Phase 2 — multi-seat later</p><a class="btn" href="mailto:support@pakkascan.com?subject=PakkaScan%20Team">Talk to us</a></article>
+  </div>
+
+  <section class="card" id="security" style="margin-top:28px">
+    <h2>Security (closed beta)</h2>
+    <ul>
+      <li>Encryption in transit (TLS in production) and at rest for document blobs</li>
+      <li>Customer isolation — your cases are not shared across accounts</li>
+      <li>CNIC masked in UI by default; we do not sell your documents</li>
+      <li>Evidence hash for shared verification without re-uploading files</li>
+    </ul>
+    <p class="disclaimer">Full app security controls ship with the product stack; this static page is the public marketing surface for Netlify.</p>
+  </section>
+</main>
+
+<footer>
+  <div class="ft">
+    <div><h4>Product</h4><a href="#how">How it works</a><a href="#sample">Sample</a><a href="#pricing">Pricing</a></div>
+    <div><h4>Trust</h4><a href="#security">Security</a><a href="mailto:support@pakkascan.com">Support</a></div>
+    <div><h4>Legal</h4><a href="#security">Privacy summary</a><a href="mailto:support@pakkascan.com">Contact</a></div>
+  </div>
+  <div style="max-width:var(--max);margin:0 auto;padding:0 16px 28px;color:var(--muted);font-size:12px">
+    © 2026 PakkaScan · Decision-support only, not legal advice · Urdu UI in Phase 2
+  </div>
+</footer>
+
+<div class="sticky-cta"><a class="btn power" href="#scan">Scan your property document →</a></div>
+
+<script>
+const CTX = {
+  society: {
+    hint: "DHA, CDA, RDA, Bahria and private societies",
+    traps: [
+      { id: "noc", label: "Allotment vs NOC beneficiary mismatch", pen: 20, flag: "Allotment holder ≠ NOC beneficiary.", level: "warn" },
+      { id: "dues", label: "Outstanding dues on NDC", pen: 15, flag: "NDC shows unpaid transfer/maintenance dues.", level: "warn" },
+      { id: "poa", label: "Sub-PoA without master verification", pen: 25, flag: "Sub-attorney chain not verified.", level: "fail" }
+    ],
+    defaults: { noc: true, dues: false, poa: false }
+  },
+  revenue: {
+    hint: "Fard, Khasra, stamp-paper deeds, Inteqal",
+    traps: [
+      { id: "inteqal", label: "Deed without PLRA Inteqal", pen: 28, flag: "Deed without matching mutation entry.", level: "warn" },
+      { id: "poa", label: "PoA chain break", pen: 22, flag: "PoA name ≠ deed seller.", level: "fail" },
+      { id: "khasra", label: "Fard vs Aks-Shajra area mismatch", pen: 18, flag: "Area figures disagree across pages.", level: "fail" }
+    ],
+    defaults: { inteqal: true, poa: false, khasra: false }
+  },
+  tenancy: {
+    hint: "Tenancy / lease packs and landlord title checks",
+    traps: [
+      { id: "landlord", label: "Landlord not on ownership record", pen: 26, flag: "Landlord ≠ owner on Fard/title.", level: "fail" },
+      { id: "term", label: "Lease term/rent inconsistent", pen: 16, flag: "Term or rent figures disagree.", level: "warn" },
+      { id: "stamp", label: "Stamp/registration cues missing", pen: 18, flag: "Lease appears unstamped or weak registration cues.", level: "warn" }
+    ],
+    defaults: { landlord: true, term: false, stamp: false }
+  }
+};
+let state = { ...CTX.revenue.defaults };
+let ctx = "revenue";
+function setCtx(c) {
+  ctx = c;
+  state = { ...CTX[c].defaults };
+  ["society","revenue","tenancy"].forEach(id => {
+    const el = document.getElementById("tab-" + id);
+    const on = id === c;
+    el.classList.toggle("active", on);
+    el.setAttribute("aria-selected", on);
+  });
+  document.getElementById("hint").textContent = CTX[c].hint;
+  renderTraps();
+  sim();
+}
+function renderTraps() {
+  document.getElementById("traps").innerHTML = CTX[ctx].traps.map(t =>
+    `<label class="trap"><input type="checkbox" ${state[t.id]?"checked":""} onchange="toggle('${t.id}')"><span>${t.label}</span></label>`
+  ).join("");
+}
+function toggle(id) { state[id] = !state[id]; sim(); }
+function sim() {
+  let score = 88, flags = [];
+  CTX[ctx].traps.forEach(t => {
+    if (state[t.id]) { score -= t.pen; flags.push(t); }
+  });
+  score = Math.max(18, score);
+  const tone = score >= 80 ? "pass" : score >= 50 ? "warn" : "fail";
+  const label = tone === "pass" ? "Pass" : tone === "warn" ? "Caution" : "Fail";
+  const el = document.getElementById("score");
+  el.textContent = score;
+  el.style.color = tone === "pass" ? "#0d7a3f" : tone === "warn" ? "#c47f0a" : "#c62828";
+  const pill = document.getElementById("scorePill");
+  pill.className = "pill " + tone;
+  pill.textContent = label;
+  document.getElementById("flags").innerHTML = flags.length
+    ? flags.map(f => `<div class="flag">${f.flag} <span class="pill ${f.level==="fail"?"fail":"warn"}">${f.level==="fail"?"Fail":"Caution"}</span></div>`).join("")
+    : `<div class="flag">Baseline clear chain. <span class="pill pass">Pass</span></div>`;
+}
+setCtx("revenue");
+</script>
+</body>
+</html>

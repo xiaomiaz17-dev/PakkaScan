@@ -1,0 +1,5 @@
+import type { Entitlement, SubscriptionPlan } from "./types";
+const ENTITLEMENTS:Record<SubscriptionPlan,Entitlement>={FREE:{plan:"FREE",maxProperties:1,reportsPerMonth:0,watermark:true,evidenceViewer:false,priorityProcessing:false},REPORT:{plan:"REPORT",maxProperties:1,reportsPerMonth:1,watermark:false,evidenceViewer:true,priorityProcessing:false},PROFESSIONAL:{plan:"PROFESSIONAL",maxProperties:null,reportsPerMonth:null,watermark:false,evidenceViewer:true,priorityProcessing:true},ENTERPRISE:{plan:"ENTERPRISE",maxProperties:null,reportsPerMonth:null,watermark:false,evidenceViewer:true,priorityProcessing:true}};
+export function entitlementFor(plan:SubscriptionPlan){ return {...ENTITLEMENTS[plan]}; }
+export function canCreateProperty(plan:SubscriptionPlan,current:number){ const max=ENTITLEMENTS[plan].maxProperties; return max===null||current<max; }
+export function canGenerateReport(plan:SubscriptionPlan,currentMonth:number){ const max=ENTITLEMENTS[plan].reportsPerMonth; return max===null||currentMonth<max; }

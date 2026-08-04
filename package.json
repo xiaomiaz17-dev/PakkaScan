@@ -1,0 +1,49 @@
+{
+  "name": "pakkascan-pd079",
+  "version": "0.65.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "beta:api": "rm -rf dist-core && tsc -p tsconfig.core.json && node dist-core/src/runtime/http-server.js",
+    "test:core": "rm -rf dist-core && tsc -p tsconfig.core.json && node --test --test-force-exit dist-core/tests-core/*.test.js",
+    "worker": "rm -rf dist-core && tsc -p tsconfig.core.json && node dist-core/src/runtime/job-worker.js",
+    "worker:supervised": "rm -rf dist-core && tsc -p tsconfig.core.json && node dist-core/src/runtime/supervised-worker.js",
+    "migrate": "rm -rf dist-core && tsc -p tsconfig.core.json && node -e \"console.log('Set PAKKADEED_ENABLE_REAL_POSTGRES=1 and DATABASE_URL then use applyBootstrapMigration via bootstrap')\"",
+    "migrate:sql": "node dist-core/src/storage/migrate-cli.js",
+    "staging:minio-init": "node dist-core/src/deployment/minio-init.js",
+    "start:api": "node dist-core/src/runtime/startup-api.js",
+    "start:worker": "node dist-core/src/runtime/startup-worker.js",
+    "build:docker:api": "docker build -f Dockerfile.api -t pakkadeed-api:pd035 .",
+    "build:docker:worker": "docker build -f Dockerfile.worker -t pakkadeed-worker:pd035 .",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@google/genai": "^2.15.0",
+    "@google/generative-ai": "^0.24.1",
+    "@prisma/client": "^6.14.0",
+    "browser-image-compression": "^2.0.2",
+    "next": "^16.0.0",
+    "pdf-parse": "^1.1.1",
+    "pg": "^8.16.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "sharp": "^0.34.5",
+    "tesseract.js": "^5.1.1",
+    "tesseract.js-core": "^6.1.2",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/pg": "^8.15.0",
+    "@types/react": "^19.0.0",
+    "prisma": "^6.14.0",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

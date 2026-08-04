@@ -1,0 +1,5 @@
+import { createHmac, timingSafeEqual } from "node:crypto";
+import type { SignedDelivery } from "./types";
+function signature(secret:string,payload:string){ return createHmac("sha256",secret).update(payload).digest("base64url"); }
+export function createSignedReportDelivery(input:{verificationId:string;secret:string;now?:Date;ttlSeconds?:number}):SignedDelivery { const expiresAt=new Date((input.now??new Date()).getTime()+(input.ttlSeconds??900)*1000).toISOString(); const path=`/reports/${encodeURIComponent(input.verificationId)}/pdf`; const payload=`${input.verificationId}|${expiresAt}|${path}`; return {verificationId:input.verificationId,expiresAt,path,signature:signature(input.secret,payload)}; }
+export function verifySignedReportDelivery(delivery:SignedDelivery,secret:string,now=new Date()){ if(new Date(delivery.expiresAt)<=now) return false; const expected=Buffer.from(signature(secret,`${delivery.verificationId}|${delivery.expiresAt}|${delivery.path}`)); const actual=Buffer.from(delivery.signature); return expected.length===actual.length&&timingSafeEqual(expected,actual); }
