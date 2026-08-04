@@ -1,3 +1,10 @@
+"use client";
+
+import Link from "next/link";
+import BrandMark from "@/components/BrandMark";
+import { useState } from "react";
+import { FOOTER_COLUMNS, NAV, SITE } from "@/content/site";
+
 export function SiteHeader({ ctaHref = "/register", ctaLabel = "Upload or scan" }: { ctaHref?: string; ctaLabel?: string }) {
   const [open, setOpen] = useState(false);
   return (
@@ -31,5 +38,44 @@ export function SiteHeader({ ctaHref = "/register", ctaLabel = "Upload or scan" 
         </nav>
       </div>
     </header>
+  );
+}
+
+export function SiteFooter() {
+  return (
+    <footer className="site-footer" aria-label="Footer">
+      <div className="footer-grid">
+        <div>
+          <strong className="brand"><BrandMark size={22} /> <span>{SITE.name}</span></strong>
+          <p className="muted">{SITE.tagline}</p>
+          <p className="muted small">Evidence-first property intelligence for Pakistan.</p>
+        </div>
+        {FOOTER_COLUMNS.map((col) => (
+          <div key={col.title}>
+            <h2 className="footer-heading">{col.title}</h2>
+            <ul className="footer-list">
+              {col.links.map((l) => (
+                <li key={l.href}>
+                  <Link href={l.href}>{l.label}</Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+      <p className="footer-legal muted small">
+        © {new Date().getFullYear()} {SITE.name}. Not a substitute for independent legal advice.
+      </p>
+    </footer>
+  );
+}
+
+export function MarketingShell({ children }: { children: React.ReactNode }) {
+  return (
+    <>
+      <SiteHeader />
+      <main id="main">{children}</main>
+      <SiteFooter />
+    </>
   );
 }
