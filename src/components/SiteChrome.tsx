@@ -1,18 +1,11 @@
-"use client";
-
-import Link from "next/link";
-import { BrandMark } from "@/components/BrandMark";
-import { useState } from "react";
-import { FOOTER_COLUMNS, NAV, SITE } from "@/content/site";
-
 export function SiteHeader({ ctaHref = "/register", ctaLabel = "Upload or scan" }: { ctaHref?: string; ctaLabel?: string }) {
   const [open, setOpen] = useState(false);
   return (
-    <header className="site-header">
-      <div className="site-header-inner">
-        <Link href="/" className="brand" aria-label={`${SITE.name} home`}>
-          <BrandMark size={28} />
-          <span>{SITE.name}</span>
+    <header className="site-header" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px 0' }}>
+      <div className="site-header-inner" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '900px', textAlign: 'center' }}>
+        <Link href="/" className="brand" aria-label={`${SITE.name} home`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textDecoration: 'none' }}>
+          <BrandMark size={36} />
+          <span style={{ fontSize: '24px', fontWeight: '800', marginTop: '8px', color: '#0f172a' }}>{SITE.name}</span>
         </Link>
         <button
           type="button"
@@ -20,10 +13,11 @@ export function SiteHeader({ ctaHref = "/register", ctaLabel = "Upload or scan" 
           aria-expanded={open}
           aria-controls="primary-nav"
           onClick={() => setOpen((v) => !v)}
+          style={{ marginTop: '12px' }}
         >
           Menu
         </button>
-        <nav id="primary-nav" className={`nav ${open ? "open" : ""}`} aria-label="Primary">
+        <nav id="primary-nav" className={`nav ${open ? "open" : ""}`} aria-label="Primary" style={{ display: 'flex', gap: '16px', marginTop: '12px', justifyContent: 'center' }}>
           {NAV.map((item) => (
             <Link key={item.href} href={item.href} onClick={() => setOpen(false)}>
               {item.label}
@@ -38,44 +32,5 @@ export function SiteHeader({ ctaHref = "/register", ctaLabel = "Upload or scan" 
         </nav>
       </div>
     </header>
-  );
-}
-
-export function SiteFooter() {
-  return (
-    <footer className="site-footer" aria-label="Footer">
-      <div className="footer-grid">
-        <div>
-          <strong className="brand"><BrandMark size={22} /> <span>{SITE.name}</span></strong>
-          <p className="muted">{SITE.tagline}</p>
-          <p className="muted small">Evidence-first property intelligence for Pakistan.</p>
-        </div>
-        {FOOTER_COLUMNS.map((col) => (
-          <div key={col.title}>
-            <h2 className="footer-heading">{col.title}</h2>
-            <ul className="footer-list">
-              {col.links.map((l) => (
-                <li key={l.href}>
-                  <Link href={l.href}>{l.label}</Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </div>
-      <p className="footer-legal muted small">
-        © {new Date().getFullYear()} {SITE.name}. Not a substitute for independent legal advice.
-      </p>
-    </footer>
-  );
-}
-
-export function MarketingShell({ children }: { children: React.ReactNode }) {
-  return (
-    <>
-      <SiteHeader />
-      <main id="main">{children}</main>
-      <SiteFooter />
-    </>
   );
 }
