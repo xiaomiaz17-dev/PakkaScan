@@ -1,38 +1,41 @@
-/** Canonical V2 document-shield mark — slate + tech blue (green reserved for status pills). */
-export function BrandMark({ size = 28, className = "" }: { size?: number; className?: string }) {
+export default function BrandMark() {
   return (
-    <svg
-      className={`brand-mark ${className}`}
-      width={size}
-      height={size}
-      viewBox="0 0 48 48"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden
-    >
-      <path
-        d="M24 4L40 10.5V23.5C40 33.8 32.8 41.5 24 44.5C15.2 41.5 8 33.8 8 23.5V10.5L24 4Z"
-        fill="#0f172a"
-        stroke="#2563eb"
-        strokeWidth="2"
-      />
-      <path
-        d="M17 14H27L31 18V32C31 33.1 30.1 34 29 34H17C15.9 34 15 33.1 15 32V16C15 14.9 15.9 14 17 14Z"
-        fill="#1e293b"
-        stroke="#60a5fa"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-      <path d="M27 14V18H31" stroke="#60a5fa" strokeWidth="1.5" strokeLinejoin="round" />
-      <line x1="19" y1="20" x2="23" y2="20" stroke="#93c5fd" strokeWidth="1.5" strokeLinecap="round" />
-      <line x1="19" y1="24" x2="22" y2="24" stroke="#93c5fd" strokeWidth="1.5" strokeLinecap="round" />
-      <path
-        d="M20 28.5L23.5 32L30 23.5"
-        stroke="#2563eb"
-        strokeWidth="2.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+      {/* Shield Icon Graphic */}
+      <div style={{
+        width: '48px',
+        height: '48px',
+        borderRadius: '12px',
+        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+        border: '1.5px solid #3b82f6',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        boxShadow: '0 10px 15px -3px rgba(37, 99, 235, 0.2)',
+        overflow: 'hidden',
+      }}>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2L4 5V11.09C4 16.14 7.41 20.85 12 22C16.59 20.85 20 16.14 20 11.09V5L12 2Z" fill="#0B132B" stroke="#3B82F6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M8 8H16" stroke="#60A5FA" strokeWidth="1.5" strokeLinecap="round"/>
+          <path d="M8 12H13" stroke="#60A5FA" strokeWidth="1.5" strokeLinecap="round"/>
+          <path d="M9 16L11 18L15 13" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </div>
+
+      {/* Brand Name & Subtitle */}
+      <div>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '2px' }}>
+          <span style={{ fontSize: '28px', fontWeight: '850', color: '#0f172a', letterSpacing: '-0.8px' }}>
+            Pakka
+          </span>
+          <span style={{ fontSize: '28px', fontWeight: '850', color: '#2563eb', letterSpacing: '-0.8px' }}>
+            Scan
+          </span>
+        </div>
+        <div style={{ fontSize: '11px', fontWeight: '700', color: '#64748b', letterSpacing: '1.2px', textTransform: 'uppercase', marginTop: '-2px' }}>
+          Evidence-Linked Verification &middot; Verify before you trust.
+        </div>
+      </div>
+    </div>
   );
 }
