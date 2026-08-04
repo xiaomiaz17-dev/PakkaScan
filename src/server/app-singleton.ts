@@ -13,12 +13,11 @@ import { ApplicationPgRepository } from "../storage/application-repository";
 import type { SqlTransport } from "../storage/postgres-driver";
 
 declare global {
-  // eslint-disable-next-line no-var
-  var __pakkadeedApp: BetaApplication | undefined;
-  // eslint-disable-next-line no-var
-  var __pakkadeedPgRepo: ApplicationPgRepository | undefined;
-  // eslint-disable-next-line no-var
-  var __pakkadeedSql: SqlTransport | undefined;
+  /* eslint-disable no-var */
+  let __pakkadeedApp: BetaApplication | undefined;
+  let __pakkadeedPgRepo: ApplicationPgRepository | undefined;
+  let __pakkadeedSql: SqlTransport | undefined;
+  /* eslint-enable no-var */
 }
 
 export async function bootstrapPostgresApplication(): Promise<{
@@ -44,8 +43,8 @@ export async function bootstrapPostgresApplication(): Promise<{
     const repository = new ApplicationPgRepository(transport);
     const health = await repository.probe();
     if (!health.ok) throw new Error(`FATAL: application repository probe failed: ${health.detail}`);
-    globalThis.__pakkadeedSql = transport;
-    globalThis.__pakkadeedPgRepo = repository;
+    (globalThis as unknown as Record<string, unknown>).__pakkadeedSql = transport;
+    (globalThis as unknown as Record<string, unknown>).__pakkadeedPgRepo = repository;
     return { transport, repository };
   }
   throw new Error("FATAL: bootstrapPostgresApplication called without postgres requirement");
@@ -58,7 +57,10 @@ export async function bootstrapPostgresApplication(): Promise<{
  */
 export function getBetaApplication(): BetaApplication {
   assertProductionPersistence();
-  if (globalThis.__pakkadeedApp) return globalThis.__pakkadeedApp;
+  const globalApp = (globalThis as unknown as Record<string, unknown>).__pakkadeedApp as BetaApplication | undefined;
+  const globalPgRepo = (globalThis as unknown as Record<string, unknown>).__pakkadeedPgRepo as ApplicationPgRepository | undefined;
+
+  if (globalApp) return globalApp;
 
   const nodeEnv = process.env.NODE_ENV ?? "development";
   const requirePg =
@@ -66,8 +68,7 @@ export function getBetaApplication(): BetaApplication {
     process.env.PAKKADEED_ENABLE_REAL_POSTGRES === "1";
 
   if (nodeEnv === "production" && requirePg) {
-    // Production must not silently fall back to memory/JSON.
-    if (!globalThis.__pakkadeedPgRepo) {
+    if (!globalPgRepo) {
       throw new Error(
         "FATAL: production PostgreSQL repository not bootstrapped — call bootstrapPostgresApplication() before serving traffic",
       );
@@ -75,13 +76,9 @@ export function getBetaApplication(): BetaApplication {
   }
 
   const statePath = process.env.PAKKADEED_STATE_PATH;
-  if (nodeEnv === "production" && requirePg) {
-    // Still construct BetaApplication for handlers that have not fully migrated;
-    // durable writes should go through getApplicationPgRepository().
-  }
   const store =
     nodeEnv === "production" && requirePg
-      ? new MemoryRuntimeStateStore() // transient cache only; source of truth is Postgres
+      ? new MemoryRuntimeStateStore()
       : statePath
         ? new JsonFileRuntimeStateStore(statePath)
         : new MemoryRuntimeStateStore();
@@ -95,24 +92,25 @@ export function getBetaApplication(): BetaApplication {
     storageSecret: resolveStorageSecret(),
     maxUploadBytes: Number(process.env.PAKKADEED_MAX_UPLOAD_BYTES ?? 15 * 1024 * 1024),
   });
-  globalThis.__pakkadeedApp = app;
+  (globalThis as unknown as Record<string, unknown>).__pakkadeedApp = app;
   return app;
 }
 
 export function getApplicationPgRepository(): ApplicationPgRepository {
-  if (!globalThis.__pakkadeedPgRepo) {
+  const globalPgRepo = (globalThis as unknown as Record<string, unknown>).__pakkadeedPgRepo as ApplicationPgRepository | undefined;
+  if (!globalPgRepo) {
     throw new Error("PostgreSQL application repository is not initialized");
   }
-  return globalThis.__pakkadeedPgRepo;
+  return globalPgRepo;
 }
 
 export function resetBetaApplicationForTests(): BetaApplication {
-  globalThis.__pakkadeedApp = undefined;
-  globalThis.__pakkadeedPgRepo = undefined;
-  globalThis.__pakkadeedSql = undefined;
+  (globalThis as unknown as Record<string, unknown>).__pakkadeedApp = undefined;
+  (globalThis as unknown as Record<string, unknown>).__pakkadeedPgRepo = undefined;
+  (globalThis as unknown as Record<string, unknown>).__pakkadeedSql = undefined;
   return getBetaApplication();
 }
 
 export function bindApplicationPgRepositoryForTests(repo: ApplicationPgRepository): void {
-  globalThis.__pakkadeedPgRepo = repo;
+  (globalThis as unknown as Record<string, unknown>).__pakkadeedPgRepo = repo;
 }
