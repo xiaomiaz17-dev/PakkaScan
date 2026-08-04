@@ -16,38 +16,14 @@ export default function LandingPage() {
           justifyContent: 'center',
           position: 'relative',
           boxShadow: '0 10px 15px -3px rgba(37, 99, 235, 0.2)',
+          overflow: 'hidden',
         }}>
-          {/* Document shape inside shield */}
-          <div style={{
-            width: '20px',
-            height: '24px',
-            backgroundColor: '#ffffff',
-            borderRadius: '3px',
-            position: 'relative',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>
-            {/* Green checkmark overlay */}
-            <div style={{
-              position: 'absolute',
-              bottom: '-2px',
-              right: '-4px',
-              width: '18px',
-              height: '18px',
-              backgroundColor: '#10b981',
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#ffffff',
-              fontSize: '10px',
-              fontWeight: '900',
-              border: '2px solid #0f172a',
-            }}>
-              
-            </div>
-          </div>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L4 5V11.09C4 16.14 7.41 20.85 12 22C16.59 20.85 20 16.14 20 11.09V5L12 2Z" fill="#0B132B" stroke="#3B82F6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M8 8H16" stroke="#60A5FA" strokeWidth="1.5" strokeLinecap="round"/>
+            <path d="M8 12H13" stroke="#60A5FA" strokeWidth="1.5" strokeLinecap="round"/>
+            <path d="M9 16L11 18L15 13" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
         </div>
 
         {/* Brand Name & Subtitle */}
@@ -61,7 +37,7 @@ export default function LandingPage() {
             </span>
           </div>
           <div style={{ fontSize: '11px', fontWeight: '700', color: '#64748b', letterSpacing: '1.2px', textTransform: 'uppercase', marginTop: '-2px' }}>
-            Evidence-Linked Verification  Verify before you trust.
+            Evidence-Linked Verification &middot; Verify before you trust.
           </div>
         </div>
       </div>
@@ -76,7 +52,7 @@ export default function LandingPage() {
         </p>
 
         <div style={{ display: 'inline-block', padding: '6px 12px', backgroundColor: '#e0f2fe', color: '#0369a1', borderRadius: '6px', fontSize: '12px', fontWeight: '700', marginBottom: '28px' }}>
-           Protects against fake stamp papers, mismatched CNICs, and unverified clauses.
+          Protects against fake stamp papers, mismatched CNICs, and unverified clauses.
         </div>
 
         <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
@@ -94,7 +70,7 @@ export default function LandingPage() {
               boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)',
             }}
           >
-            Upload Contract & Scan 
+            Upload Contract & Scan
           </a>
         </div>
       </div>
