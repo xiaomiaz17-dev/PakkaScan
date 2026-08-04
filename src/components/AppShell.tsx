@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { BrandMark } from "@/components/BrandMark";
+import BrandMark from "@/components/BrandMark";s
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/client/api";
 
