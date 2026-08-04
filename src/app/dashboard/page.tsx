@@ -36,3 +36,27 @@ export default function DashboardPage() {
   }, [router]);
 
   if (!isMounted) return null; // Prevents server-side prerender evaluation crash
+
+  return (
+    <AppShell>
+      <div style={{ padding: '40px', maxWidth: '1200px', margin: '0 auto' }}>
+        <h1 style={{ fontSize: '28px', fontWeight: '800', marginBottom: '24px' }}>Dashboard</h1>
+        {loading && <p>Loading properties...</p>}
+        {error && <p style={{ color: 'red' }}>{error}</p>}
+        {!loading && !error && (
+          <div>
+            {properties.length === 0 ? (
+              <p>No properties found.</p>
+            ) : (
+              <ul>
+                {properties.map((p) => (
+                  <li key={p.id}>{p.label} - {p.status}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+      </div>
+    </AppShell>
+  );
+}
