@@ -13,3 +13,11 @@ export function getCustomerApp(): BetaApplication {
 export function getCustomerRepo(): ApplicationPgRepository {
   return getApplicationPgRepository();
 }
+
+export function resolveCustomerApp(): BetaApplication {
+  return getBetaApplication();
+}
+
+export async function awaitify<T>(promise: Promise<T>): Promise<T> {
+  return await promise;
+}
