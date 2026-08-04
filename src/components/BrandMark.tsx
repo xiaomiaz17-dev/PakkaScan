@@ -1,10 +1,10 @@
-export default function BrandMark() {
+export default function BrandMark({ size = 32 }: { size?: number }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', width: '100%' }}>
       {/* Shield Icon Graphic */}
       <div style={{
-        width: '48px',
-        height: '48px',
+        width: `${size + 16}px`,
+        height: `${size + 16}px`,
         borderRadius: '12px',
         background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
         border: '1.5px solid #3b82f6',
@@ -15,7 +15,7 @@ export default function BrandMark() {
         overflow: 'hidden',
         marginBottom: '12px',
       }}>
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M12 2L4 5V11.09C4 16.14 7.41 20.85 12 22C16.59 20.85 20 16.14 20 11.09V5L12 2Z" fill="#0B132B" stroke="#3B82F6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           <path d="M8 8H16" stroke="#60A5FA" strokeWidth="1.5" strokeLinecap="round"/>
           <path d="M8 12H13" stroke="#60A5FA" strokeWidth="1.5" strokeLinecap="round"/>
