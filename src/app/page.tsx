@@ -15,7 +15,7 @@ export default function LandingPage() {
           AI-powered legal due diligence for Pakistani property
         </h1>
         <p style={{ fontSize: '20px', fontWeight: '600', color: '#2563eb', margin: '0 0 20px 0' }}>
-          Dont pay bayana until you know whats real.
+          Do not pay bayana until you know what is real.
         </p>
 
         <div style={{ display: 'inline-block', padding: '6px 12px', backgroundColor: '#e0f2fe', color: '#0369a1', borderRadius: '6px', fontSize: '12px', fontWeight: '700', marginBottom: '28px' }}>
@@ -45,10 +45,3 @@ export default function LandingPage() {
     </div>
   );
 }
-```[cite: 4]
-
-Save the file, then push it:
-```powershell
-git add .
-git commit -m "Fix syntax error at line 48 in page.tsx"
-git push
