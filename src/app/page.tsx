@@ -45,3 +45,4 @@ export default function LandingPage() {
     </div>
   );
 }
+```[cite: 4]
