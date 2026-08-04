@@ -46,3 +46,9 @@ export default function LandingPage() {
   );
 }
 ```[cite: 4]
+
+Save the file, then push it:
+```powershell
+git add .
+git commit -m "Fix syntax error at line 48 in page.tsx"
+git push
