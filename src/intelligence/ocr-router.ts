@@ -1,5 +1,5 @@
 ﻿import { extractWithLocalOcr, type LocalOcrImage, type LocalOcrResult } from "./local-ocr";
-import { extractBatchImages, geminiConfigured } from "./gemini-ocr";
+import { extractBatchImages, extractPdfWithGemini, geminiConfigured } from "./gemini-ocr";
 import { rasterisePdfToImages } from "./pdf-rasteriser";
 import { cacheGet, cacheSet } from "./llm-cache";
 import { createHash } from "node:crypto";
@@ -97,18 +97,82 @@ export async function runOcr(images: LocalOcrImage[]): Promise<OcrOutcome> {
     if (!geminiConfigured()) {
       throw new Error("PAKKASCAN_OCR=gemini but GEMINI_API_KEY is not set");
     }
-    const pageImages = await toPageImages(images);
-    console.log(`[ocr-router] Gemini mode: prepared ${pageImages.length} page image(s)`);
-    const result = await extractBatchImages(pageImages as any);
-    const outcome: OcrOutcome = {
-      text: result.text || "",
-      confidence: 70,
-      language: "Unknown",
-      pageCount: pageImages.length,
-      engineUsed: "gemini",
-    };
-    cacheSet("ocr", outcome, mode, fingerprint);
-    return outcome;
+
+    // Try normal path first: rasterize PDF to images, OCR each page.
+    // Some PDFs (with unusual vector graphics or forms) crash pdfjs/canvas.
+    // On failure, fall back to sending the raw PDF directly to Gemini,
+    // which handles PDFs natively via inlineData.
+    try {
+      const pageImages = await toPageImages(images);
+      console.log(`[ocr-router] Gemini mode: prepared ${pageImages.length} page image(s)`);
+      const result = await extractBatchImages(pageImages as any);
+      const outcome: OcrOutcome = {
+        text: result.text || "",
+        confidence: 70,
+        language: "Unknown",
+        pageCount: pageImages.length,
+        engineUsed: "gemini",
+      };
+      cacheSet("ocr", outcome, mode, fingerprint);
+      return outcome;
+    } catch (rasterErr: any) {
+      console.warn("[ocr-router] Rasterization failed:", rasterErr?.message || rasterErr);
+      console.warn("[ocr-router] Falling back to native Gemini PDF handling");
+
+      // Native PDF fallback: find PDF buffers in the input and send them directly
+      const pdfBuffers: Buffer[] = [];
+      for (const img of images) {
+        let buf: Buffer | null = null;
+        let mimeType = "";
+        if ("inlineData" in img && img.inlineData) {
+          buf = Buffer.from(img.inlineData.data, "base64");
+          mimeType = img.inlineData.mimeType;
+        } else if (Buffer.isBuffer((img as any).buf)) {
+          buf = (img as any).buf;
+          mimeType = (img as any).mime || (img as any).mimeType || "";
+        } else if (typeof (img as any).buf === "string") {
+          buf = Buffer.from((img as any).buf, "base64");
+          mimeType = (img as any).mime || (img as any).mimeType || "";
+        }
+        if (buf && (mimeType === "application/pdf" || mimeType.includes("pdf"))) {
+          pdfBuffers.push(buf);
+        }
+      }
+
+      if (pdfBuffers.length === 0) {
+        console.error("[ocr-router] Fallback failed: no PDF buffers found in input");
+        throw rasterErr;
+      }
+
+      // Send each PDF to Gemini directly
+      const texts: string[] = [];
+      for (const pdfBuf of pdfBuffers) {
+        const pdfBase64 = pdfBuf.toString("base64");
+        try {
+          const text = await extractPdfWithGemini(pdfBase64);
+          if (text) texts.push(text);
+        } catch (fallbackErr: any) {
+          console.error("[ocr-router] Native Gemini PDF fallback also failed:", fallbackErr?.message || fallbackErr);
+        }
+      }
+
+      const combinedText = texts.join("\n\n");
+      if (!combinedText.trim()) {
+        console.error("[ocr-router] Both rasterization and native PDF fallback returned empty text");
+        throw new Error("PDF processing failed. The document may be corrupt, password-protected, or in an unsupported format.");
+      }
+
+      const outcome: OcrOutcome = {
+        text: combinedText,
+        confidence: 65, // Slightly lower confidence for native PDF path
+        language: "Unknown",
+        pageCount: pdfBuffers.length,
+        engineUsed: "gemini",
+      };
+      cacheSet("ocr", outcome, mode, fingerprint);
+      console.log(`[ocr-router] Native PDF fallback succeeded: ${combinedText.length} chars from ${pdfBuffers.length} PDF(s)`);
+      return outcome;
+    }
   }
 
   if (mode === "local") {
