@@ -17,6 +17,20 @@ const nextConfig = {
     "sharp",
   ],
 
+  // Force-include files that pdf-to-img and pdfjs-dist require at runtime
+  // via dynamic require() calls that Next.js bundler cannot statically detect.
+  // Without this, Vercel deploys will fail with:
+  //   "Cannot find module pdfjs-dist/package.json"
+  outputFileTracingIncludes: {
+    "/api/beta/scan": [
+      "./node_modules/pdfjs-dist/package.json",
+      "./node_modules/pdfjs-dist/build/**",
+      "./node_modules/pdfjs-dist/legacy/**",
+      "./node_modules/pdf-to-img/**",
+      "./node_modules/@napi-rs/canvas/**",
+    ],
+  },
+
   turbopack: {},
 
   webpack: (config) => {
@@ -30,16 +44,11 @@ const nextConfig = {
 };
 
 // Wrap the Next config with Sentry.
-// - silent: true         => do not spam the console on every build
-// - hideSourceMaps: true => source maps are uploaded to Sentry but stripped from the client bundle
-// - disableLogger: true  => strip Sentry SDK debug logging in production bundles
 export default withSentryConfig(nextConfig, {
   silent: true,
   hideSourceMaps: true,
   disableLogger: true,
 
-  // Do not fail the build if Sentry auth is missing (e.g. local dev without SENTRY_AUTH_TOKEN).
-  // Source map upload will simply be skipped.
   errorHandler: (err, invokeErr, compilation) => {
     compilation.warnings.push("Sentry CLI: " + err.message);
   },
