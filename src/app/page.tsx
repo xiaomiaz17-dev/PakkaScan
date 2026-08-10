@@ -4,6 +4,8 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Fraunces, Noto_Nastaliq_Urdu } from "next/font/google";
 import { DOCUMENT_TYPE_OPTIONS, groupedDocumentTypes, type DocumentTypeOption } from "@/lib/document-types";
 
+type SessionUser = { email: string; name: string | null };
+
 const fraunces = Fraunces({
   subsets: ["latin"],
   weight: ["700", "900"],
@@ -573,6 +575,27 @@ export default function ScanPage() {
   const [filePreviews, setFilePreviews] = useState<string[]>([]);
   const [fileTags, setFileTags] = useState<string[]>([]); // per-file document type hints (empty string = auto-detect)
   const [openDropdownIdx, setOpenDropdownIdx] = useState<number | null>(null);
+  const [sessionUser, setSessionUser] = useState<SessionUser | null>(null);
+  const [sessionLoaded, setSessionLoaded] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/auth/session")
+      .then((r) => (r.ok ? r.json() : { authenticated: false }))
+      .then((data) => {
+        if (cancelled) return;
+        if (data.authenticated) setSessionUser(data.user);
+        setSessionLoaded(true);
+      })
+      .catch(() => { if (!cancelled) setSessionLoaded(true); });
+    return () => { cancelled = true; };
+  }, []);
+
+  async function handleSignOut() {
+    await fetch("/api/auth/session", { method: "DELETE" });
+    setSessionUser(null);
+    if (typeof window !== "undefined") window.location.reload();
+  }
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [currentStageIndex, setCurrentStageIndex] = useState(-1);
   const [results, setResults] = useState<BackendResponse | null>(null);
@@ -660,6 +683,7 @@ export default function ScanPage() {
           NO_DOCUMENTS: "Please upload at least one file.",
           UNSUPPORTED_CONTENT_TYPE: "That file type is not supported.",
           UPLOAD_TOO_LARGE: "Files must be under 15MB.",
+          NOT_SIGNED_IN: "Please sign in to use PakkaScan.",
           INTERNAL_ERROR: "Something went wrong on the server. Please try again.",
         };
         throw new Error(map[code] || "Scan failed: " + code);
@@ -704,7 +728,18 @@ export default function ScanPage() {
     <div style={{ minHeight: "100vh", backgroundColor: "#f8fafc", display: "flex", flexDirection: "column", alignItems: "center", fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
       <style>{"@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 4px rgba(11, 19, 43, 0.15); } 50% { box-shadow: 0 0 0 8px rgba(11, 19, 43, 0.08); } }"}</style>
 
-      <div style={{ width: "100%", backgroundColor: "#0b132b", display: "flex", flexDirection: "column", alignItems: "center", padding: "60px 20px 100px 20px", boxSizing: "border-box" }}>
+      <div style={{ width: "100%", backgroundColor: "#0b132b", display: "flex", flexDirection: "column", alignItems: "center", padding: "60px 20px 100px 20px", boxSizing: "border-box", position: "relative" }}>
+        {/* Top-right auth chip */}
+        <div style={{ position: "absolute", top: "16px", right: "16px", zIndex: 5 }}>
+          {!sessionLoaded ? null : sessionUser ? (
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <div style={{ fontSize: "12px", color: "#cbd5e1", fontWeight: 600 }}>{sessionUser.email}</div>
+              <button onClick={handleSignOut} style={{ backgroundColor: "rgba(255,255,255,0.08)", color: "#ffffff", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "8px", padding: "6px 12px", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}>Sign out</button>
+            </div>
+          ) : (
+            <a href="/login" style={{ display: "inline-flex", alignItems: "center", padding: "6px 14px", backgroundColor: "rgba(255,255,255,0.1)", color: "#ffffff", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "8px", fontSize: "13px", fontWeight: 600, textDecoration: "none" }}>Sign in</a>
+          )}
+        </div>
         <div style={{ width: "84px", height: "84px", borderRadius: "50%", backgroundColor: "#0b132b", border: "3px solid #ffffff", boxShadow: "0 0 0 4px rgba(255, 255, 255, 0.15), inset 0 0 12px rgba(255, 255, 255, 0.3)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "24px" }}>
           <svg width="40" height="40" style={{ color: "#ffffff" }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />

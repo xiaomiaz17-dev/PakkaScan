@@ -1,47 +1,19 @@
 /**
- * Beta access password gate.
+ * Route protection middleware.
  *
- * Runs on every request. If the visitor does not have a valid
- * pakkascan_access cookie, they are redirected to /access to enter
- * the shared beta password.
+ * PROTECTED: /api/beta/* (scan API). Requires a valid auth session cookie.
  *
- * PUBLIC (no password required):
- *   - / (marketing home page)
- *   - /access (the password entry page itself)
- *   - /api/access (POST endpoint to validate password)
- *   - Static assets (_next, fonts, images, etc.)
- *   - Sentry / observability endpoints
+ * PUBLIC: everything else (homepage, /login, /api/auth/*, static assets).
  *
- * PROTECTED (password required):
- *   - /app/scan (the product)
- *   - /api/beta/scan (the scan API)
- *   - Any /app/* or /api/beta/* routes
- *
- * This is a temporary beta gate. Real per-user auth + payment
- * will replace it before public launch.
+ * The scan page itself (/) is public so visitors can see what PakkaScan is,
+ * but attempting a scan (POST /api/beta/scan) requires being signed in.
  */
 
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { getSessionFromRequest } from "@/lib/session";
 
-const ACCESS_COOKIE = "pakkascan_access";
-const PROTECTED_PATH_PREFIXES = ["/app", "/api/beta"];
-
-/**
- * The cookie stores a signed access token. We keep it simple:
- * the cookie value is a hash of the password. On every request,
- * we compute the current expected hash from the env var and compare.
- * If the env var password changes, all existing cookies invalidate.
- */
-function expectedCookieValue(): string | null {
-  const pw = process.env.SITE_ACCESS_PASSWORD;
-  if (!pw) return null;
-  // Simple obfuscation - not cryptographic security, just to avoid
-  // sending the raw password in the cookie value.
-  // Base64 of a fixed prefix + password. In production auth this would
-  // be a signed JWT or session token.
-  return Buffer.from("pk-" + pw).toString("base64");
-}
+const PROTECTED_PATH_PREFIXES = ["/api/beta"];
 
 function isProtected(pathname: string): boolean {
   for (const prefix of PROTECTED_PATH_PREFIXES) {
@@ -50,50 +22,34 @@ function isProtected(pathname: string): boolean {
   return false;
 }
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // If SITE_ACCESS_PASSWORD is not set (e.g. local dev), let everything through.
-  // This makes local dev not require the password.
-  const expected = expectedCookieValue();
-  if (!expected) {
-    return NextResponse.next();
-  }
-
-  // Not a protected route - let through.
   if (!isProtected(pathname)) {
     return NextResponse.next();
   }
 
-  // Protected route - check cookie
-  const cookieValue = request.cookies.get(ACCESS_COOKIE)?.value;
-  if (cookieValue === expected) {
+  const session = await getSessionFromRequest(request);
+  if (session) {
     return NextResponse.next();
   }
 
-  // Missing or invalid cookie
-  // For API routes, return 401 JSON instead of redirect
+  // Not signed in - block scan API
   if (pathname.startsWith("/api/")) {
     return NextResponse.json(
-      { error: "BETA_ACCESS_REQUIRED", message: "This endpoint requires beta access. Visit /access to enter your access code." },
+      { error: "NOT_SIGNED_IN", message: "Please sign in to use PakkaScan." },
       { status: 401 }
     );
   }
 
-  // For pages, redirect to /access with a return URL
-  const accessUrl = new URL("/access", request.url);
-  accessUrl.searchParams.set("returnTo", pathname);
-  return NextResponse.redirect(accessUrl);
+  // For pages (defensive - no protected pages currently), redirect to /login
+  const loginUrl = new URL("/login", request.url);
+  loginUrl.searchParams.set("returnTo", pathname);
+  return NextResponse.redirect(loginUrl);
 }
 
 export const config = {
   matcher: [
-    // Run on all routes EXCEPT:
-    // - _next static assets
-    // - _next/image (image optimization)
-    // - favicon.ico
-    // - manifest.json / sw.js
-    // - .well-known (Vercel/ACME challenges)
     "/((?!_next/static|_next/image|favicon.ico|manifest.json|sw.js|icon-192.png|.well-known).*)",
   ],
 };
