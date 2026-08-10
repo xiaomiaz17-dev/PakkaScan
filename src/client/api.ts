@@ -46,22 +46,58 @@ export async function apiFetch<T = unknown>(
   return { ok: true, status: response.status, data: payload as T };
 }
 
-export function publicErrorMessage(code: string): string {
-  const map: Record<string, string> = {
-    VALIDATION_FAILED: "Please check the form and try again.",
-    INVALID_CREDENTIALS: "Email or password is incorrect.",
-    EMAIL_ALREADY_REGISTERED: "An account with this email already exists.",
-    UNAUTHENTICATED: "Please sign in to continue.",
-    FORBIDDEN: "You do not have access to this resource.",
-    CSRF_FAILED: "Your session could not be verified. Refresh and try again.",
-    UPLOAD_TOO_LARGE: "That file is too large (max 15 MB).",
-    UNSUPPORTED_CONTENT_TYPE: "Upload a PDF, JPEG, PNG or text file.",
-    LIVE_OCR_REQUIRED: "This scan needs OCR before analysis can finish.",
-    NO_DOCUMENTS: "Upload at least one document before analysing.",
-    REPORT_NOT_READY: "The report is not ready yet.",
-    PASSPORT_NOT_READY: "The Property Passport is not ready yet.",
-    PROPERTY_NOT_FOUND: "Property not found.",
-    RATE_LIMITED: "Too many attempts. Please wait and try again.",
-  };
-  return map[code] ?? "Something went wrong. Please try again.";
+export function publicErrorMessage(errOrResult: unknown, fallback = "Something went wrong. Please try again."): string {
+  if (typeof errOrResult === "string") {
+    const map: Record<string, string> = {
+      VALIDATION_FAILED: "Please check the form and try again.",
+      INVALID_CREDENTIALS: "Email or password is incorrect.",
+      EMAIL_ALREADY_REGISTERED: "An account with this email already exists.",
+      UNAUTHENTICATED: "Please sign in to continue.",
+      FORBIDDEN: "You do not have access to this resource.",
+      CSRF_FAILED: "Your session could not be verified. Refresh and try again.",
+      UPLOAD_TOO_LARGE: "That file is too large (max 15 MB).",
+      UNSUPPORTED_CONTENT_TYPE: "Upload a PDF, JPEG, PNG or text file.",
+      LIVE_OCR_REQUIRED: "This scan needs OCR before analysis can finish.",
+      NO_DOCUMENTS: "Upload at least one document before analysing.",
+      REPORT_NOT_READY: "The report is not ready yet.",
+      PASSPORT_NOT_READY: "The Property Passport is not ready yet.",
+      PROPERTY_NOT_FOUND: "Property not found.",
+      RATE_LIMITED: "Too many attempts. Please wait and try again.",
+    };
+    if (map[errOrResult]) {
+      return map[errOrResult];
+    }
+  }
+
+  if (typeof errOrResult === "object" && errOrResult !== null) {
+    if ("error" in errOrResult && typeof (errOrResult as any).error === "string") {
+      const code = (errOrResult as any).error;
+      const map: Record<string, string> = {
+        VALIDATION_FAILED: "Please check the form and try again.",
+        INVALID_CREDENTIALS: "Email or password is incorrect.",
+        EMAIL_ALREADY_REGISTERED: "An account with this email already exists.",
+        UNAUTHENTICATED: "Please sign in to continue.",
+        FORBIDDEN: "You do not have access to this resource.",
+        CSRF_FAILED: "Your session could not be verified. Refresh and try again.",
+        UPLOAD_TOO_LARGE: "That file is too large (max 15 MB).",
+        UNSUPPORTED_CONTENT_TYPE: "Upload a PDF, JPEG, PNG or text file.",
+        LIVE_OCR_REQUIRED: "This scan needs OCR before analysis can finish.",
+        NO_DOCUMENTS: "Upload at least one document before analysing.",
+        REPORT_NOT_READY: "The report is not ready yet.",
+        PASSPORT_NOT_READY: "The Property Passport is not ready yet.",
+        PROPERTY_NOT_FOUND: "Property not found.",
+        RATE_LIMITED: "Too many attempts. Please wait and try again.",
+      };
+      if (map[code]) {
+        return map[code];
+      }
+      return code;
+    }
+  }
+
+  if (errOrResult instanceof Error) {
+    return errOrResult.message;
+  }
+
+  return fallback;
 }

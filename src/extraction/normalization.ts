@@ -54,10 +54,30 @@ export function normalizeDate(value: string): string {
   return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
 }
 
+/**
+ * Normalize monetary values.
+ * Converts "PKR 1,50,000", "Rs. 25000/-", "₨ 5,00,000 only" → "PKR 150000".
+ * Preserves currency (PKR or INR). Handles Urdu digits.
+ */
+export function normalizeAmount(value: string): string {
+  const urduDigits: Record<string, string> = {
+    "۰": "0", "۱": "1", "۲": "2", "۳": "3", "۴": "4",
+    "۵": "5", "۶": "6", "۷": "7", "۸": "8", "۹": "9",
+  };
+  const anglicised = value.replace(/[۰-۹]/g, (c) => urduDigits[c] || c);
+  const lower = normalizeWhitespace(anglicised).toLocaleLowerCase("en");
+  const currency = /inr|₹/.test(lower) ? "INR" : "PKR";
+  const digitsMatch = lower.match(/([\d,]+(?:\.\d{1,2})?)/);
+  if (!digitsMatch) return normalizeWhitespace(anglicised);
+  const numeric = digitsMatch[1].replace(/,/g, "");
+  return `${currency} ${numeric}`;
+}
+
 export function normalizeField(field: string, value: string): string {
   if (/identity|cnic|nicop/i.test(field)) return normalizeIdentityNumber(value);
-  if (/owner|seller|buyer|principal|attorney|mortgagor|mortgagee|name/i.test(field)) return normalizePersonName(value);
-  if (/khasra|property_reference/i.test(field)) return normalizePropertyReference(value);
+  if (/rent|deposit|consideration|token|advance|price|amount|loan|balance|stamp/i.test(field)) return normalizeAmount(value);
+  if (/owner|seller|buyer|principal|attorney|mortgagor|mortgagee|landlord|tenant|name/i.test(field)) return normalizePersonName(value);
+  if (/khasra|khewat|khatoni|khatooni|murabba|property_reference/i.test(field)) return normalizePropertyReference(value);
   if (/area/i.test(field)) return normalizeArea(value);
   if (/date|expiry|period_(start|end)/i.test(field)) return normalizeDate(value);
   if (/active|template_detected/i.test(field)) return normalizeBoolean(value);

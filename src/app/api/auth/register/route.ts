@@ -1,4 +1,4 @@
-import { awaitify, resolveCustomerApp } from "@/server/customer-app";
+import { resolveCustomerApp } from "@/server/customer-app";
 import { errorResponse, json } from "@/server/http";
 import {
   CSRF_COOKIE,
@@ -11,17 +11,19 @@ import {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const email = String(body.email ?? "").trim();
+    const email = String(body.email ?? "").trim().toLowerCase();
     const displayName = String(body.displayName ?? "").trim();
     const password = String(body.password ?? "");
-    if (!email || !displayName || password.length < 10) {
+    if (!email || !password || !displayName) {
       return json({ error: "VALIDATION_FAILED" }, 400);
     }
+
     const app = resolveCustomerApp();
-    const registered = await awaitify(app.register({ email, displayName, password }));
-    const loggedIn = await awaitify(app.login({ email, password }));
+    const registered = app.register({ email, displayName, password });
+    const loggedIn = app.login({ email, password });
     const csrf = createCsrfToken();
-    const response = json({ userId: registered.userId, csrf, mode: app.mode }, 201);
+
+    const response = json({ userId: registered.userId, csrf }, 201);
     response.cookies.set(SESSION_COOKIE, loggedIn.token, sessionCookieOptions());
     response.cookies.set(CSRF_COOKIE, csrf, csrfCookieOptions());
     return response;

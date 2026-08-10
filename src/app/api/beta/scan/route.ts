@@ -1,62 +1,440 @@
-import { NextResponse } from 'next/server';
-import { redactSensitiveText } from '@/utils/redaction';
+import { NextResponse } from "next/server";
+import { runOcr } from "@/intelligence/ocr-router";
+import { classifyFromText } from "@/intelligence/document-classifier";
+import { classifyDocument } from "@/ingestion/classifier";
+import { analyseDocument } from "@/pipeline/analyse-document";
+import { extractSmartFields } from "@/intelligence/llm-extractor";
+import { buildEvidence } from "@/evidence/builder";
+import { runPhase2Analysis } from "@/intelligence/phase2-pipeline";
+import { generateNextSteps, fallbackNextSteps } from "@/intelligence/next-steps-advisor";
+import { detectCompleteness } from "@/intelligence/completeness-detector";
+import { analyzeCrossDocuments, computeCombinedVerdict, type CrossDocResult } from "@/intelligence/cross-doc-analyzer";
+import { translateToUrdu } from "@/intelligence/urdu-translator";
+import { checkRateLimit, recordScan, extractClientIp, getGlobalSpendState } from "@/utils/rate-limiter";
+import type { Jurisdiction, DocumentType } from "@/domain/models";
+import { randomUUID } from "node:crypto";
+
+const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
+const ALLOWED_TYPES = new Set([
+  "application/pdf",
+  "image/png",
+  "image/jpeg",
+  "image/jpg",
+  "image/webp",
+  "image/tiff",
+  "text/plain",
+]);
+
+/**
+ * Choose the best classification by combining both classifiers.
+ * See Path A launch notes for rationale.
+ */
+function bestClassification(text: string) {
+  const [ingestionCandidate] = classifyDocument(text);
+  const intelligenceCandidate = classifyFromText(text);
+
+  const criticalTypes = new Set(["TENANCY_AGREEMENT", "AGREEMENT_TO_SELL"]);
+
+  if (criticalTypes.has(ingestionCandidate.documentType) && ingestionCandidate.confidence >= 0.2) {
+    return {
+      documentType: ingestionCandidate.documentType,
+      jurisdiction: ingestionCandidate.jurisdiction as Jurisdiction,
+      confidence: ingestionCandidate.confidence,
+      reasons: ingestionCandidate.reasons,
+    };
+  }
+  if (criticalTypes.has(intelligenceCandidate.documentType) && intelligenceCandidate.confidence >= 0.7) {
+    return {
+      documentType: intelligenceCandidate.documentType,
+      jurisdiction: "UNKNOWN" as Jurisdiction,
+      confidence: intelligenceCandidate.confidence,
+      reasons: intelligenceCandidate.matchedCues,
+    };
+  }
+  if (ingestionCandidate.confidence >= intelligenceCandidate.confidence) {
+    return {
+      documentType: ingestionCandidate.documentType,
+      jurisdiction: ingestionCandidate.jurisdiction as Jurisdiction,
+      confidence: ingestionCandidate.confidence,
+      reasons: ingestionCandidate.reasons,
+    };
+  }
+  return {
+    documentType: intelligenceCandidate.documentType,
+    jurisdiction: "UNKNOWN" as Jurisdiction,
+    confidence: intelligenceCandidate.confidence,
+    reasons: intelligenceCandidate.matchedCues,
+  };
+}
+
+/**
+ * Extract missing evidence strings from the phase2 output.
+ * Handles both string arrays and object arrays with {label, message, description}.
+ */
+function stringifyMissing(missing: any): string[] {
+  if (!missing) return [];
+  if (Array.isArray(missing)) {
+    return missing.map((m: any) => {
+      if (typeof m === "string") return m;
+      return m.label || m.message || m.description || m.field || m.documentType || m.type || m.code || JSON.stringify(m);
+    });
+  }
+  if (missing.missing && Array.isArray(missing.missing)) {
+    return stringifyMissing(missing.missing);
+  }
+  return [];
+}
+
+/**
+ * Extract finding strings from phase2 output.
+ */
+function stringifyFindings(findings: any): string[] {
+  if (!Array.isArray(findings)) return [];
+  return findings.map((f: any) => {
+    if (typeof f === "string") return f;
+    return f.message || f.description || f.label || f.code || JSON.stringify(f);
+  });
+}
 
 export async function POST(request: Request) {
   try {
-    const formData = await request.formData();
-    const files = formData.getAll('files') as File[];
-
-    if (!files || files.length === 0) {
-      return NextResponse.json({ error: 'No files provided' }, { status: 400 });
+    // Rate limit check - runs before any work
+    const clientIp = extractClientIp(request);
+    const limitCheck = checkRateLimit(clientIp);
+    if (!limitCheck.allowed) {
+      const statusCode = limitCheck.reason === "global_daily_cap" ? 503 : 429;
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (limitCheck.retryAfterSeconds) {
+        headers["Retry-After"] = String(limitCheck.retryAfterSeconds);
+      }
+      console.log("[beta/scan] Rate limited: " + limitCheck.reason + " (ip=" + clientIp + ")");
+      return new Response(
+        JSON.stringify({
+          error: limitCheck.reason.toUpperCase(),
+          message: limitCheck.message,
+          retryAfterSeconds: limitCheck.retryAfterSeconds,
+        }),
+        { status: statusCode, headers }
+      );
     }
 
-    // Example raw text containing potential PII that gets automatically redacted
-    const rawSummary = "Comprehensive Legal Due Diligence: Document reviewed for seller CNIC 42101-1234567-1 and contact 03001234567. Stamp paper duty verified successfully.";
-    const sanitizedSummary = redactSensitiveText(rawSummary);
+    // Log current global spend state periodically for visibility
+    const spendState = getGlobalSpendState();
+    if (spendState.scanCount > 0 && spendState.scanCount % 10 === 0) {
+      console.log("[beta/scan] Global spend today: " + spendState.scanCount + " scan(s), ~GBP " + spendState.estimatedSpendGbp + " / GBP " + spendState.capGbp);
+    }
 
-    const responseText = JSON.stringify({
-      status: "WARNING",
-      summary: sanitizedSummary,
-      riskScore: "Medium-High",
-      validations: {
-        cnicStatus: {
-          isValid: false,
-          message: "Seller CNIC format mismatch (Expected 13-digit standard pattern)."
+    const formData = await request.formData();
+    const files = formData.getAll("files") as File[];
+    const rawHints = formData.getAll("documentTypeHints");
+    const documentTypeHints: string[] = rawHints.map((h) => (typeof h === "string" ? h : ""));
+
+    if (!files || files.length === 0) {
+      return NextResponse.json({ error: "NO_DOCUMENTS" }, { status: 400 });
+    }
+
+    for (const file of files) {
+      if (!ALLOWED_TYPES.has(file.type)) {
+        return NextResponse.json({ error: "UNSUPPORTED_CONTENT_TYPE", details: file.type }, { status: 400 });
+      }
+      if (file.size > MAX_UPLOAD_BYTES) {
+        return NextResponse.json({ error: "UPLOAD_TOO_LARGE" }, { status: 413 });
+      }
+    }
+
+    console.log(`[beta/scan] Received ${files.length} file(s)`);
+
+    const perDocument: any[] = [];
+
+    for (const file of files) {
+      const documentId = randomUUID();
+      const buf = Buffer.from(await file.arrayBuffer());
+
+      console.log(`[beta/scan] OCR starting: ${file.name} (${file.type}, ${file.size} bytes)`);
+
+      const ocr = await runOcr([{ buf, mimeType: file.type }]);
+
+      console.log(
+        `[beta/scan] OCR complete: engine=${ocr.engineUsed}, ` +
+        `confidence=${ocr.confidence.toFixed(1)}%, language=${ocr.language}, ` +
+        `pages=${ocr.pageCount}, chars=${ocr.text.length}`
+      );
+
+      if (!ocr.text || ocr.text.trim().length < 20) {
+        perDocument.push({
+          documentId,
+          fileName: file.name,
+          status: "ocr_failed",
+          ocr,
+          error: "LIVE_OCR_REQUIRED",
+        });
+        continue;
+      }
+
+      // If user pre-tagged this file with a document type, use it directly.
+      // Otherwise fall back to auto-classification.
+      const userHint = documentTypeHints[files.indexOf(file)] || "";
+      let classification;
+      if (userHint) {
+        classification = {
+          documentType: userHint as DocumentType,
+          jurisdiction: "UNKNOWN" as Jurisdiction,
+          confidence: 1.0,
+          reasons: ["User-provided document type"],
+        };
+      } else {
+        classification = bestClassification(ocr.text);
+      }
+      console.log(
+        `[beta/scan] Classified: ${classification.documentType} ` +
+        `(${(classification.confidence * 100).toFixed(0)}%) - ${classification.jurisdiction}`
+      );
+
+      const analysed = analyseDocument({
+        documentId,
+        text: ocr.text,
+        jurisdictionHint: classification.jurisdiction,
+        documentTypeHint: classification.documentType,
+      });
+
+      console.log(
+        `[beta/scan] Extracted ${analysed.extracted.fields.length} field(s), ` +
+        `${analysed.evidence.length} evidence, ${analysed.observations.length} observation(s)`
+      );
+
+      const smartFields = await extractSmartFields(classification.documentType, ocr.text);
+
+      // Detect if this is a complete/partial/template document
+      const completeness = detectCompleteness(classification.documentType, smartFields);
+      console.log(
+        `[beta/scan] Completeness: ${completeness.status} (` +
+        `${completeness.criticalFieldsPresent}/${completeness.criticalFieldsTotal} critical fields)`
+      );
+
+      perDocument.push({
+        documentId,
+        fileName: file.name,
+        status: "ok",
+        smartFields,
+        completeness,
+        ocr: {
+          engineUsed: ocr.engineUsed,
+          confidence: ocr.confidence,
+          language: ocr.language,
+          pageCount: ocr.pageCount,
+          charCount: ocr.text.length,
         },
-        stampPaperStatus: {
-          isValid: true,
-          message: "Stamp paper duty meets minimum provincial valuation thresholds."
-        }
-      },
-      findings: [
-        {
-          category: "Bayana (Advance Payment)",
-          severity: "High",
-          detail: "The advance payment clause requests 25% upfront, which exceeds standard market practice of 10-15% in this jurisdiction.",
-          evidence: "Section 3, Paragraph 2: '...buyer shall deposit 25% earnest money...'"
+        classification: {
+          documentType: classification.documentType,
+          jurisdiction: classification.jurisdiction,
+          confidence: classification.confidence,
+          reasons: classification.reasons,
         },
-        {
-          category: "Title Verification",
-          severity: "Medium",
-          detail: "Mutation (Intikal) records referenced in the text do not explicitly name the current seller as the sole recorded owner.",
-          evidence: "Section 1, Clause 4: '...property currently registered under previous title deed...'"
+        extracted: {
+          schemaVersion: analysed.extracted.schemaVersion,
+          fields: analysed.extracted.fields,
+          warnings: analysed.extracted.warnings,
+        },
+        observations: analysed.observations,
+      });
+    }
+
+    const combinedEvidence = perDocument
+      .filter((d) => d.status === "ok")
+      .flatMap((d) =>
+        buildEvidenceFromExtracted(d.documentId, d.extracted!.fields, d.classification!.documentType)
+      );
+
+    const firstJurisdiction =
+      (perDocument.find((d) => d.status === "ok")?.classification?.jurisdiction as Jurisdiction) ||
+      ("UNKNOWN" as Jurisdiction);
+
+    let phase2: ReturnType<typeof runPhase2Analysis> | null = null;
+    let nextSteps: any[] = [];
+
+    if (combinedEvidence.length > 0) {
+      phase2 = runPhase2Analysis({
+        evidence: combinedEvidence,
+        jurisdiction: firstJurisdiction,
+        rawTextHint: perDocument.find((d) => d.status === "ok")?.ocr && "text_present",
+      });
+      console.log(
+        `[beta/scan] Phase 2: verdict=${phase2.analysis.decision}, ` +
+        `posture=${phase2.posture}, findings=${phase2.analysis.findings.length}, ` +
+        `missing=${phase2.missingEvidence?.missing?.length ?? 0}`
+      );
+
+      // Generate personalized next-steps via LLM advisor.
+      // Uses the first successful document's smart fields for context.
+      const firstOk = perDocument.find((d) => d.status === "ok");
+      if (firstOk && firstOk.smartFields && !firstOk.smartFields.extractionError) {
+        try {
+          const missingStrings = stringifyMissing(phase2.missingEvidence);
+          const findingsStrings = stringifyFindings(phase2.analysis.findings);
+          const advisorResult = await generateNextSteps({
+            documentType: firstOk.classification.documentType,
+            verdict: phase2.analysis.decision,
+            pakkaScore: phase2.analysis.pakkaScore ?? 0,
+            extractedFacts: firstOk.smartFields,
+            missingEvidence: missingStrings,
+            findings: findingsStrings,
+          });
+
+          if (advisorResult.steps.length > 0) {
+            nextSteps = advisorResult.steps;
+            console.log(`[beta/scan] Next-steps: ${advisorResult.steps.length} step(s) via ${advisorResult.model}`);
+          } else {
+            console.warn(`[beta/scan] Next-steps advisor returned no steps: ${advisorResult.error}. Using fallback.`);
+            nextSteps = fallbackNextSteps(missingStrings, findingsStrings);
+          }
+        } catch (err: any) {
+          console.warn(`[beta/scan] Next-steps advisor threw:`, err?.message || err);
+          nextSteps = fallbackNextSteps(
+            stringifyMissing(phase2.missingEvidence),
+            stringifyFindings(phase2.analysis.findings)
+          );
         }
-      ],
-      recommendations: [
-        "Do not release bayana funds until Patwari verifies ownership records at the Tehsil office.",
-        "Request correct 13-digit CNIC documentation from the seller before proceeding."
-      ]
-    }, null, 2);
+      }
+    }
+
+    // Multi-document cross-check analysis (only runs if 2+ documents successfully processed)
+    let crossDoc: CrossDocResult | null = null;
+    let combinedVerdict: { verdict: string; posture: string; reasoning: string } | null = null;
+
+    const successfulDocs = perDocument.filter((d) => d.status === "ok" && d.smartFields && !d.smartFields.extractionError);
+
+    if (successfulDocs.length >= 2) {
+      try {
+        crossDoc = await analyzeCrossDocuments(
+          successfulDocs.map((d) => ({
+            fileName: d.fileName,
+            documentType: d.classification?.documentType || "UNKNOWN",
+            smartFields: d.smartFields,
+          }))
+        );
+        console.log(
+          `[beta/scan] Cross-doc: ${crossDoc.crossChecks.length} check(s), ` +
+          `critical mismatch: ${crossDoc.hasCriticalMismatch}`
+        );
+      } catch (err: any) {
+        console.warn("[beta/scan] Cross-doc analysis threw:", err?.message || err);
+        crossDoc = {
+          crossChecks: [],
+          overallAssessment: "Cross-document analysis could not complete.",
+          hasCriticalMismatch: false,
+          error: err?.message || "unknown error",
+        };
+      }
+
+      // Compute safety-first combined verdict
+      const perDocVerdicts: string[] = [];
+      if (phase2?.analysis?.decision) perDocVerdicts.push(phase2.analysis.decision);
+      // Also consider each individual document's completeness status as a signal
+      for (const d of successfulDocs) {
+        if (d.completeness?.status === "template") perDocVerdicts.push("PROCEED_WITH_CAUTION");
+      }
+      combinedVerdict = computeCombinedVerdict(perDocVerdicts, crossDoc.hasCriticalMismatch);
+      console.log(
+        `[beta/scan] Combined verdict: ${combinedVerdict.verdict} - ${combinedVerdict.reasoning}`
+      );
+    }
+
+    // Level 1 Urdu translation.
+    // Collect all user-facing English strings and translate them in ONE batched LLM call.
+    // Attach the translations map to the response so the UI can render bilingual text.
+    const translationInputs: Record<string, string> = {};
+
+    // 1. Verdict headline (single-doc)
+    if (phase2?.analysis?.decision) {
+      const verdictHeadline = (() => {
+        const v = phase2.analysis.decision as string;
+        const p = phase2.posture as string;
+        if (v === "PROCEED" || p === "CLEAR") return "This document looks safe to move forward with.";
+        if (v === "DO_NOT_PROCEED" || v === "STOP" || v === "BLOCKED" || v === "REJECT" || p === "STOP" || p === "BLOCKED") return "Serious issues found. Do not release money or sign.";
+        return "Some evidence is missing. See What To Do Next.";
+      })();
+      translationInputs["verdictHeadline"] = verdictHeadline;
+    }
+
+    // 2. Combined verdict reasoning (multi-doc)
+    if (combinedVerdict?.reasoning) {
+      translationInputs["combinedReasoning"] = combinedVerdict.reasoning;
+    }
+
+    // 3. Cross-doc overall assessment (multi-doc)
+    if (crossDoc?.overallAssessment) {
+      translationInputs["crossDocAssessment"] = crossDoc.overallAssessment;
+    }
+
+    // 4. Per-document AI summaries (first doc gets a stable key; more docs get numbered keys)
+    perDocument.forEach((d, i) => {
+      if (d.status === "ok" && d.smartFields?.summary) {
+        translationInputs["docSummary_" + i] = d.smartFields.summary;
+      }
+    });
+
+    // 5. Next-step titles + details (LLM-generated action items)
+    nextSteps.forEach((step: any, i: number) => {
+      if (step?.title) translationInputs["nextStepTitle_" + i] = step.title;
+      if (step?.detail) translationInputs["nextStepDetail_" + i] = step.detail;
+    });
+
+    let urduTranslations: Record<string, string> = {};
+    if (Object.keys(translationInputs).length > 0) {
+      try {
+        urduTranslations = await translateToUrdu(translationInputs);
+        console.log(`[beta/scan] Urdu: translated ${Object.keys(urduTranslations).length}/${Object.keys(translationInputs).length} string(s)`);
+      } catch (err: any) {
+        console.warn("[beta/scan] Urdu translation threw:", err?.message || err);
+      }
+    }
+
+    // Record scan for rate limit tracking (regardless of outcome)
+    recordScan(clientIp);
 
     return NextResponse.json({
       success: true,
-      analysis: responseText,
+      documents: perDocument,
+      crossDoc,
+      combinedVerdict,
+      urduTranslations,
+      phase2: phase2 && {
+        classification: phase2.classification,
+        observations: phase2.observations,
+        result: phase2.analysis,
+        explanations: phase2.explanations,
+        posture: phase2.posture,
+        missingEvidence: phase2.missingEvidence,
+        tenancyJurisdiction: phase2.tenancyJurisdiction,
+        propertyJurisdiction: phase2.propertyJurisdiction,
+        assistant: {
+          allowed: phase2.assistant.allowed,
+          text: phase2.assistant.text,
+          citations: phase2.assistant.citations,
+          declinedReason: phase2.assistant.declinedReason,
+        },
+        nextSteps,
+      },
     });
   } catch (error: any) {
-    console.error('Scan error:', error);
+    console.error("[beta/scan] Error:", error);
     return NextResponse.json(
-      { error: error.message || 'Internal Server Error' },
+      {
+        error: "INTERNAL_ERROR",
+        details: process.env.NODE_ENV === "development" ? String(error?.message || error) : undefined,
+      },
       { status: 500 }
     );
   }
+}
+
+function buildEvidenceFromExtracted(documentId: string, fields: any[], documentType: any) {
+  return buildEvidence({
+    documentId,
+    documentType,
+    jurisdiction: "UNKNOWN" as Jurisdiction,
+    schemaVersion: "1.0.0",
+    fields,
+    warnings: [],
+  }) as any;
 }

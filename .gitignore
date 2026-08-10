@@ -4,3 +4,16 @@ out/
 .DS_Store
 *.pem
 .env*.local
+
+# Real user documents - never commit
+fixtures/documents/real-samples/
+
+# TypeScript build cache
+tsconfig.tsbuildinfo
+
+# Diagnostic scripts (local dev only)
+scripts/
+
+# Sentry auth (never commit)
+.sentryclirc
+

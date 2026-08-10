@@ -1,5 +1,8 @@
 import type { ExtractionContext, ExtractedDocument, RawField } from "./types";
 import { SCHEMA_REGISTRY } from "./schema-registry";
+import { extractUniversalFields } from "./universal-extractors";
+import { extractTenancyFields } from "./tenancy-extractor";
+import { extractBayanaFields } from "./bayana-extractor";
 
 const lineValue = (text: string, labels: string[]): string | undefined => {
   for (const label of labels) {
@@ -14,6 +17,33 @@ const regexField = (text: string, regex: RegExp): string | undefined => text.mat
 
 function field(field: string, value: string | undefined, confidence = 0.94): RawField | null {
   return value ? { field, value, confidence, page: 1, rawText: value } : null;
+}
+
+/**
+ * Merge two field arrays. When the same field name appears in both,
+ * keep the one with higher confidence. Preserves audit-only fields
+ * (e.g. amount_mention_1, amount_mention_2) always.
+ */
+function mergeFields(schemaFields: RawField[], universalFields: RawField[]): RawField[] {
+  const byName = new Map<string, RawField>();
+
+  for (const f of schemaFields) {
+    byName.set(f.field, f);
+  }
+
+  for (const f of universalFields) {
+    // Always append audit-only mentions
+    if (f.field.startsWith("amount_mention_")) {
+      byName.set(f.field, f);
+      continue;
+    }
+    const existing = byName.get(f.field);
+    if (!existing || f.confidence > existing.confidence) {
+      byName.set(f.field, f);
+    }
+  }
+
+  return [...byName.values()];
 }
 
 export function extractDocument(context: ExtractionContext): ExtractedDocument {
@@ -102,16 +132,28 @@ export function extractDocument(context: ExtractionContext): ExtractedDocument {
         field("document_state", /\[(vendor name|plot no|amount in figures)\]/i.test(text) ? "blank_template" : undefined, 0.99),
       );
       break;
+    case "TENANCY_AGREEMENT":
+    case "LEASE_DEED":
+      fields.push(...extractTenancyFields(text));
+      break;
+    case "AGREEMENT_TO_SELL":
+      fields.push(...extractBayanaFields(text));
+      break;
     default:
       break;
   }
 
-  const clean = fields.filter((item): item is RawField => item !== null);
+  const schemaFields = fields.filter((item): item is RawField => item !== null);
+
+  // Layer 2: universal extractors run on EVERY document regardless of type
+  const universalFields = extractUniversalFields(text);
+  const merged = mergeFields(schemaFields, universalFields);
+
   const warnings: string[] = [];
   if (!schema) warnings.push(`No extraction schema registered for ${context.documentType}.`);
   else {
     for (const critical of schema.criticalFields) {
-      if (!clean.some((item) => item.field === critical)) warnings.push(`Missing critical field: ${critical}`);
+      if (!merged.some((item) => item.field === critical)) warnings.push(`Missing critical field: ${critical}`);
     }
   }
 
@@ -120,7 +162,7 @@ export function extractDocument(context: ExtractionContext): ExtractedDocument {
     documentType: context.documentType,
     jurisdiction: context.jurisdiction,
     schemaVersion: schema?.version ?? "0.0.0",
-    fields: clean,
+    fields: merged,
     warnings,
   };
 }

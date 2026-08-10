@@ -24,7 +24,7 @@ export default function ClientDashboard() {
           router.replace("/login");
           return;
         }
-        setError(publicErrorMessage(result, "Failed to load properties"));
+        setError(publicErrorMessage(result));
         return;
       }
       setProperties(result.data.properties || []);

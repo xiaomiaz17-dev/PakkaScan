@@ -7,11 +7,11 @@
     "build": "next build --webpack",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "beta:api": "rm -rf dist-core && tsc -p tsconfig.core.json && node dist-core/src/runtime/http-server.js",
-    "test:core": "rm -rf dist-core && tsc -p tsconfig.core.json && node --test --test-force-exit dist-core/tests-core/*.test.js",
+    "beta:api": "rm -rf dist-core && tsc -p tsconfig.core.json && node dist-core/src/runtime/http-startup.js",
+    "test:core": "rm -rf dist-core && tsc -p tsconfig.core.json && node --test --test-force-exit dist-core/src/**/*.test.js",
     "worker": "rm -rf dist-core && tsc -p tsconfig.core.json && node dist-core/src/runtime/job-worker.js",
-    "worker:supervised": "rm -rf dist-core && tsc -p tsconfig.core.json && node dist-core/src/runtime/supervised-worker.js",
-    "migrate": "rm -rf dist-core && tsc -p tsconfig.core.json && node -e \"console.log('Set PAKKADEED_ENABLE_REAL_POSTGRES=1 and DATABASE_URL then use applyBootstrapMigration via bootstrap')\"",
+    "worker:supervised": "rm -rf dist-core && tsc -p tsconfig.core.json && node dist-core/src/runtime/job-worker-supervised.js",
+    "migrate": "rm -rf dist-core && tsc -p tsconfig.core.json && node -e \"console.log('Set PAKKADEED_MIGRATE=true')\"",
     "migrate:sql": "node dist-core/src/storage/migrate-cli.js",
     "staging:minio-init": "node dist-core/src/deployment/minio-init.js",
     "start:api": "node dist-core/src/runtime/startup-api.js",
@@ -20,30 +20,35 @@
     "build:docker:worker": "docker build -f Dockerfile.worker -t pakkadeed-worker:pd035 .",
     "start": "next start"
   },
+  "vitest": {
+    "globals": true
+  },
   "dependencies": {
-    "@google/genai": "^2.15.0",
+    "@google/genai": "^0.15.0",
     "@google/generative-ai": "^0.24.1",
-    "@prisma/client": "^6.14.0",
-    "browser-image-compression": "^2.0.2",
-    "next": "^16.0.0",
-    "pdf-parse": "^1.1.1",
-    "pg": "^8.16.0",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "sharp": "^0.34.5",
-    "tesseract.js": "^5.1.1",
-    "tesseract.js-core": "^6.1.2",
-    "zod": "^4.0.0"
+    "@libsql/client": "^0.17.4",
+    "@sentry/nextjs": "^10.69.0",
+    "drizzle-orm": "^0.45.2",
+    "next": "^16.3.0",
+    "pdf-to-img": "^5.0.0",
+    "pdfjs-dist": "^5.4.624",
+    "pg": "^8.22.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "sharp": "^0.35.3",
+    "tesseract.js": "^7.0.0",
+    "unpdf": "^1.7.0",
+    "uuid": "^14.0.1",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@types/node": "^22.0.0",
-    "@types/pg": "^8.15.0",
-    "@types/react": "^19.0.0",
-    "prisma": "^6.14.0",
-    "typescript": "^5.9.0",
-    "vitest": "^3.2.0"
-  },
-  "engines": {
-    "node": ">=20"
+    "@types/node": "26.1.2",
+    "@types/pg": "^8.20.4",
+    "@types/react": "19.2.18",
+    "@types/uuid": "^10.0.0",
+    "@vitest/ui": "^4.1.10",
+    "dotenv": "^17.4.2",
+    "typescript": "7.0.2",
+    "vitest": "^4.1.10"
   }
 }

@@ -24,10 +24,14 @@ export function redactEmail(text: string): string {
   return text.replace(emailRegex, '[REDACTED_EMAIL]');
 }
 
+/**
+ * Applies all PII redaction rules in sequence.
+ * Order matters: CNIC first (most specific), then phone, then email.
+ */
 export function redactSensitiveText(text: string): string {
   if (!text) return '';
   let processed = redactCNIC(text);
   processed = redactPhone(processed);
-  processed = redactSensitiveText(processed); // recursive or chained
-  return redactEmail(processed);
+  processed = redactEmail(processed);
+  return processed;
 }

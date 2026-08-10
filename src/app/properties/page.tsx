@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { AppShell } from "@/components/AppShell";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiFetch, publicErrorMessage } from "@/client/api";

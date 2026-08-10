@@ -1,21 +1,19 @@
+import { expect, test, describe } from 'vitest';
 import { validateCNIC, validateStampPaper } from '../validation';
 import { redactCNIC, redactPhone, redactEmail, redactSensitiveText } from '../redaction';
 
 describe('PakkaScan Compliance & Redaction Utility Tests', () => {
-  
+
   test('validateCNIC checks correct and incorrect formats', () => {
-    // Valid formats
     expect(validateCNIC('42101-1234567-1').isValid).toBe(true);
     expect(validateCNIC('4210112345671').isValid).toBe(true);
 
-    // Invalid formats
     expect(validateCNIC('42101-123456-1').isValid).toBe(false);
     expect(validateCNIC('abc-1234567-1').isValid).toBe(false);
     expect(validateCNIC('').isValid).toBe(false);
   });
 
   test('validateStampPaper checks duty thresholds correctly', () => {
-    // Property value: 10,000,000 -> Expected min 1% = 100,000
     expect(validateStampPaper(120000, 10000000).isValid).toBe(true);
     expect(validateStampPaper(50000, 10000000).isValid).toBe(false);
   });

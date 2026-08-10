@@ -8,14 +8,25 @@ export function generateStaticParams() {
   return HELP_ARTICLES.map((a) => ({ slug: a.slug }));
 }
 
-export function generateMetadata({ params }: { params: { slug: string } }): Metadata {
-  const article = getHelpArticle(params.slug);
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const article = getHelpArticle(slug);
   return { title: article?.title ?? "Help", description: article?.summary };
 }
 
-export default function HelpArticlePage({ params }: { params: { slug: string } }) {
-  const article = getHelpArticle(params.slug);
+export default async function HelpArticlePage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const article = getHelpArticle(slug);
   if (!article) notFound();
+  
   return (
     <MarketingShell>
       <div className="shell prose">
