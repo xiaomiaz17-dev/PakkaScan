@@ -1,0 +1,101 @@
+/* ============================================================
+   PakkaScan Global Styles
+   Mobile-first responsive overrides for all pages.
+   ============================================================ */
+
+/* Smooth scrolling for anchor links */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Anchor targets clear the sticky nav bar */
+section[id] {
+  scroll-margin-top: 80px;
+}
+
+/* ============================================================
+   MOBILE BREAKPOINT: 768px and below
+   ============================================================ */
+@media (max-width: 768px) {
+
+  /* ---- Navigation ---- */
+  /* Hide desktop nav links, show hamburger button */
+  .pks-nav-links {
+    display: none !important;
+  }
+  .pks-mobile-menu-btn {
+    display: inline-block !important;
+  }
+  .pks-mobile-menu {
+    display: block !important;
+  }
+
+  /* ---- Hero Section ---- */
+  .pks-hero-h1 {
+    font-size: 28px !important;
+    line-height: 1.2 !important;
+  }
+  .pks-hero-tagline {
+    font-size: 14px !important;
+  }
+
+  /* ---- CTA Buttons ---- */
+  .pks-hero-ctas {
+    flex-direction: column !important;
+    width: 100% !important;
+  }
+  .pks-hero-ctas > a {
+    width: 100% !important;
+    text-align: center !important;
+    box-sizing: border-box !important;
+  }
+
+  /* ---- Grid Layouts: force single column ---- */
+  .pks-trust-grid,
+  .pks-how-grid,
+  .pks-price-grid,
+  .pks-facts-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ============================================================
+   SMALL MOBILE: 480px and below
+   ============================================================ */
+@media (max-width: 480px) {
+
+  .pks-hero-h1 {
+    font-size: 24px !important;
+  }
+
+  .pks-hero-tagline {
+    font-size: 13px !important;
+  }
+}
+
+/* ============================================================
+   GLOBAL UTILITY: grids in supporting pages
+   These pages use inline styles with grid layouts.
+   We add classes via the pages themselves, but also target
+   common inline grid patterns for safety.
+   ============================================================ */
+@media (max-width: 768px) {
+
+  /* Footer columns */
+  footer > div > div:first-child {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* About page core principles, pricing cards, etc. */
+  div[style*="gridTemplateColumns"][style*="repeat(3"] {
+    grid-template-columns: 1fr !important;
+  }
+  div[style*="gridTemplateColumns"][style*="repeat(auto-fit"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Pricing card min-width override */
+  div[style*="minmax(300px"] {
+    grid-template-columns: 1fr !important;
+  }
+}

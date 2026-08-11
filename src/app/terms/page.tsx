@@ -1,5 +1,6 @@
 import { Fraunces } from "next/font/google";
 import Link from "next/link";
+import NavBar from "@/components/NavBar";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -23,26 +24,7 @@ const strongStyle: React.CSSProperties = { color: "#0f172a", fontWeight: 700 };
 export default function TermsPage() {
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#ffffff", fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
-      <div style={{ position: "sticky", top: 0, zIndex: 50, backgroundColor: "rgba(11, 19, 43, 0.95)", backdropFilter: "blur(10px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-        <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "10px" }}>
-            <div style={{ width: "32px", height: "32px", borderRadius: "50%", backgroundColor: "#0b132b", border: "2px solid #ffffff", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <svg width="18" height="18" style={{ color: "#ffffff" }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-              </svg>
-            </div>
-            <div className={fraunces.className} style={{ fontSize: "20px", fontWeight: 900, color: "#ffffff", letterSpacing: "-0.02em" }}>
-              Pakka<span style={{ color: "#16a34a", fontStyle: "italic" }}>Scan</span>
-            </div>
-          </Link>
-          <nav style={{ display: "flex", alignItems: "center", gap: "24px" }}>
-            <Link href="/pricing" style={{ color: "#cbd5e1", fontSize: "14px", fontWeight: 600, textDecoration: "none" }}>Pricing</Link>
-            <Link href="/about" style={{ color: "#cbd5e1", fontSize: "14px", fontWeight: 600, textDecoration: "none" }}>About</Link>
-            <Link href="/faq" style={{ color: "#cbd5e1", fontSize: "14px", fontWeight: 600, textDecoration: "none" }}>FAQ</Link>
-            <Link href="/contact" style={{ color: "#cbd5e1", fontSize: "14px", fontWeight: 600, textDecoration: "none" }}>Contact</Link>
-          </nav>
-        </div>
-      </div>
+      <NavBar />
 
       <section style={{ padding: "64px 24px 80px 24px" }}>
         <div style={{ maxWidth: "760px", margin: "0 auto" }}>

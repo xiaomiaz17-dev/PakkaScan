@@ -1,5 +1,6 @@
 import { Fraunces } from "next/font/google";
 import Link from "next/link";
+import NavBar from "@/components/NavBar";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -21,27 +22,7 @@ export default function AboutPage() {
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#ffffff", fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
       {/* Simple nav bar */}
-      <div style={{ position: "sticky", top: 0, zIndex: 50, backgroundColor: "rgba(11, 19, 43, 0.95)", backdropFilter: "blur(10px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-        <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "10px" }}>
-            <div style={{ width: "32px", height: "32px", borderRadius: "50%", backgroundColor: "#0b132b", border: "2px solid #ffffff", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <svg width="18" height="18" style={{ color: "#ffffff" }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-              </svg>
-            </div>
-            <div className={fraunces.className} style={{ fontSize: "20px", fontWeight: 900, color: "#ffffff", letterSpacing: "-0.02em" }}>
-              Pakka<span style={{ color: "#16a34a", fontStyle: "italic" }}>Scan</span>
-            </div>
-          </Link>
-          <nav style={{ display: "flex", alignItems: "center", gap: "24px" }}>
-            <Link href="/#how-it-works" style={navLinkStyle}>How it Works</Link>
-            <Link href="/pricing" style={navLinkStyle}>Pricing</Link>
-            <Link href="/faq" style={navLinkStyle}>FAQ</Link>
-            <Link href="/contact" style={navLinkStyle}>Contact</Link>
-            <Link href="/scan" style={{ display: "inline-flex", alignItems: "center", padding: "8px 18px", backgroundColor: "#16a34a", color: "#ffffff", borderRadius: "8px", fontSize: "13px", fontWeight: 700, textDecoration: "none" }}>Try It</Link>
-          </nav>
-        </div>
-      </div>
+      <NavBar currentPage="About" />
 
       {/* Hero */}
       <section style={{ backgroundColor: "#0b132b", color: "#ffffff", padding: "64px 24px 48px 24px", textAlign: "center" }}>
