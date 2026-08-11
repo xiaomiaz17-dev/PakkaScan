@@ -5,6 +5,18 @@ import Script from 'next/script';
 export const metadata: Metadata = {
   title: 'PakkaScan',
   description: 'AI-powered legal due diligence for Pakistani property',
+  openGraph: {
+    title: 'PakkaScan ' + String.fromCharCode(0x2014) + ' AI Legal Due Diligence for Pakistani Property',
+    description: "Don't hand over bayana until PakkaScan has read the fine print you didn't.",
+    url: 'https://pakkascan.com',
+    siteName: 'PakkaScan',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'PakkaScan',
+    description: "Don't hand over bayana until PakkaScan has read the fine print you didn't.",
+  },
   manifest: '/manifest.json',
 };
 

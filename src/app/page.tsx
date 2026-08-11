@@ -196,7 +196,7 @@ export default function LandingPage() {
 
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#ffffff", fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
-      <style>{"@media (max-width: 768px) { .pks-nav-links { display: none !important; } .pks-mobile-menu-btn { display: inline-block !important; } .pks-mobile-menu { display: block !important; } .pks-hero-h1 { font-size: 32px !important; } .pks-hero-tagline { font-size: 15px !important; } .pks-hero-ctas { flex-direction: column !important; width: 100% !important; } .pks-hero-ctas > a { width: 100% !important; text-align: center !important; } .pks-price-grid { grid-template-columns: 1fr !important; } .pks-how-grid { grid-template-columns: 1fr !important; } .pks-trust-grid { grid-template-columns: 1fr !important; } }"}</style>
+      <style>{" section[id] { scroll-margin-top: 80px; }@media (max-width: 768px) { .pks-nav-links { display: none !important; } .pks-mobile-menu-btn { display: inline-block !important; } .pks-mobile-menu { display: block !important; } .pks-hero-h1 { font-size: 32px !important; } .pks-hero-tagline { font-size: 15px !important; } .pks-hero-ctas { flex-direction: column !important; width: 100% !important; } .pks-hero-ctas > a { width: 100% !important; text-align: center !important; } .pks-price-grid { grid-template-columns: 1fr !important; } .pks-how-grid { grid-template-columns: 1fr !important; } .pks-trust-grid { grid-template-columns: 1fr !important; } }"}</style>
 
       <NavBar sessionUser={sessionUser} sessionLoaded={sessionLoaded} onSignOut={handleSignOut} />
 
@@ -299,7 +299,7 @@ export default function LandingPage() {
                     </li>
                   ))}
                 </ul>
-                <a href="/scan" style={{ display: "block", padding: "12px 20px", backgroundColor: tier.highlight ? "#16a34a" : "#0b132b", color: "#ffffff", fontWeight: 700, fontSize: "14px", borderRadius: "10px", textDecoration: "none", textAlign: "center" }}>Try This Scan</a>
+                <a href="/scan" style={{ display: "block", padding: "12px 20px", backgroundColor: tier.highlight ? "#16a34a" : "#0b132b", color: "#ffffff", fontWeight: 700, fontSize: "14px", borderRadius: "10px", textDecoration: "none", textAlign: "center" }}>Scan Free in Beta</a>
               </div>
             ))}
           </div>
@@ -315,12 +315,13 @@ export default function LandingPage() {
       <section style={{ padding: "64px 24px", backgroundColor: "#ffffff" }}>
         <div style={{ maxWidth: "1000px", margin: "0 auto", textAlign: "center" }}>
           <h2 style={{ fontSize: "24px", fontWeight: 800, color: "#0f172a", margin: "0 0 12px 0", letterSpacing: "-0.02em" }}>What We Scan</h2>
-          <p style={{ fontSize: "14px", color: "#64748b", margin: "0 0 32px 0" }}>All Pakistani property documents supported. Auto-detected -- no need to sort first.</p>
+          <p style={{ fontSize: "14px", color: "#64748b", margin: "0 0 32px 0" }}>All Pakistani property documents supported. Auto-detected — no need to sort first.</p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", justifyContent: "center" }}>
             {["Bayana / Agreement to Sell", "Registered Sale Deed", "Tenancy Agreement", "CNIC / NICOP / POC", "Fard (Ownership)", "Mutation (Sale)", "Mutation (Gift)", "Mutation (Mortgage)", "Mutation (Inheritance)", "Power of Attorney", "Gift Deed (Hiba)", "Non-Encumbrance Certificate"].map((doc, i) => (
               <div key={i} style={{ padding: "10px 16px", backgroundColor: "#f0fdf4", color: "#166534", fontSize: "13px", fontWeight: 600, border: "1px solid #bbf7d0", borderRadius: "8px" }}>{doc}</div>
             ))}
           </div>
+          <p style={{ fontSize: "13px", color: "#64748b", marginTop: "20px" }}>Have a different document? Upload it anyway — our auto-detection engine will parse and highlight key terms.</p>
         </div>
       </section>
 

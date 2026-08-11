@@ -149,7 +149,7 @@ export default function PricingPage() {
                 <div style={{ fontSize: "12px", color: "#334155", lineHeight: 1.5 }}>{tier.idealFor}</div>
               </div>
 
-              <Link href="/scan" style={{ display: "block", padding: "12px 20px", backgroundColor: tier.highlight ? "#16a34a" : "#0b132b", color: "#ffffff", fontWeight: 700, fontSize: "14px", borderRadius: "10px", textDecoration: "none", textAlign: "center" }}>Try This Scan</Link>
+              <Link href="/scan" style={{ display: "block", padding: "12px 20px", backgroundColor: tier.highlight ? "#16a34a" : "#0b132b", color: "#ffffff", fontWeight: 700, fontSize: "14px", borderRadius: "10px", textDecoration: "none", textAlign: "center" }}>Scan Free in Beta</Link>
             </div>
           ))}
         </div>

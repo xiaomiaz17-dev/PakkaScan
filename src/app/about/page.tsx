@@ -86,8 +86,38 @@ export default function AboutPage() {
             </div>
 
             <p style={{ margin: "0 0 32px 0" }}>
-              No jargon. No wait. No middleman. Just an honest second opinion before you hand over any money.
-            </p>
+              No jargon. No wait. No middleman. Just an honest second opinion before you hand over any money.</p>
+
+            {/* Core Principles Strip */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px", margin: "32px 0" }}>
+              {[
+                { badge: "EN—UR", title: "Bilingual Integrity", desc: "Full English and Urdu (Nastaliq) extraction on every report." },
+                { badge: "AI", title: "Anti-Hallucination", desc: "CNICs cross-checked character-by-character against the source document." },
+                { badge: "0", title: "Zero Retention", desc: "Document files processed in memory only and never stored to disk." },
+              ].map((item, i) => (
+                <div key={i} style={{ textAlign: "center", padding: "16px" }}>
+                  <div style={{ display: "inline-block", padding: "6px 14px", backgroundColor: "#0b132b", color: "#ffffff", fontSize: "12px", fontWeight: 900, borderRadius: "8px", letterSpacing: "0.05em", marginBottom: "10px" }}>{item.badge}</div>
+                  <div style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a", marginBottom: "6px" }}>{item.title}</div>
+                  <div style={{ fontSize: "12px", color: "#64748b", lineHeight: 1.5 }}>{item.desc}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Founder Quote */}
+            <div style={{ backgroundColor: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "24px", margin: "32px 0", textAlign: "center" }}>
+              <p style={{ fontSize: "17px", color: "#0f172a", fontStyle: "italic", lineHeight: 1.6, margin: "0 0 12px 0" }}>
+                &ldquo;We built PakkaScan because remote property buying should not feel like a leap of faith. Clarity is the ultimate safety net.&rdquo;
+              </p>
+              <p style={{ fontSize: "13px", color: "#64748b", fontWeight: 700, margin: 0 }}>— Founder, PakkaScan</p>
+            </div>
+
+            {/* Our Role callout */}
+            <div style={{ backgroundColor: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: "12px", padding: "20px 24px", margin: "16px 0 32px 0" }}>
+              <div style={{ fontSize: "15px", fontWeight: 800, color: "#1e3a8a", marginBottom: "10px" }}>Our Role in Your Due Diligence</div>
+              <p style={{ fontSize: "14px", color: "#1e40af", lineHeight: 1.6, margin: 0 }}>
+                PakkaScan is an AI assistant, not a law firm or government agency. It automates initial document checks to save you time, flag missing evidence, and catch hidden risks — before you hire expensive local legal counsel or hand over token money. For very high-value transactions, always confirm with a licensed lawyer and the relevant authority.
+              </p>
+            </div>
 
             <div style={{ backgroundColor: "#fef9c3", border: "1px solid #fde68a", borderRadius: "12px", padding: "20px 24px" }}>
               <p style={{ margin: 0, fontSize: "15px", color: "#713f12", lineHeight: 1.6 }}>
