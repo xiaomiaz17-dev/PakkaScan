@@ -13,7 +13,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getSessionFromRequest } from "@/lib/session";
 
-const PROTECTED_PATH_PREFIXES = ["/api/beta"];
+const PROTECTED_PATH_PREFIXES = ["/api/beta", "/scan"];
 
 function isProtected(pathname: string): boolean {
   for (const prefix of PROTECTED_PATH_PREFIXES) {

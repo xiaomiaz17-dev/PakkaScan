@@ -17,6 +17,7 @@ import { sendMagicLinkEmail } from "@/lib/email";
 
 const bodySchema = z.object({
   email: z.string().email().max(200).transform((s) => s.trim().toLowerCase()),
+  returnTo: z.string().max(500).optional(),
 });
 
 const LINK_TTL_MS = 15 * 60 * 1000;
@@ -59,7 +60,10 @@ export async function POST(request: Request) {
   `;
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin;
-  const magicLinkUrl = baseUrl + "/api/auth/verify?token=" + rawToken;
+  const rawReturnTo = parsed.data.returnTo;
+    const safeReturnTo = rawReturnTo && rawReturnTo.startsWith("/") && !rawReturnTo.startsWith("//") ? rawReturnTo : null;
+    const returnToQuery = safeReturnTo ? "&returnTo=" + encodeURIComponent(safeReturnTo) : "";
+    const magicLinkUrl = baseUrl + "/api/auth/verify?token=" + rawToken + returnToQuery;
 
   const emailResult = await sendMagicLinkEmail({
     to: email,

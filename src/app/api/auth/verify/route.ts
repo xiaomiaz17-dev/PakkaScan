@@ -75,7 +75,10 @@ export async function GET(request: Request) {
   const userAgent = request.headers.get("user-agent") || null;
   const { token } = await createSession({ userId, email, ipAddress, userAgent });
 
-  const response = NextResponse.redirect(new URL("/", request.url));
+  // Determine safe redirect target
+    const returnTo = url.searchParams.get("returnTo");
+    const safeReturn = returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//") ? returnTo : "/";
+    const response = NextResponse.redirect(new URL(safeReturn, request.url));
   response.cookies.set(SESSION_COOKIE_NAME, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

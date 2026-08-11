@@ -13,6 +13,7 @@ const fraunces = Fraunces({
 function LoginForm() {
   const searchParams = useSearchParams();
   const errorCode = searchParams.get("error");
+  const returnTo = searchParams.get("returnTo");
 
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -34,7 +35,7 @@ function LoginForm() {
       await fetch("/api/auth/request-link", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim() }),
+        body: JSON.stringify({ email: email.trim(), returnTo: returnTo || undefined }),
       });
       setSent(true);
     } catch {

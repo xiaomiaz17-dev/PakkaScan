@@ -1,151 +1,197 @@
-"use client";
-
+import { Fraunces } from "next/font/google";
 import Link from "next/link";
-import { useState } from "react";
-import { MarketingShell } from "@/components/SiteChrome";
 
-const FULL_HASH = "0x8f3a9c1e2b7d4f60a1c5e8d2b9f4a7c3e6d1b8a5f2c9e4d7b0a3f6c1e8d5b2";
-const SHORT_HASH = "0x8f3a…d5b2";
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  weight: ["700", "900"],
+  style: ["normal", "italic"],
+});
+
+const WHATSAPP_URL = "https://wa.me/923156507067?text=" + encodeURIComponent("Hi PakkaScan, I have a question.");
+
+const navLinkStyle: React.CSSProperties = { color: "#cbd5e1", fontSize: "14px", fontWeight: 600, textDecoration: "none" };
+const footerLinkStyle: React.CSSProperties = { display: "block", fontSize: "13px", color: "#94a3b8", textDecoration: "none", padding: "6px 0", lineHeight: 1.4 };
+
+export const metadata = {
+  title: "Sample Report ? See PakkaScan In Action",
+  description: "An anonymised example of a PakkaScan due diligence report.",
+};
 
 export default function SampleReportPage() {
-  const [anon, setAnon] = useState(true);
-  const [copied, setCopied] = useState(false);
-  const [annotated, setAnnotated] = useState(true);
-
-  async function copyHash() {
-    try {
-      await navigator.clipboard.writeText(`https://pakkascan.com/verify?h=${FULL_HASH}`);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      setCopied(false);
-    }
-  }
-
-  function downloadSample() {
-    const body = [
-      "PakkaScan — Sample Audit Report (DEMO ONLY)",
-      "Verification ID: VR-2026-DEMO01",
-      `Evidence hash: ${FULL_HASH}`,
-      "PakkaScore: 82",
-      "Decision-support only — not legal advice.",
-    ].join("\n");
-    const url = URL.createObjectURL(new Blob([body], { type: "text/plain" }));
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "pakkascan-sample-audit-demo.txt";
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
   return (
-    <MarketingShell>
-      <div className="shell">
-        <p>
-          <Link href="/">← Home</Link>
-        </p>
-        <span className="badge">Demo · not a real title</span>
-        <h1>Sample audit report</h1>
-        <p className="muted">
-          Synthetic content only. Side-by-side view shows how raw document cues become evidence-linked findings.
-        </p>
-
-        <label className="anon-toggle">
-          <input type="checkbox" checked={anon} onChange={(e) => setAnon(e.target.checked)} />
-          <span>
-            Automatically redact CNIC &amp; personal identifiers in preview
-            <span className="muted small" style={{ display: "block", fontWeight: 500 }}>
-              Privacy-first default for demos.
-            </span>
-          </span>
-        </label>
-
-        <label className="anon-toggle" style={{ marginTop: 8 }}>
-          <input type="checkbox" checked={annotated} onChange={(e) => setAnnotated(e.target.checked)} />
-          <span>View annotated document (before → after extraction)</span>
-        </label>
-
-        {annotated ? (
-          <div className="before-after" aria-label="Before and after extraction">
-            <article className="card">
-              <small className="muted">BEFORE · raw scan cues</small>
-              <div className="raw-scan">
-                <div className="raw-line">FARD-E-MALKIYAT (scan)</div>
-                <div className="raw-line dim">Khasra …… 412/9</div>
-                <div className="raw-line dim">Owner …… {anon ? "••••••••" : "Muhammad …"}</div>
-                <div className="raw-line dim">Deed ref …… SR-…</div>
-              </div>
-            </article>
-            <article className="card">
-              <small className="muted">AFTER · parsed findings</small>
-              <ul className="parsed-list">
-                <li>
-                  Khasra <span className="mono-badge">412/9</span> <span className="status-pill pass">Extracted</span>
-                </li>
-                <li>
-                  Owner match {anon ? "••••" : "within tolerance"} <span className="status-pill pass">Matched</span>
-                </li>
-                <li>
-                  Active charge <span className="status-pill warn">Gap detected</span>
-                </li>
-              </ul>
-            </article>
-          </div>
-        ) : null}
-
-        <div className="grid" style={{ marginTop: 20 }}>
-          <article className="card">
-            <small className="muted">PakkaScore</small>
-            <h2 style={{ fontFamily: "var(--font-mono)", color: "var(--success)" }}>82</h2>
-          </article>
-          <article className="card">
-            <small className="muted">Verification hash</small>
-            <div className="hash-row">
-              <span className="mono-badge">{SHORT_HASH}</span>
-              <button type="button" className="button secondary" onClick={() => void copyHash()}>
-                {copied ? "Copied link" : "Copy audit link"}
-              </button>
-              <Link className="button secondary" href="/verify">
-                Open verifier
-              </Link>
+    <div style={{ minHeight: "100vh", backgroundColor: "#f8fafc", fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
+      <style>{"@media (max-width: 640px) { .pks-facts-grid { grid-template-columns: 1fr !important; } }"}</style>
+      <div style={{ position: "sticky", top: 0, zIndex: 50, backgroundColor: "rgba(11, 19, 43, 0.95)", backdropFilter: "blur(10px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "10px" }}>
+            <div style={{ width: "32px", height: "32px", borderRadius: "50%", backgroundColor: "#0b132b", border: "2px solid #ffffff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width="18" height="18" style={{ color: "#ffffff" }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
             </div>
-          </article>
-          <article className="card">
-            <small className="muted">Status</small>
-            <p>
-              <span className="status-pill ready">Report ready</span>
-            </p>
-          </article>
+            <div className={fraunces.className} style={{ fontSize: "20px", fontWeight: 900, color: "#ffffff", letterSpacing: "-0.02em" }}>
+              Pakka<span style={{ color: "#16a34a", fontStyle: "italic" }}>Scan</span>
+            </div>
+          </Link>
+          <nav style={{ display: "flex", alignItems: "center", gap: "24px" }}>
+            <Link href="/pricing" style={navLinkStyle}>Pricing</Link>
+            <Link href="/about" style={navLinkStyle}>About</Link>
+            <Link href="/faq" style={navLinkStyle}>FAQ</Link>
+            <Link href="/scan" style={{ display: "inline-flex", alignItems: "center", padding: "8px 18px", backgroundColor: "#16a34a", color: "#ffffff", borderRadius: "8px", fontSize: "13px", fontWeight: 700, textDecoration: "none" }}>Try It</Link>
+          </nav>
+        </div>
+      </div>
+
+      {/* Banner */}
+      <div style={{ backgroundColor: "#eff6ff", borderBottom: "1px solid #bfdbfe", padding: "12px 24px", textAlign: "center" }}>
+        <div style={{ maxWidth: "760px", margin: "0 auto", fontSize: "13px", color: "#1e40af" }}>
+          <strong>Sample report.</strong> Details anonymised for privacy. Real reports use your actual document data.
+        </div>
+      </div>
+
+      <div style={{ maxWidth: "900px", margin: "40px auto", padding: "0 24px" }}>
+        <h1 style={{ fontSize: "26px", fontWeight: 800, color: "#0f172a", margin: "0 0 6px 0" }}>Due Diligence Report</h1>
+        <div style={{ fontSize: "14px", color: "#64748b", marginBottom: "24px" }}>Bayana / Agreement to Sell</div>
+
+        {/* Verdict Hero (green PROCEED) */}
+        <div style={{ background: "linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)", border: "2px solid #86efac", borderRadius: "16px", padding: "24px", marginBottom: "20px", display: "flex", alignItems: "center", gap: "20px", flexWrap: "wrap" }}>
+          <div style={{ width: "72px", height: "72px", borderRadius: "50%", backgroundColor: "#16a34a", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px", fontWeight: 900, flexShrink: 0, boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>OK</div>
+          <div style={{ flex: 1, minWidth: "200px" }}>
+            <div style={{ fontSize: "11px", fontWeight: 800, color: "#14532d", letterSpacing: "0.1em", marginBottom: "4px", opacity: 0.75 }}>VERDICT</div>
+            <div style={{ fontSize: "28px", fontWeight: 900, color: "#14532d", marginBottom: "6px", letterSpacing: "-0.02em" }}>PROCEED</div>
+            <div style={{ fontSize: "14px", color: "#14532d", opacity: 0.9, lineHeight: 1.4 }}>This document looks safe to move forward with.</div>
+          </div>
+          <div style={{ textAlign: "right", flexShrink: 0 }}>
+            <div style={{ fontSize: "11px", fontWeight: 800, color: "#14532d", letterSpacing: "0.1em", marginBottom: "2px", opacity: 0.75 }}>PAKKASCORE</div>
+            <div style={{ fontSize: "36px", fontWeight: 900, color: "#14532d", lineHeight: 1 }}>100<span style={{ fontSize: "16px", opacity: 0.7 }}>/100</span></div>
+          </div>
         </div>
 
-        <section className="panel" style={{ marginTop: 16 }}>
-          <h2>Findings</h2>
-          <ul>
-            <li>
-              <strong>Mutation continuity</strong> — continuous. <span className="status-pill pass">Verified</span>{" "}
-              <span className="mono-badge">ev_mut_01</span>
-            </li>
-            <li>
-              <strong>Owner name match</strong> —{" "}
-              {anon ? "Demo Customer ↔ CNIC •••••-•••••••-•" : "Demo Customer ↔ CNIC 12345-1234567-1"}.{" "}
-              <span className="status-pill pass">Matched</span>
-            </li>
-            <li>
-              <strong>Active charge observation</strong> — clearance needed.{" "}
-              <span className="status-pill warn">Gap detected</span>
-            </li>
-          </ul>
-          <p className="muted small">Decision-support only — not legal advice.</p>
-          <div className="form-actions">
-            <Link className="button primary" href="/register">
-              Scan your property document →
-            </Link>
-            <button type="button" className="button secondary" onClick={downloadSample}>
-              Download sample audit
-            </button>
+        {/* What To Do Next */}
+        <div style={{ marginBottom: "20px" }}>
+          <h3 style={{ fontSize: "16px", fontWeight: 800, color: "#0f172a", margin: "0 0 12px 0" }}>What To Do Next</h3>
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            {[
+              { title: "Verify seller CNIC in person", detail: "Ask [Seller Name] to show his original CNIC in person and match the number against the one on the Bayana before handing over any further funds." },
+              { title: "Get a current dated Fard", detail: "Request a Fard-e-Malkiat from the local revenue office to confirm [Seller Name] is the recorded owner of the property." },
+              { title: "Non-encumbrance registry search", detail: "Conduct a non-encumbrance check at the Sub-Registrar office to ensure the plot has no active mortgages or legal claims." },
+              { title: "Keep signed copies safe", detail: "Store your signed copy of the Bayana + Pay Order receipt in a secure location until the final Sale Deed is registered." },
+            ].map((step, i) => (
+              <div key={i} style={{ backgroundColor: i < 2 ? "#fef2f2" : (i < 3 ? "#eff6ff" : "#f0fdf4"), border: "1px solid " + (i < 2 ? "#fecaca" : (i < 3 ? "#bfdbfe" : "#bbf7d0")), borderRadius: "12px", padding: "14px 16px", display: "flex", gap: "14px", alignItems: "flex-start" }}>
+                <div style={{ width: "28px", height: "28px", borderRadius: "50%", backgroundColor: "#0b132b", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: 800, flexShrink: 0 }}>{i + 1}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px", flexWrap: "wrap" }}>
+                    <span style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a" }}>{step.title}</span>
+                    <span style={{ fontSize: "9px", fontWeight: 800, color: i < 2 ? "#991b1b" : (i < 3 ? "#1e40af" : "#166534"), backgroundColor: i < 2 ? "#fee2e2" : (i < 3 ? "#dbeafe" : "#dcfce7"), padding: "2px 6px", borderRadius: "4px", letterSpacing: "0.05em" }}>{i < 2 ? "DO FIRST" : (i < 3 ? "IMPORTANT" : "OPTIONAL")}</span>
+                  </div>
+                  <div style={{ fontSize: "13px", color: "#334155", lineHeight: 1.5 }}>{step.detail}</div>
+                </div>
+              </div>
+            ))}
           </div>
-        </section>
+        </div>
+
+        {/* Missing Evidence */}
+        <div style={{ backgroundColor: "#fef9c3", padding: "16px", borderRadius: "12px", border: "1px solid #fde68a", marginBottom: "20px" }}>
+          <div style={{ fontSize: "14px", fontWeight: 800, color: "#854d0e", marginBottom: "10px" }}>Missing Evidence (3)</div>
+          <ul style={{ margin: 0, paddingLeft: "20px", color: "#854d0e", fontSize: "13px", lineHeight: 1.6 }}>
+            <li>CNIC (or NICOP/POC) of the seller and buyer</li>
+            <li>Current dated Fard or equivalent ownership record</li>
+            <li>Current non-encumbrance / registry search (recommended)</li>
+          </ul>
+        </div>
+
+        {/* Doc Details */}
+        <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: "20px", marginTop: "8px" }}>
+          <div style={{ fontSize: "13px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "12px" }}>Document Details</div>
+          <div style={{ backgroundColor: "#ffffff", padding: "16px", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+            <div style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a" }}>sample-bayana-anonymised.pdf</div>
+            <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}>Identified as: <strong style={{ color: "#0f172a" }}>Bayana / Agreement to Sell</strong></div>
+
+            <div style={{ backgroundColor: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "12px", padding: "16px", marginTop: "12px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
+                <span style={{ fontSize: "12px", fontWeight: 800, color: "#166534", textTransform: "uppercase", letterSpacing: "0.05em" }}>Key Facts</span>
+                <span style={{ fontSize: "9px", color: "#16a34a", fontWeight: 700 }}>AI-verified</span>
+              </div>
+              <div className="pks-facts-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                {[
+                  { label: "SELLER", value: "[Seller Name]" },
+                  { label: "BUYER", value: "[Buyer Name]" },
+                  { label: "TOTAL PRICE", value: "PKR 45,000,000" },
+                  { label: "TOKEN / BAYANA", value: "PKR 5,000,000" },
+                  { label: "BALANCE DUE", value: "PKR 40,000,000" },
+                  { label: "PROPERTY ADDRESS", value: "Property No. [X-XX], DHA Phase [X], Lahore" },
+                  { label: "PROPERTY TYPE", value: "Plot / House" },
+                  { label: "AREA", value: "1 Kanal" },
+                  { label: "SIGNED ON", value: "2026-08-07" },
+                  { label: "BALANCE DUE BY", value: "2026-09-30" },
+                ].map((r, i) => (
+                  <div key={i} style={{ backgroundColor: "#ffffff", padding: "10px 12px", borderRadius: "8px", border: "1px solid #dcfce7" }}>
+                    <div style={{ fontSize: "10px", color: "#166534", fontWeight: 700, marginBottom: "3px", letterSpacing: "0.03em" }}>{r.label}</div>
+                    <div style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a", wordBreak: "break-word" }}>{r.value}</div>
+                  </div>
+                ))}
+              </div>
+              <p style={{ fontSize: "12px", color: "#166534", margin: "12px 0 0 0", fontStyle: "italic", lineHeight: 1.5 }}>
+                [Seller] agreed to sell Property No. [X-XX] in DHA Phase [X], Lahore, measuring 1 Kanal to [Buyer] for PKR 45,000,000, with a token of PKR 5,000,000 paid and the balance due by 30 September 2026.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* CTA */}
+        <div style={{ marginTop: "48px", textAlign: "center", backgroundColor: "#0b132b", color: "#ffffff", padding: "40px 24px", borderRadius: "16px" }}>
+          <div className={fraunces.className} style={{ fontSize: "26px", fontWeight: 900, marginBottom: "12px", letterSpacing: "-0.02em" }}>
+            Ready to scan your own?
+          </div>
+          <p style={{ fontSize: "14px", color: "#cbd5e1", marginBottom: "24px", lineHeight: 1.6 }}>
+            Your first scan is free. Get a real bilingual report on your actual Bayana, Fard, or Sale Deed in 2 minutes.
+          </p>
+          <Link href="/scan" style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "14px 32px", backgroundColor: "#16a34a", color: "#ffffff", fontWeight: 700, fontSize: "15px", borderRadius: "12px", textDecoration: "none", boxShadow: "0 4px 16px rgba(22,163,74,0.4)" }}>
+            Scan Your First Document
+          </Link>
+        </div>
       </div>
-    </MarketingShell>
+
+      {/* Footer */}
+      <footer style={{ backgroundColor: "#0b132b", color: "#94a3b8", padding: "48px 24px 32px 24px", marginTop: "80px" }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "32px", marginBottom: "32px" }}>
+            <div>
+              <div className={fraunces.className} style={{ fontSize: "22px", fontWeight: 900, color: "#ffffff", marginBottom: "8px" }}>
+                Pakka<span style={{ color: "#16a34a", fontStyle: "italic" }}>Scan</span>
+              </div>
+              <div style={{ fontSize: "12px", color: "#64748b", lineHeight: 1.6 }}>AI-powered document verification for Pakistani property transactions.</div>
+            </div>
+            <div>
+              <div style={{ fontSize: "12px", fontWeight: 800, color: "#ffffff", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "12px" }}>Product</div>
+              <Link href="/scan" style={footerLinkStyle}>Scan a Document</Link>
+              <Link href="/pricing" style={footerLinkStyle}>Pricing</Link>
+            </div>
+            <div>
+              <div style={{ fontSize: "12px", fontWeight: 800, color: "#ffffff", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "12px" }}>Company</div>
+              <Link href="/about" style={footerLinkStyle}>About</Link>
+              <Link href="/contact" style={footerLinkStyle}>Contact</Link>
+              <Link href="/faq" style={footerLinkStyle}>FAQ</Link>
+            </div>
+            <div>
+              <div style={{ fontSize: "12px", fontWeight: 800, color: "#ffffff", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "12px" }}>Legal</div>
+              <Link href="/terms" style={footerLinkStyle}>Terms of Service</Link>
+              <Link href="/privacy" style={footerLinkStyle}>Privacy Policy</Link>
+            </div>
+            <div>
+              <div style={{ fontSize: "12px", fontWeight: 800, color: "#ffffff", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "12px" }}>Support</div>
+              <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" style={{ ...footerLinkStyle, color: "#25D366" }}>WhatsApp Support</a>
+            </div>
+          </div>
+          <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: "24px", fontSize: "11px", color: "#64748b", lineHeight: 1.7 }}>
+            <p style={{ margin: "0 0 12px 0" }}>
+              <strong style={{ color: "#94a3b8" }}>Disclaimer:</strong> Sample report shown above uses fictitious details for illustration purposes only. PakkaScan is an AI-powered assistive tool. Not a licensed lawyer. Reports are advisory. Always confirm high-value transactions with qualified legal counsel.
+            </p>
+            <p style={{ margin: 0 }}>? 2026 PakkaScan. All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
+    </div>
   );
 }
