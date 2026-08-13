@@ -261,10 +261,7 @@ function PricingCta({
         body: JSON.stringify({ reportType }),
       });
       const data = await res.json();
-      if (data.alreadyEntitled) {
-        alert("Great news - you already have a free scan available for this report. Redirecting you to the scanner.");
-        window.location.href = data.redirectTo || "/scan";
-      } else if (data.url) {
+      if (data.url) {
         window.location.href = data.url;
       } else {
         alert(data.error || "Checkout failed. Please try again.");
@@ -444,11 +441,11 @@ export default function LandingPage() {
             <p style={{ fontSize: "13px", color: "#64748b", margin: 0 }}>
               {paymentsMode === "beta" ? (
                 <>
-                  <strong style={{ color: "#0f172a" }}>Your first Rental Safety Check is free.</strong> Bayana and Full Property Due Diligence reports launching soon. Try PakkaScan now while in private beta.
+                  Try PakkaScan now while in private beta.
                 </>
               ) : (
                 <>
-                  <strong style={{ color: "#0f172a" }}>Your first Rental Safety Check is free.</strong> Bayana and Full Property Due Diligence reports are paid.
+                  All reports are paid per scan. International customers pay via card. Local Raast payment for Pakistan customers coming soon.
                 </>
               )}
             </p>
@@ -498,7 +495,7 @@ export default function LandingPage() {
             Verify before you trust.
           </h2>
           <p style={{ fontSize: "16px", color: "#cbd5e1", lineHeight: 1.6, marginBottom: "32px" }}>
-            Your first Rental Safety Check is free. Get an honest, bilingual second opinion before you hand over any money.
+            Get an honest, bilingual second opinion before you hand over any money.
           </p>
           <a href="/scan" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "18px 40px", backgroundColor: "#16a34a", color: "#ffffff", fontWeight: 700, fontSize: "17px", borderRadius: "12px", textDecoration: "none", boxShadow: "0 4px 20px rgba(22,163,74,0.4)" }}>
             Scan Your First Document
