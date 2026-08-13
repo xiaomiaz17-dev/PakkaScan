@@ -243,7 +243,7 @@ function PricingCta({
 
   // BETA MODE: single button, all free
   if (paymentsMode === "beta") {
-    return <a href="/scan" style={cardBtnStyle}>Scan Free in Beta</a>;
+    return <a href="/scan" style={cardBtnStyle}>Get Started</a>;
   }
 
   // PAID MODE: not signed in => single "Sign in to Buy" button
@@ -404,7 +404,7 @@ export default function LandingPage() {
         <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: "48px" }}>
             <h2 style={{ fontSize: "32px", fontWeight: 800, color: "#0f172a", margin: "0 0 12px 0", letterSpacing: "-0.02em" }}>Pricing</h2>
-            <p style={{ fontSize: "16px", color: "#64748b", margin: 0 }}>Pay per report. No subscription. First Rental Safety Check free.</p>
+            <p style={{ fontSize: "16px", color: "#64748b", margin: 0 }}>Pay per report. No subscription. No hidden fees.</p>
             <p style={{ fontSize: "13px", color: "#94a3b8", margin: "8px 0 0 0" }}>Local payment via Raast for Pakistan customers (coming soon). International customers pay in USD via card.</p>
           </div>
           <div className="pks-price-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px" }}>

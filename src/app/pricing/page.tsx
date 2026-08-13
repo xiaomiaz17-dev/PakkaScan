@@ -15,7 +15,7 @@ const footerLinkStyle: React.CSSProperties = { display: "block", fontSize: "13px
 
 export const metadata = {
   title: "Pricing ? PakkaScan",
-  description: "Three transparent tiers. Pay per report, no subscription. First scan free.",
+  description: "Three transparent tiers. Pay per report, no subscription. No hidden fees.",
 };
 
 const TIERS = [
@@ -72,8 +72,8 @@ const FAQ_MINI = [
     a: "No. You pay per report. Once you've paid for a scan, that report is yours to keep.",
   },
   {
-    q: "Why is the first scan free?",
-    a: "PakkaScan is new in Pakistan. We want you to see the quality of the report before you pay anything. Try it once, then decide if it's worth it.",
+    q: "Do I have to pay upfront?",
+    a: "Yes. Each scan requires payment. We offer three tiers to match your needs. You can see a sample report on our website before buying to understand exactly what you get.",
   },
   {
     q: "What payment methods will you accept?",
@@ -97,7 +97,7 @@ export default function PricingPage() {
             Pay per <span style={{ color: "#16a34a", fontStyle: "italic" }}>report</span>. No subscription.
           </h1>
           <p style={{ fontSize: "17px", color: "#cbd5e1", lineHeight: 1.6, margin: 0 }}>
-            Your first scan is free. See the report quality yourself before spending a rupee.
+            Transparent pricing. Pay only for what you scan.
           </p>
         </div>
       </section>
@@ -130,7 +130,7 @@ export default function PricingPage() {
                 <div style={{ fontSize: "12px", color: "#334155", lineHeight: 1.5 }}>{tier.idealFor}</div>
               </div>
 
-              <Link href="/scan" style={{ display: "block", padding: "12px 20px", backgroundColor: tier.highlight ? "#16a34a" : "#0b132b", color: "#ffffff", fontWeight: 700, fontSize: "14px", borderRadius: "10px", textDecoration: "none", textAlign: "center" }}>Scan Free in Beta</Link>
+              <Link href="/scan" style={{ display: "block", padding: "12px 20px", backgroundColor: tier.highlight ? "#16a34a" : "#0b132b", color: "#ffffff", fontWeight: 700, fontSize: "14px", borderRadius: "10px", textDecoration: "none", textAlign: "center" }}>Get Started</Link>
             </div>
           ))}
         </div>

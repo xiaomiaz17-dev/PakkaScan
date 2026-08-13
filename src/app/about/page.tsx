@@ -110,7 +110,7 @@ export default function AboutPage() {
           {/* CTA */}
           <div style={{ marginTop: "48px", textAlign: "center" }}>
             <Link href="/scan" style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "16px 32px", backgroundColor: "#16a34a", color: "#ffffff", fontWeight: 700, fontSize: "15px", borderRadius: "12px", textDecoration: "none", boxShadow: "0 4px 16px rgba(22,163,74,0.3)" }}>
-              Try PakkaScan ? First Scan Free
+              Try PakkaScan
             </Link>
           </div>
         </div>

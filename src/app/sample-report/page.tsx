@@ -127,7 +127,7 @@ export default function SampleReportPage() {
             Ready to scan your own?
           </div>
           <p style={{ fontSize: "14px", color: "#cbd5e1", marginBottom: "24px", lineHeight: 1.6 }}>
-            Your first scan is free. Get a real bilingual report on your actual Bayana, Fard, or Sale Deed in 2 minutes.
+            Get a real bilingual report on your actual Bayana, Fard, or Sale Deed in 2 minutes.
           </p>
           <Link href="/scan" style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "14px 32px", backgroundColor: "#16a34a", color: "#ffffff", fontWeight: 700, fontSize: "15px", borderRadius: "12px", textDecoration: "none", boxShadow: "0 4px 16px rgba(22,163,74,0.4)" }}>
             Scan Your First Document
