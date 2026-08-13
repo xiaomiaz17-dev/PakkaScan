@@ -2,11 +2,14 @@ import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
-export default function PaymentSuccessPage({
+export default async function PaymentSuccessPage({
   searchParams,
 }: {
-  searchParams: { session_id?: string };
+  searchParams: Promise<{ session_id?: string }>;
 }) {
+  const params = await searchParams;
+  const sessionId = params.session_id;
+
   return (
     <div
       style={{
@@ -77,7 +80,7 @@ export default function PaymentSuccessPage({
           Your report credit has been added to your account. You can now generate your report.
         </p>
 
-        {searchParams.session_id && (
+        {sessionId && (
           <p
             style={{
               fontSize: "11px",
@@ -86,7 +89,7 @@ export default function PaymentSuccessPage({
               wordBreak: "break-all",
             }}
           >
-            Reference: {searchParams.session_id}
+            Reference: {sessionId}
           </p>
         )}
 
