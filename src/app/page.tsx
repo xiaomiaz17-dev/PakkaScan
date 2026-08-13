@@ -10,6 +10,8 @@ const fraunces = Fraunces({
 });
 
 type SessionUser = { email: string; name: string | null };
+type PaymentsMode = "beta" | "paid";
+type ReportType = "rental" | "bayana" | "full_dd";
 
 const WHATSAPP_URL = "https://wa.me/923156507067?text=" + encodeURIComponent("Hi PakkaScan, I have a question.");
 
@@ -171,9 +173,128 @@ function FaqItem({ q, a, defaultOpen = false }: { q: string; a: string; defaultO
   );
 }
 
+function PricingCta({
+  reportType,
+  pricePkr,
+  priceUsd,
+  highlight,
+  paymentsMode,
+  sessionUser,
+}: {
+  reportType: ReportType;
+  pricePkr: string;
+  priceUsd: string;
+  highlight: boolean;
+  paymentsMode: PaymentsMode;
+  sessionUser: SessionUser | null;
+}) {
+  const [loading, setLoading] = useState(false);
+
+  const cardBtnStyle: React.CSSProperties = {
+    display: "block",
+    padding: "12px 20px",
+    backgroundColor: highlight ? "#16a34a" : "#0b132b",
+    color: "#ffffff",
+    fontWeight: 700,
+    fontSize: "14px",
+    lineHeight: 1.4,
+    borderRadius: "10px",
+    textDecoration: "none",
+    textAlign: "center",
+    border: "none",
+    cursor: loading ? "wait" : "pointer",
+    width: "100%",
+    boxSizing: "border-box",
+    opacity: loading ? 0.7 : 1,
+    fontFamily: "inherit",
+  };
+
+  const raastBtnStyle: React.CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "8px",
+    padding: "12px 20px",
+    backgroundColor: "#f1f5f9",
+    color: "#94a3b8",
+    fontWeight: 700,
+    fontSize: "14px",
+    lineHeight: 1.4,
+    borderRadius: "10px",
+    textAlign: "center",
+    border: "1px solid #e2e8f0",
+    cursor: "not-allowed",
+    width: "100%",
+    boxSizing: "border-box",
+    fontFamily: "inherit",
+    marginBottom: "8px",
+  };
+
+  const comingSoonBadge: React.CSSProperties = {
+    fontSize: "10px",
+    fontWeight: 800,
+    padding: "2px 8px",
+    backgroundColor: "#e2e8f0",
+    color: "#64748b",
+    borderRadius: "10px",
+    letterSpacing: "0.05em",
+    textTransform: "uppercase",
+  };
+
+  // BETA MODE: single button, all free
+  if (paymentsMode === "beta") {
+    return <a href="/scan" style={cardBtnStyle}>Scan Free in Beta</a>;
+  }
+
+  // PAID MODE: not signed in => single "Sign in to Buy" button
+  if (!sessionUser) {
+    return <a href="/login" style={cardBtnStyle}>Sign in to Buy</a>;
+  }
+
+  // PAID MODE: signed in — show BOTH buttons (Raast disabled, Card active)
+  async function handleCardClick() {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reportType }),
+      });
+      const data = await res.json();
+      if (data.alreadyEntitled) {
+        alert("Great news - you already have a free scan available for this report. Redirecting you to the scanner.");
+        window.location.href = data.redirectTo || "/scan";
+      } else if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert(data.error || "Checkout failed. Please try again.");
+        setLoading(false);
+      }
+    } catch (err) {
+      alert("Checkout failed. Please try again.");
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div>
+      {/* Raast button - disabled with Coming Soon badge */}
+      <button disabled style={raastBtnStyle}>
+        <span>Pay with Raast &mdash; Rs {pricePkr}</span>
+        <span style={comingSoonBadge}>Soon</span>
+      </button>
+      {/* Card button - active Stripe checkout */}
+      <button onClick={handleCardClick} disabled={loading} style={cardBtnStyle}>
+        {loading ? "Loading..." : `Pay with Card \u2014 $${priceUsd}`}
+      </button>
+    </div>
+  );
+}
+
 export default function LandingPage() {
   const [sessionUser, setSessionUser] = useState<SessionUser | null>(null);
   const [sessionLoaded, setSessionLoaded] = useState(false);
+  const [paymentsMode, setPaymentsMode] = useState<PaymentsMode>("beta");
 
   useEffect(() => {
     let cancelled = false;
@@ -186,6 +307,13 @@ export default function LandingPage() {
       })
       .catch(() => { if (!cancelled) setSessionLoaded(true); });
     return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/config/payments")
+      .then((r) => (r.ok ? r.json() : { mode: "beta" }))
+      .then((data) => setPaymentsMode(data.mode === "paid" ? "paid" : "beta"))
+      .catch(() => {});
   }, []);
 
   async function handleSignOut() {
@@ -276,20 +404,22 @@ export default function LandingPage() {
         <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: "48px" }}>
             <h2 style={{ fontSize: "32px", fontWeight: 800, color: "#0f172a", margin: "0 0 12px 0", letterSpacing: "-0.02em" }}>Pricing</h2>
-            <p style={{ fontSize: "16px", color: "#64748b", margin: 0 }}>Pay per report. No subscription. First scan free.</p>
+            <p style={{ fontSize: "16px", color: "#64748b", margin: 0 }}>Pay per report. No subscription. First Rental Safety Check free.</p>
+            <p style={{ fontSize: "13px", color: "#94a3b8", margin: "8px 0 0 0" }}>Local payment via Raast for Pakistan customers (coming soon). International customers pay in USD via card.</p>
           </div>
           <div className="pks-price-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px" }}>
-            {[
-              { name: "Rental Safety Check", price: "Rs 499", includes: ["Tenancy Agreement", "Landlord CNIC verification"], desc: "For renters signing a new tenancy.", highlight: false },
-              { name: "Bayana Safety Check", price: "Rs 1,499", includes: ["Bayana / Agreement to Sell", "Seller CNIC verification", "Current Fard (Ownership Record)"], desc: "Before you hand over any token money.", highlight: true },
-              { name: "Full Property Due Diligence", price: "Rs 2,999", includes: ["Registered Sale Deed", "Current Fard", "Mutation record", "Seller CNIC", "Non-Encumbrance Certificate"], desc: "For property purchases at Sale Deed stage.", highlight: false },
-            ].map((tier, i) => (
+            {([
+              { name: "Rental Safety Check", pricePkr: "499", priceUsd: "4.99", reportType: "rental" as ReportType, includes: ["Tenancy Agreement", "Landlord CNIC verification"], desc: "For renters signing a new tenancy.", highlight: false },
+              { name: "Bayana Safety Check", pricePkr: "1,499", priceUsd: "9.99", reportType: "bayana" as ReportType, includes: ["Bayana / Agreement to Sell", "Seller CNIC verification", "Current Fard (Ownership Record)"], desc: "Before you hand over any token money.", highlight: true },
+              { name: "Full Property Due Diligence", pricePkr: "2,999", priceUsd: "19.99", reportType: "full_dd" as ReportType, includes: ["Registered Sale Deed", "Current Fard", "Mutation record", "Seller CNIC", "Non-Encumbrance Certificate"], desc: "For property purchases at Sale Deed stage.", highlight: false },
+            ]).map((tier, i) => (
               <div key={i} style={{ backgroundColor: "#ffffff", border: tier.highlight ? "2px solid #16a34a" : "1px solid #e2e8f0", borderRadius: "16px", padding: "28px", position: "relative", boxShadow: tier.highlight ? "0 10px 25px -5px rgba(22,163,74,0.15)" : "0 4px 6px -1px rgba(0,0,0,0.02)" }}>
                 {tier.highlight && (
                   <div style={{ position: "absolute", top: "-12px", left: "50%", transform: "translateX(-50%)", backgroundColor: "#16a34a", color: "#ffffff", fontSize: "11px", fontWeight: 800, padding: "4px 12px", borderRadius: "20px", letterSpacing: "0.05em" }}>MOST POPULAR</div>
                 )}
                 <div style={{ fontSize: "13px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "12px" }}>{tier.name}</div>
-                <div style={{ fontSize: "36px", fontWeight: 900, color: "#0f172a", marginBottom: "6px", letterSpacing: "-0.02em" }}>{tier.price}</div>
+                <div style={{ fontSize: "30px", fontWeight: 900, color: "#0f172a", marginBottom: "4px", letterSpacing: "-0.02em" }}>Rs {tier.pricePkr}</div>
+                <div style={{ fontSize: "13px", color: "#64748b", marginBottom: "4px" }}>or ${tier.priceUsd} USD (international)</div>
                 <div style={{ fontSize: "13px", color: "#64748b", marginBottom: "20px" }}>{tier.desc}</div>
                 <ul style={{ listStyle: "none", padding: 0, margin: "0 0 24px 0" }}>
                   {tier.includes.map((item, j) => (
@@ -299,13 +429,28 @@ export default function LandingPage() {
                     </li>
                   ))}
                 </ul>
-                <a href="/scan" style={{ display: "block", padding: "12px 20px", backgroundColor: tier.highlight ? "#16a34a" : "#0b132b", color: "#ffffff", fontWeight: 700, fontSize: "14px", borderRadius: "10px", textDecoration: "none", textAlign: "center" }}>Scan Free in Beta</a>
+                <PricingCta
+                  reportType={tier.reportType}
+                  pricePkr={tier.pricePkr}
+                  priceUsd={tier.priceUsd}
+                  highlight={tier.highlight}
+                  paymentsMode={paymentsMode}
+                  sessionUser={sessionUser}
+                />
               </div>
             ))}
           </div>
           <div style={{ textAlign: "center", marginTop: "32px" }}>
             <p style={{ fontSize: "13px", color: "#64748b", margin: 0 }}>
-              <strong style={{ color: "#0f172a" }}>Your first scan is free.</strong> Payment integration launching soon -- try PakkaScan now while in private beta.
+              {paymentsMode === "beta" ? (
+                <>
+                  <strong style={{ color: "#0f172a" }}>Your first Rental Safety Check is free.</strong> Bayana and Full Property Due Diligence reports launching soon. Try PakkaScan now while in private beta.
+                </>
+              ) : (
+                <>
+                  <strong style={{ color: "#0f172a" }}>Your first Rental Safety Check is free.</strong> Bayana and Full Property Due Diligence reports are paid.
+                </>
+              )}
             </p>
           </div>
         </div>
@@ -353,7 +498,7 @@ export default function LandingPage() {
             Verify before you trust.
           </h2>
           <p style={{ fontSize: "16px", color: "#cbd5e1", lineHeight: 1.6, marginBottom: "32px" }}>
-            Your first scan is free. Get an honest, bilingual second opinion before you hand over any money.
+            Your first Rental Safety Check is free. Get an honest, bilingual second opinion before you hand over any money.
           </p>
           <a href="/scan" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "18px 40px", backgroundColor: "#16a34a", color: "#ffffff", fontWeight: 700, fontSize: "17px", borderRadius: "12px", textDecoration: "none", boxShadow: "0 4px 20px rgba(22,163,74,0.4)" }}>
             Scan Your First Document

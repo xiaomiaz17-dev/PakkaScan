@@ -17,3 +17,6 @@ scripts/
 # Sentry auth (never commit)
 .sentryclirc
 
+
+# Backup files created during edits
+*.backup*
