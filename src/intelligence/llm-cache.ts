@@ -23,7 +23,7 @@ import { createHash } from "node:crypto";
  * Old cache entries become invisible (they will silently expire).
  * Format: YYYYMMDD-N (date + iteration within that day).
  */
-export const PROMPT_VERSION = "20260811-1";
+export const PROMPT_VERSION = "20260811-2";
 
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 const MAX_ENTRIES_PER_NAMESPACE = 200;

@@ -26,6 +26,8 @@ export type SmartFields = {
   dates?: any;
   legal?: any;
   clauses?: any;
+  suspicious_clauses?: Array<{ clause: string; concern: string }>;
+  date_anomalies?: Array<{ anomaly: string; explanation: string }>;
   summary?: string;
   extractionEngine?: string;
   extractionModel?: string;
@@ -47,24 +49,46 @@ RULES:
 
 1. EXTRACT EVERYTHING VISIBLE: If a name, amount, date, address, or clause is written in the text, include it. Do not skip visible information because you are unsure about ONE sub-detail.
 
-2. CNIC SAFETY (CRITICAL): CNICs are unique identifiers where a wrong digit means a wrong person - potentially causing legal or financial harm.
+2. CNIC SAFETY AND INTELLIGENCE (CRITICAL): CNICs are unique identifiers where a wrong digit means a wrong person - potentially causing legal or financial harm.
    - Only include a CNIC if it appears EXACTLY (character-for-character) in the source OCR text.
    - If a party's CNIC is not visible, OMIT ONLY THE cnic sub-field. Still return the party's name, role, address, and any other visible details.
    - Never "correct", "guess", or "clean up" CNIC digits. Never invent one to fill the schema.
+
+   CNIC INTELLIGENCE: The first 5 digits of a Pakistani CNIC encode the district of issuance. Common prefixes:
+   - 35202 = Lahore Cantt, 35201 = Lahore City
+   - 42101 = Karachi East, 42201 = Karachi Central, 42301 = Karachi West, 42501 = Karachi South
+   - 17301 = Peshawar, 38403 = Islamabad
+   - 61101 = Multan, 36302 = Faisalabad
+   If a party's CNIC district prefix does not match the property's stated city, note this observation (do not block or reject - just flag it as: "Seller's CNIC was issued in [district] but the property is located in [city]. This is common but worth verifying the seller's connection to this property.").
 
 3. PARTIES: List every person/party mentioned. A landlord with a name but no CNIC is still a landlord - return them with the cnic field omitted. Include witnesses, guarantors, co-signers in the witnesses or additional_parties arrays. Do not drop anyone.
 
 4. AMOUNTS: Extract numeric value (no commas) plus currency code. If the amount is visible in the document, include it.
 
-5. DATES: Use ISO YYYY-MM-DD format. Distinguish DOB (date of birth on a CNIC) from execution/signing dates. If a date is visible in the document, include it.
+5. DATES: Use ISO YYYY-MM-DD format.
+   DATE INTELLIGENCE: Check for date anomalies and flag them:
+   - Execution date in the FUTURE (document claims to be signed on a date that hasn't happened yet)
+   - Sale Deed execution date MORE than 4 months before registration date (may violate Registration Act timelines)
+   - Bayana/Agreement dated AFTER a Sale Deed for the same property (chronologically impossible)
+   - Any date that appears unrealistic (e.g., year 1900, year 2099)
+   Add any date anomalies to a "date_anomalies" array with a brief explanation. Distinguish DOB (date of birth on a CNIC) from execution/signing dates. If a date is visible in the document, include it.
 
 6. ADDRESSES: If an address is written, include it. Full or partial is fine.
 
 7. HANDWRITTEN or URDU DOCS: Use context clues to identify roles. Common role indicators include: S/o, D/o, W/o for son/daughter/wife of; malik or malkiat for owner; mustajir or kirayadar for tenant; baye or vendor for seller; mushtari or vendee for buyer. When a role is truly unclear, put the party in additional_parties with role "unknown" - but still include their name and other visible details.
 
-8. OMIT ONLY WHEN TRULY ABSENT: If a field is genuinely not present in the text, omit it. But err on the side of extraction - if information IS in the text, include it.
+8. SUSPICIOUS CLAUSES: Flag any unusual, one-sided, or potentially harmful clauses you notice. Examples include:
+   - Seller can cancel without penalty or refund
+   - Buyer waives right to refund of token/deposit
+   - Property sold "as-is" with no inspection right
+   - Unusually short deadline for balance payment
+   - Power of Attorney used without clear justification
+   - Any clause that disproportionately favours one party
+   Add these to a "suspicious_clauses" array in the output with a brief explanation of why each is concerning.
 
-9. Return ONLY the JSON object. No markdown fences, no commentary.
+9. OMIT ONLY WHEN TRULY ABSENT: If a field is genuinely not present in the text, omit it. But err on the side of extraction - if information IS in the text, include it.
+
+10. Return ONLY the JSON object. No markdown fences, no commentary.
 
 `;
 
@@ -105,7 +129,10 @@ const SCHEMAS: Record<string, string> = {
     "renewal_terms": "e.g. renewable by mutual agreement",
     "notice_period_days": 30,
     "deposit_refund_terms": "e.g. refundable without interest on vacation",
-    "termination_penalties": "e.g. one month rent forfeit"
+    "termination_penalties": "e.g. one month rent forfeit",
+    "subletting_allowed": "yes/no/not mentioned",
+    "maintenance_responsibility": "landlord/tenant/shared/not mentioned",
+    "missing_standard_clauses": ["List any standard tenancy clauses that are ABSENT from this document. Common ones to check: security deposit refund terms, rent escalation, notice period, maintenance responsibility, subletting restriction, dispute resolution, property inspection rights. Only list genuinely missing ones."]
   },
   "legal": {
     "applicable_law": "e.g. Sindh Rented Premises Ordinance 1979",
@@ -125,9 +152,10 @@ const SCHEMAS: Record<string, string> = {
   },
   "financials": {
     "total_price":      { "amount": 5000000, "currency": "PKR", "in_words": "..." },
-    "stamp_duty":       { "amount": 0, "currency": "PKR", "percentage": "e.g. 3%" },
+    "stamp_duty":       { "amount": 0, "currency": "PKR", "percentage": "e.g. 3%", "rate_check": "Pakistani stamp duty rates: Punjab 3%, Sindh 4%, KPK 3-4%, ICT Islamabad 4%. If the stated stamp duty percentage or amount appears incorrect for the jurisdiction, flag it." },
     "registration_fee": { "amount": 0, "currency": "PKR" },
-    "cvt":              { "amount": 0, "currency": "PKR", "percentage": "e.g. 2%" }
+    "cvt":              { "amount": 0, "currency": "PKR", "percentage": "e.g. 2%" },
+    "declared_value_note": "If the total sale price appears significantly below market value for the described property type and area (e.g., 10 Marla DHA plot for under Rs 50 lakh), note: 'Declared value may be below DC rate. Verify with revenue authority.'"
   },
   "property": {
     "address": "Full one-line address",
@@ -361,7 +389,8 @@ const SCHEMAS: Record<string, string> = {
     "powers_granted": ["e.g. to sell property", "e.g. to receive rent"],
     "scope": "GENERAL / SPECIFIC / LIMITED",
     "revocable": true,
-    "attestation": "Notary / Sub-Registrar / Consulate"
+    "attestation": "Notary / Sub-Registrar / Consulate",
+    "poa_risk_flags": ["List any concerns about this PoA. Common risks: PoA is general (not limited to specific property), no expiry date (could be used indefinitely), not attested by Sub-Registrar (may not be legally enforceable for property transactions), principal is overseas (verify identity independently), PoA grants power to sell AND receive payment (high risk of misuse)."]
   },
   "legal": {
     "registration_number": "if registered",
