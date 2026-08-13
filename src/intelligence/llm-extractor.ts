@@ -93,10 +93,11 @@ const SCHEMAS: Record<string, string> = {
     "purpose": "residential / commercial / mixed"
   },
   "dates": {
-    "start_date": "YYYY-MM-DD",
-    "end_date": "YYYY-MM-DD",
-    "execution_date": "YYYY-MM-DD",
-    "duration_months": 11
+    "start_date": "YYYY-MM-DD (if the start date field is blank but execution_date and duration_months are known, calculate it: start_date = execution_date)",
+    "end_date": "YYYY-MM-DD (if blank but execution_date and duration are known, calculate: end_date = execution_date + duration_months)",
+    "execution_date": "YYYY-MM-DD (the date the agreement was signed/executed, often in the header or preamble)",
+    "duration_months": 11,
+    "dates_inferred": "true if start/end dates were calculated from execution_date + duration rather than explicitly written"
   },
   "clauses": {
     "rent_payment_period": "e.g. 1st to 10th of each month",

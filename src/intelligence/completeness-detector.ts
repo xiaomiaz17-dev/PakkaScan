@@ -60,8 +60,8 @@ const CRITICAL_FIELDS: Record<string, CriticalFieldSpec[]> = {
     { path: "parties.landlord", label: "Landlord name", category: "party", check: (f) => partyHasName(f.parties?.landlord) },
     { path: "parties.tenant", label: "Tenant name", category: "party", check: (f) => partyHasName(f.parties?.tenant) },
     { path: "financials.monthly_rent", label: "Monthly rent amount", category: "financial", check: (f) => moneyHasAmount(f.financials?.monthly_rent) },
-    { path: "dates.start_date", label: "Tenancy start date", category: "date", check: (f) => stringPresent(f.dates?.start_date) },
-    { path: "dates.end_date", label: "Tenancy end date", category: "date", check: (f) => stringPresent(f.dates?.end_date) },
+    { path: "dates.start_or_execution", label: "Tenancy start date", category: "date", check: (f) => stringPresent(f.dates?.start_date) || (stringPresent(f.dates?.execution_date) && f.dates?.duration_months > 0) },
+    { path: "dates.end_or_duration", label: "Tenancy end date", category: "date", check: (f) => stringPresent(f.dates?.end_date) || (stringPresent(f.dates?.execution_date) && f.dates?.duration_months > 0) },
     { path: "property.address", label: "Property address", category: "property", check: (f) => stringPresent(f.property?.address) },
   ],
 
