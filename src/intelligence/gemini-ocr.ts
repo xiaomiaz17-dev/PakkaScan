@@ -7,6 +7,13 @@ const genAI = apiKey ? new GoogleGenAI({ apiKey }) : null;
 const OCR_MODELS = ["gemini-flash-latest", "gemini-flash-lite-latest", "gemini-pro-latest"];
 const MAX_CONCURRENCY = 3;
 
+// --- Retry / timeout tuning ---
+const MAX_RETRIES_PER_MODEL = 1;           // 2 total attempts per model (was 3)
+const MAX_BACKOFF_MS = 3000;               // cap wait between attempts at 3s (was up to 8s)
+const BASE_BACKOFF_MS = 1500;              // starting backoff
+const PER_CALL_TIMEOUT_MS = 20000;         // 20s max per Gemini call
+const PER_PAGE_BUDGET_MS = 60000;          // 60s total budget per page
+
 export function geminiConfigured(): boolean {
   return Boolean(apiKey && apiKey.trim().length > 0);
 }
@@ -49,12 +56,33 @@ Extract ALL text visible on this page verbatim, preserving:
 Do NOT summarise, translate, or add commentary. Output raw extracted text only.
 If a section is unreadable, write [UNREADABLE] on that line and continue.`;
 
+/**
+ * Wrap a promise with a hard timeout. If the promise doesn't resolve/reject
+ * within timeoutMs, reject with a timeout error.
+ */
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`${label} exceeded ${timeoutMs}ms`)), timeoutMs);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (err) => {
+        clearTimeout(timer);
+        reject(err);
+      }
+    );
+  });
+}
+
 async function callModel(modelName: string, image: any, pageIdx: number): Promise<string | null> {
   if (!genAI) throw new Error("GEMINI_API_KEY not set");
-  const response = await genAI.models.generateContent({
+  const callPromise = genAI.models.generateContent({
     model: modelName,
     contents: [{ role: "user", parts: [{ inlineData: image.inlineData }, { text: OCR_PROMPT }] }],
   });
+  const response = await withTimeout(callPromise, PER_CALL_TIMEOUT_MS, `[gemini-ocr] ${modelName} page ${pageIdx + 1}`);
   const text = response.text;
   if (text && text.trim().length > 0) {
     console.log(`[gemini-ocr] Page ${pageIdx + 1}: ${modelName} extracted ${text.length} chars`);
@@ -63,30 +91,52 @@ async function callModel(modelName: string, image: any, pageIdx: number): Promis
   return null;
 }
 
-async function extractSinglePage(image: any, pageIdx: number, maxRetries = 2): Promise<string> {
+async function extractSinglePage(image: any, pageIdx: number): Promise<string> {
+  const pageStart = Date.now();
   let lastError: any = null;
+
   for (const modelName of OCR_MODELS) {
-    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    for (let attempt = 0; attempt <= MAX_RETRIES_PER_MODEL; attempt++) {
+
+      // Check global page budget
+      const elapsed = Date.now() - pageStart;
+      if (elapsed >= PER_PAGE_BUDGET_MS) {
+        console.warn(`[gemini-ocr] Page ${pageIdx + 1}: exceeded ${PER_PAGE_BUDGET_MS}ms budget, giving up`);
+        return `[Page ${pageIdx + 1}: OCR timeout - AI service was slow]`;
+      }
+
       try {
         const result = await callModel(modelName, image, pageIdx);
         if (result) return result;
-      } catch (err: any) {
-        lastError = err;
-        const status = err?.status || err?.code;
-        const retry = status === 503 || status === 429 || err?.message?.includes("503") || err?.message?.includes("429") || err?.message?.includes("overloaded");
-        if (retry && attempt < maxRetries) {
-          const delay = Math.pow(2, attempt) * 2000 + Math.random() * 1000;
-          console.warn(`[gemini-ocr] Page ${pageIdx + 1} (${modelName}) got ${status}; retrying in ${Math.round(delay)}ms`);
+        // Undefined/empty response - retry if we have attempts left, else move to next model
+        if (attempt < MAX_RETRIES_PER_MODEL) {
+          const delay = Math.min(BASE_BACKOFF_MS * Math.pow(2, attempt), MAX_BACKOFF_MS);
+          console.warn(`[gemini-ocr] Page ${pageIdx + 1} (${modelName}) got empty response; retrying in ${delay}ms`);
           await new Promise((r) => setTimeout(r, delay));
           continue;
         }
-        console.warn(`[gemini-ocr] Page ${pageIdx + 1} (${modelName}) failed: ${err?.message || err}`);
+        // No retries left for this model, break to next model
+        console.warn(`[gemini-ocr] Page ${pageIdx + 1} (${modelName}) exhausted retries, moving to next model`);
+        break;
+      } catch (err: any) {
+        lastError = err;
+        const status = err?.status || err?.code;
+        const isRetryable = status === 503 || status === 429 || err?.message?.includes("503") || err?.message?.includes("429") || err?.message?.includes("overloaded") || err?.message?.includes("exceeded");
+
+        if (isRetryable && attempt < MAX_RETRIES_PER_MODEL) {
+          const delay = Math.min(BASE_BACKOFF_MS * Math.pow(2, attempt), MAX_BACKOFF_MS);
+          console.warn(`[gemini-ocr] Page ${pageIdx + 1} (${modelName}) error (${status || err?.message}); retrying in ${delay}ms`);
+          await new Promise((r) => setTimeout(r, delay));
+          continue;
+        }
+        console.warn(`[gemini-ocr] Page ${pageIdx + 1} (${modelName}) failed permanently: ${err?.message || err}`);
         break;
       }
     }
   }
-  console.error(`[gemini-ocr] Page ${pageIdx + 1}: all models exhausted`, lastError?.message || lastError);
-  return `[Page ${pageIdx + 1}: OCR failed]`;
+
+  console.error(`[gemini-ocr] Page ${pageIdx + 1}: all models exhausted after ${Date.now() - pageStart}ms`, lastError?.message || lastError);
+  return `[Page ${pageIdx + 1}: OCR failed - AI service unavailable]`;
 }
 
 async function runWithConcurrencyLimit<T, R>(items: T[], limit: number, worker: (item: T, index: number) => Promise<R>): Promise<R[]> {
