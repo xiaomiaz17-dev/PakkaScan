@@ -97,6 +97,7 @@ function stringifyFindings(findings: any): string[] {
 }
 
 export async function POST(request: Request) {
+  const _t_scan_total = Date.now();
   try {
     // Rate limit check - runs before any work
     const clientIp = extractClientIp(request);
@@ -152,7 +153,9 @@ export async function POST(request: Request) {
 
       console.log(`[beta/scan] OCR starting: ${file.name} (${file.type}, ${file.size} bytes)`);
 
+      const _t_ocr = Date.now();
       const ocr = await runOcr([{ buf, mimeType: file.type }]);
+      console.log(`[timing] OCR (${file.name}): ${Date.now() - _t_ocr}ms`);
 
       console.log(
         `[beta/scan] OCR complete: engine=${ocr.engineUsed}, ` +
@@ -190,19 +193,23 @@ export async function POST(request: Request) {
         `(${(classification.confidence * 100).toFixed(0)}%) - ${classification.jurisdiction}`
       );
 
+      const _t_analyse = Date.now();
       const analysed = analyseDocument({
         documentId,
         text: ocr.text,
         jurisdictionHint: classification.jurisdiction,
         documentTypeHint: classification.documentType,
       });
+      console.log(`[timing] AnalyseDocument (${file.name}): ${Date.now() - _t_analyse}ms`);
 
       console.log(
         `[beta/scan] Extracted ${analysed.extracted.fields.length} field(s), ` +
         `${analysed.evidence.length} evidence, ${analysed.observations.length} observation(s)`
       );
 
+      const _t_smart = Date.now();
       const smartFields = await extractSmartFields(classification.documentType, ocr.text);
+      console.log(`[timing] SmartFields LLM (${file.name}): ${Date.now() - _t_smart}ms`);
 
       // Detect if this is a complete/partial/template document
       const completeness = detectCompleteness(classification.documentType, smartFields);
@@ -253,11 +260,13 @@ export async function POST(request: Request) {
     let nextSteps: any[] = [];
 
     if (combinedEvidence.length > 0) {
+      const _t_phase2 = Date.now();
       phase2 = runPhase2Analysis({
         evidence: combinedEvidence,
         jurisdiction: firstJurisdiction,
         rawTextHint: perDocument.find((d) => d.status === "ok")?.ocr && "text_present",
       });
+      console.log(`[timing] Phase2Analysis: ${Date.now() - _t_phase2}ms`);
       console.log(
         `[beta/scan] Phase 2: verdict=${phase2.analysis.decision}, ` +
         `posture=${phase2.posture}, findings=${phase2.analysis.findings.length}, ` +
@@ -271,6 +280,7 @@ export async function POST(request: Request) {
         try {
           const missingStrings = stringifyMissing(phase2.missingEvidence);
           const findingsStrings = stringifyFindings(phase2.analysis.findings);
+          const _t_next = Date.now();
           const advisorResult = await generateNextSteps({
             documentType: firstOk.classification.documentType,
             verdict: phase2.analysis.decision,
@@ -279,6 +289,7 @@ export async function POST(request: Request) {
             missingEvidence: missingStrings,
             findings: findingsStrings,
           });
+          console.log(`[timing] NextSteps LLM: ${Date.now() - _t_next}ms`);
 
           if (advisorResult.steps.length > 0) {
             nextSteps = advisorResult.steps;
@@ -305,6 +316,7 @@ export async function POST(request: Request) {
 
     if (successfulDocs.length >= 2) {
       try {
+        const _t_cross = Date.now();
         crossDoc = await analyzeCrossDocuments(
           successfulDocs.map((d) => ({
             fileName: d.fileName,
@@ -312,6 +324,7 @@ export async function POST(request: Request) {
             smartFields: d.smartFields,
           }))
         );
+        console.log(`[timing] CrossDoc LLM: ${Date.now() - _t_cross}ms`);
         console.log(
           `[beta/scan] Cross-doc: ${crossDoc.crossChecks.length} check(s), ` +
           `critical mismatch: ${crossDoc.hasCriticalMismatch}`
@@ -382,7 +395,9 @@ export async function POST(request: Request) {
     let urduTranslations: Record<string, string> = {};
     if (Object.keys(translationInputs).length > 0) {
       try {
+        const _t_urdu = Date.now();
         urduTranslations = await translateToUrdu(translationInputs);
+        console.log(`[timing] UrduTranslation LLM: ${Date.now() - _t_urdu}ms`);
         console.log(`[beta/scan] Urdu: translated ${Object.keys(urduTranslations).length}/${Object.keys(translationInputs).length} string(s)`);
       } catch (err: any) {
         console.warn("[beta/scan] Urdu translation threw:", err?.message || err);
@@ -391,6 +406,8 @@ export async function POST(request: Request) {
 
     // Record scan for rate limit tracking (regardless of outcome)
     recordScan(clientIp);
+
+    console.log(`[timing] SCAN_TOTAL: ${Date.now() - _t_scan_total}ms`);
 
     return NextResponse.json({
       success: true,
