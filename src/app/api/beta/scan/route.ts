@@ -13,6 +13,9 @@ import { translateToUrdu } from "@/intelligence/urdu-translator";
 import { checkRateLimit, recordScan, extractClientIp, getGlobalSpendState } from "@/utils/rate-limiter";
 import type { Jurisdiction, DocumentType } from "@/domain/models";
 import { randomUUID } from "node:crypto";
+import { getSession } from "@/lib/session";
+import { getUnusedEntitlements, consumeEntitlement, recordScanUsage } from "@/commercial/billing/entitlement-store";
+import type { ReportType } from "@/commercial/billing/reports";
 
 const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
 const ALLOWED_TYPES = new Set([
@@ -99,6 +102,35 @@ function stringifyFindings(findings: any): string[] {
 export async function POST(request: Request) {
   const _t_scan_total = Date.now();
   try {
+    // --- Authentication + Entitlement Gate ---
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json(
+        { error: "NOT_SIGNED_IN", message: "Please sign in to use PakkaScan." },
+        { status: 401 }
+      );
+    }
+
+    const unused = await getUnusedEntitlements(session.userId);
+    if (unused.length === 0) {
+      console.log(`[beta/scan] No entitlement for user=${session.userId}, returning 402`);
+      return NextResponse.json(
+        {
+          error: "NO_ENTITLEMENT",
+          message: "You need to purchase a scan credit before analysing documents.",
+          redirectTo: "/#pricing",
+        },
+        { status: 402 }
+      );
+    }
+
+    // Pick cheapest entitlement first (rental < bayana < full_dd)
+    const priceOrder: Record<ReportType, number> = { rental: 1, bayana: 2, full_dd: 3 };
+    const entitlementToUse = unused.sort(
+      (a, b) => (priceOrder[a.report_type] ?? 99) - (priceOrder[b.report_type] ?? 99)
+    )[0];
+    console.log(`[beta/scan] Using entitlement id=${entitlementToUse.id} type=${entitlementToUse.report_type} source=${entitlementToUse.source}`);
+
     // Rate limit check - runs before any work
     const clientIp = extractClientIp(request);
     const limitCheck = checkRateLimit(clientIp);
@@ -406,6 +438,20 @@ export async function POST(request: Request) {
 
     // Record scan for rate limit tracking (regardless of outcome)
     recordScan(clientIp);
+
+    // Consume the entitlement (one per scan session, not per file)
+    try {
+      await consumeEntitlement(entitlementToUse.id);
+      await recordScanUsage({
+        userId: session.userId,
+        entitlementId: entitlementToUse.id,
+        reportType: entitlementToUse.report_type,
+      });
+      console.log(`[beta/scan] Entitlement consumed: id=${entitlementToUse.id}`);
+    } catch (err: any) {
+      console.error(`[beta/scan] Failed to consume entitlement: ${err?.message || err}`);
+      // Don't fail the scan - user already got their report
+    }
 
     console.log(`[timing] SCAN_TOTAL: ${Date.now() - _t_scan_total}ms`);
 

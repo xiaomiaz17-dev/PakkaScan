@@ -678,6 +678,18 @@ export default function ScanPage() {
       let payload: any = null;
       try { payload = text ? JSON.parse(text) : null; } catch { throw new Error("Server returned an invalid response."); }
       if (!response.ok) {
+        // Handle no-entitlement case (Payment Required)
+        if (response.status === 402) {
+          alert(payload?.message || "You need to purchase a scan credit before analysing documents.");
+          window.location.href = payload?.redirectTo || "/#pricing";
+          return;
+        }
+        // Handle not-signed-in case
+        if (response.status === 401) {
+          alert(payload?.message || "Please sign in to continue.");
+          window.location.href = "/login";
+          return;
+        }
         const code = payload?.error || "INTERNAL_ERROR";
         const map: Record<string, string> = {
           NO_DOCUMENTS: "Please upload at least one file.",
