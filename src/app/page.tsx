@@ -261,7 +261,9 @@ function PricingCta({
         body: JSON.stringify({ reportType }),
       });
       const data = await res.json();
-      if (data.url) {
+      if (data.alreadyEntitled) {
+        window.location.href = data.redirectTo || "/scan";
+      } else if (data.url) {
         window.location.href = data.url;
       } else {
         alert(data.error || "Checkout failed. Please try again.");
