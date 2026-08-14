@@ -684,6 +684,11 @@ export default function ScanPage() {
           window.location.href = payload?.redirectTo || "/#pricing";
           return;
         }
+        // Handle too many files for tier
+        if (response.status === 400 && payload?.error === "TOO_MANY_FILES") {
+          alert(payload?.message || "Too many files for this credit tier.");
+          return;
+        }
         // Handle not-signed-in case
         if (response.status === 401) {
           alert(payload?.message || "Please sign in to continue.");

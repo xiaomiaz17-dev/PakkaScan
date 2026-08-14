@@ -131,6 +131,22 @@ export async function POST(request: Request) {
     )[0];
     console.log(`[beta/scan] Using entitlement id=${entitlementToUse.id} type=${entitlementToUse.report_type} source=${entitlementToUse.source}`);
 
+    // --- Per-tier file count limits ---
+    // Rental ($4.99): 2 files (Tenancy + CNIC)
+    // Bayana ($9.99): 3 files (Bayana + Fard + CNIC)
+    // Full DD ($19.99): 5 files (Sale Deed + Fard + Mutation + CNIC + NEC)
+    const tierFileLimits: Record<ReportType, number> = {
+      rental: 2,
+      bayana: 3,
+      full_dd: 5,
+    };
+    const maxFilesForTier = tierFileLimits[entitlementToUse.report_type] ?? 1;
+
+    // We need to check the file count AFTER parsing formData, so we defer this check.
+    // Store the limit for use after formData parsing.
+    const _tierFileLimit = maxFilesForTier;
+    const _tierName = entitlementToUse.report_type;
+
     // Rate limit check - runs before any work
     const clientIp = extractClientIp(request);
     const limitCheck = checkRateLimit(clientIp);
@@ -173,6 +189,20 @@ export async function POST(request: Request) {
       if (file.size > MAX_UPLOAD_BYTES) {
         return NextResponse.json({ error: "UPLOAD_TOO_LARGE" }, { status: 413 });
       }
+    }
+
+    // Enforce tier file count limit
+    if (files.length > _tierFileLimit) {
+      console.log(`[beta/scan] Too many files: ${files.length} uploaded, tier=${_tierName} allows max ${_tierFileLimit}`);
+      return NextResponse.json(
+        {
+          error: "TOO_MANY_FILES",
+          message: `Your ${_tierName === "rental" ? "Rental Safety Check" : _tierName === "bayana" ? "Bayana Safety Check" : "Full Property Due Diligence"} credit allows up to ${_tierFileLimit} file${_tierFileLimit === 1 ? "" : "s"}. You uploaded ${files.length}. Please remove ${files.length - _tierFileLimit} file${files.length - _tierFileLimit === 1 ? "" : "s"} or upgrade your credit.`,
+          tierLimit: _tierFileLimit,
+          uploaded: files.length,
+        },
+        { status: 400 }
+      );
     }
 
     console.log(`[beta/scan] Received ${files.length} file(s)`);
