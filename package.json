@@ -36,6 +36,7 @@
     "pdf-to-img": "^5.0.0",
     "pdfjs-dist": "^5.4.624",
     "pg": "^8.22.0",
+    "qrcode.react": "^4.2.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "resend": "^6.18.1",

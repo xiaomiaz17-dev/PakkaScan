@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Fraunces, Noto_Nastaliq_Urdu } from "next/font/google";
 import { DOCUMENT_TYPE_OPTIONS, groupedDocumentTypes, type DocumentTypeOption } from "@/lib/document-types";
+import { QRCodeSVG } from "qrcode.react";
 
 type SessionUser = { email: string; name: string | null };
 
@@ -1093,6 +1094,61 @@ export default function ScanPage() {
           </div>
         )}
 
+        {results?.referenceCode && (
+          <div style={{ marginTop: "36px", paddingTop: "24px", borderTop: "1px solid #e2e8f0" }}>
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "24px",
+              padding: "20px",
+              backgroundColor: "#f8fafc",
+              border: "1px solid #e2e8f0",
+              borderRadius: "12px",
+              flexWrap: "wrap",
+              justifyContent: "center",
+            }}>
+              <div style={{
+                backgroundColor: "#ffffff",
+                padding: "10px",
+                borderRadius: "8px",
+                border: "1px solid #e2e8f0",
+                lineHeight: 0,
+              }}>
+                <QRCodeSVG
+                  value={`https://www.pakkascan.com/verify/${results.referenceCode}`}
+                  size={130}
+                  level="M"
+                  bgColor="#ffffff"
+                  fgColor="#0f172a"
+                />
+              </div>
+              <div style={{ flex: "1 1 240px", minWidth: 0 }}>
+                <div style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a", marginBottom: "6px" }}>
+                  Verify this report
+                </div>
+                <div style={{ fontSize: "12px", color: "#475569", marginBottom: "10px", lineHeight: 1.5 }}>
+                  Scan the QR code or visit the URL below to confirm this report
+                  was issued by PakkaScan.
+                </div>
+                <div style={{
+                  fontSize: "11px",
+                  fontFamily: "monospace",
+                  color: "#0f172a",
+                  backgroundColor: "#ffffff",
+                  padding: "8px 10px",
+                  borderRadius: "6px",
+                  border: "1px solid #e2e8f0",
+                  wordBreak: "break-all",
+                }}>
+                  pakkascan.com/verify/{results.referenceCode}
+                </div>
+                <div style={{ fontSize: "10px", color: "#94a3b8", marginTop: "8px", fontStyle: "italic" }}>
+                  Public verification does not reveal document contents.
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "28px", marginTop: "40px", flexWrap: "wrap" }}>
           {["Bank-grade encryption", "Docs deleted after scan", "AI-powered analysis"].map((text, i) => (
             <div key={i} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", color: "#334155", fontWeight: 600 }}>
