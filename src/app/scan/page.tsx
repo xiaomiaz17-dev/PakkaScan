@@ -847,8 +847,8 @@ export default function ScanPage() {
                   <div style={{ fontSize: "12px", color: "#166534", opacity: 0.85, marginTop: "2px" }}>
                     {entitlements.credits.map((c, i) => (
                       <span key={c.type}>
-                        {i > 0 && " � "}
-                        {c.count}� {c.type === "rental" ? "Rental Safety Check (2 files max)" : c.type === "bayana" ? "Bayana Safety Check (3 files max)" : "Full Property Due Diligence (5 files max)"}
+                        {i > 0 && " x "}
+                        {c.count}x {c.type === "rental" ? "Rental Safety Check (2 files max)" : c.type === "bayana" ? "Bayana Safety Check (3 files max)" : "Full Property Due Diligence (5 files max)"}
                       </span>
                     ))}
                   </div>
