@@ -635,6 +635,37 @@ export default function ScanPage() {
     else setActiveStep(0);
   }, [files, isAnalyzing, results]);
 
+  // --- Entitlement summary state ---
+  const [entitlements, setEntitlements] = React.useState<{
+    credits: Array<{ type: string; count: number }>;
+    total: number;
+    loaded: boolean;
+    signedIn: boolean;
+  }>({ credits: [], total: 0, loaded: false, signedIn: false });
+
+  const refreshEntitlements = React.useCallback(async () => {
+    try {
+      const res = await fetch("/api/entitlements", { credentials: "same-origin" });
+      if (res.status === 401) {
+        setEntitlements({ credits: [], total: 0, loaded: true, signedIn: false });
+        return;
+      }
+      const data = await res.json();
+      setEntitlements({
+        credits: data.credits || [],
+        total: data.total || 0,
+        loaded: true,
+        signedIn: true,
+      });
+    } catch {
+      setEntitlements((prev) => ({ ...prev, loaded: true }));
+    }
+  }, []);
+
+  React.useEffect(() => {
+    refreshEntitlements();
+  }, [refreshEntitlements]);
+
   const processFiles = (fileList: File[]) => {
     setFiles(fileList);
     setFileTags(fileList.map(() => "")); // reset tags - all auto-detect by default
@@ -696,6 +727,8 @@ export default function ScanPage() {
           return;
         }
         const code = payload?.error || "INTERNAL_ERROR";
+      // Also refresh entitlements after any response (success or non-blocking error)
+      void refreshEntitlements();
         const map: Record<string, string> = {
           NO_DOCUMENTS: "Please upload at least one file.",
           UNSUPPORTED_CONTENT_TYPE: "That file type is not supported.",
@@ -801,6 +834,46 @@ export default function ScanPage() {
           )}
         </div>
 
+        {/* --- Entitlement Banner --- */}
+        {entitlements.loaded && entitlements.signedIn && (
+          entitlements.total > 0 ? (
+            <div style={{ width: "100%", backgroundColor: "#f0fdf4", border: "1px solid #86efac", borderRadius: "12px", padding: "14px 18px", marginBottom: "16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <div style={{ width: "32px", height: "32px", borderRadius: "50%", backgroundColor: "#16a34a", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", fontWeight: 900, flexShrink: 0 }}>OK</div>
+                <div>
+                  <div style={{ fontSize: "14px", fontWeight: 800, color: "#166534" }}>
+                    You have {entitlements.total} scan credit{entitlements.total === 1 ? "" : "s"} available
+                  </div>
+                  <div style={{ fontSize: "12px", color: "#166534", opacity: 0.85, marginTop: "2px" }}>
+                    {entitlements.credits.map((c, i) => (
+                      <span key={c.type}>
+                        {i > 0 && " · "}
+                        {c.count}× {c.type === "rental" ? "Rental Safety Check (2 files max)" : c.type === "bayana" ? "Bayana Safety Check (3 files max)" : "Full Property Due Diligence (5 files max)"}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <a href="/#pricing" style={{ fontSize: "12px", color: "#166534", fontWeight: 700, textDecoration: "underline", whiteSpace: "nowrap" }}>Buy more credits</a>
+            </div>
+          ) : (
+            <div style={{ width: "100%", backgroundColor: "#fef2f2", border: "1px solid #fecaca", borderRadius: "12px", padding: "16px 18px", marginBottom: "16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <div style={{ width: "32px", height: "32px", borderRadius: "50%", backgroundColor: "#dc2626", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", fontWeight: 900, flexShrink: 0 }}>!</div>
+                <div>
+                  <div style={{ fontSize: "14px", fontWeight: 800, color: "#991b1b" }}>
+                    You have no scan credits
+                  </div>
+                  <div style={{ fontSize: "12px", color: "#991b1b", opacity: 0.85, marginTop: "2px" }}>
+                    Purchase a credit before uploading documents.
+                  </div>
+                </div>
+              </div>
+              <a href="/#pricing" style={{ fontSize: "13px", color: "#ffffff", backgroundColor: "#dc2626", fontWeight: 700, textDecoration: "none", padding: "8px 16px", borderRadius: "8px", whiteSpace: "nowrap" }}>Purchase a scan</a>
+            </div>
+          )
+        )}
+
         <div style={{ width: "100%", border: "2px dashed #cbd5e1", borderRadius: "16px", padding: "40px 24px", textAlign: "center", backgroundColor: isDraggingOver ? "rgba(22, 163, 74, 0.08)" : "#ffffff", transition: "background-color 0.2s", boxSizing: "border-box", position: "relative", overflow: "hidden", boxShadow: "0 4px 12px rgba(0,0,0,0.02)" }} onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
           <div style={{ position: "absolute", right: "-24px", bottom: "-16px", transform: "rotate(-12deg)", pointerEvents: "none", opacity: 0.12, border: "2px dashed #0b132b", borderRadius: "50%", width: "110px", height: "110px", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <div style={{ textAlign: "center", fontSize: "11px", fontWeight: 900, color: "#0b132b", textTransform: "uppercase", letterSpacing: "0.1em", lineHeight: 1.1 }}>
@@ -905,7 +978,7 @@ export default function ScanPage() {
               </div>
             )}
 
-            <button onClick={handleScan} disabled={isAnalyzing} style={{ width: "100%", padding: "16px 24px", backgroundColor: "#0b132b", color: "#ffffff", fontWeight: 700, fontSize: "16px", borderRadius: "12px", border: "none", cursor: isAnalyzing ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "12px", opacity: isAnalyzing ? 0.7 : 1, boxShadow: "0 4px 12px rgba(11, 19, 43, 0.25)", transition: "opacity 0.2s" }}>
+            <button onClick={handleScan} disabled={isAnalyzing || (entitlements.loaded && entitlements.total === 0)} style={{ width: "100%", padding: "16px 24px", backgroundColor: "#0b132b", color: "#ffffff", fontWeight: 700, fontSize: "16px", borderRadius: "12px", border: "none", cursor: (isAnalyzing || (entitlements.loaded && entitlements.total === 0)) ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "12px", opacity: (isAnalyzing || (entitlements.loaded && entitlements.total === 0)) ? 0.5 : 1, boxShadow: "0 4px 12px rgba(11, 19, 43, 0.25)", transition: "opacity 0.2s" }}>
               {isAnalyzing ? (
                 <>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ animation: "spin 1s linear infinite" }}>
