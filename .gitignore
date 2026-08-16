@@ -20,3 +20,4 @@ scripts/
 
 # Backup files created during edits
 *.backup*
+_backups/

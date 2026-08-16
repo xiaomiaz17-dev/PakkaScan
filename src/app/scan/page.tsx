@@ -1000,8 +1000,18 @@ export default function ScanPage() {
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
                 <h3 style={{ fontSize: "22px", fontWeight: 800, color: "#0f172a", margin: "0 0 4px 0" }}>Due Diligence Report</h3>
                 {results.referenceCode && (
-                  <div style={{ fontSize: "11px", color: "#64748b", fontFamily: "monospace", backgroundColor: "#f1f5f9", padding: "4px 10px", borderRadius: "6px", border: "1px solid #e2e8f0" }}>
-                    Ref: <span style={{ fontWeight: 700, color: "#0f172a" }}>{results.referenceCode}</span>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px" }}>
+                    <div style={{ fontSize: "11px", color: "#64748b", fontFamily: "monospace", backgroundColor: "#f1f5f9", padding: "4px 10px", borderRadius: "6px", border: "1px solid #e2e8f0" }}>
+                      Ref: <span style={{ fontWeight: 700, color: "#0f172a" }}>{results.referenceCode}</span>
+                    </div>
+                    <a
+                      href={`/verify/${encodeURIComponent(results.referenceCode)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ fontSize: "10px", color: "#059669", textDecoration: "none", fontWeight: 500 }}
+                    >
+                      Verify at pakkascan.com/verify &rarr;
+                    </a>
                   </div>
                 )}
               </div>
