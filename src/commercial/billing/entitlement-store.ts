@@ -146,13 +146,28 @@ export async function ensureFreeRentalGrant(userId: string): Promise<void> {
 // SCAN USAGE
 // ============================================
 
+/**
+ * Generate a human-readable scan reference code.
+ * Format: PKS-YYYY-MM-XXXX (e.g., PKS-2026-08-A7B3)
+ */
+export function generateScanReference(): string {
+  const now = new Date();
+  const year = now.getUTCFullYear();
+  const month = String(now.getUTCMonth() + 1).padStart(2, "0");
+  const hex = Math.floor(Math.random() * 0xFFFF).toString(16).toUpperCase().padStart(4, "0");
+  return `PKS-${year}-${month}-${hex}`;
+}
+
 export async function recordScanUsage(input: {
   userId: string;
   entitlementId: string;
   reportType: ReportType;
-}): Promise<void> {
+  referenceCode?: string;
+}): Promise<string> {
+  const ref = input.referenceCode ?? generateScanReference();
   await sql`
-    INSERT INTO scan_usage (user_id, entitlement_id, report_type)
-    VALUES (${input.userId}, ${input.entitlementId}, ${input.reportType})
+    INSERT INTO scan_usage (user_id, entitlement_id, report_type, reference_code)
+    VALUES (${input.userId}, ${input.entitlementId}, ${input.reportType}, ${ref})
   `;
+  return ref;
 }

@@ -128,6 +128,7 @@ type BackendResponse = {
   documents: BackendDocument[];
   crossDoc?: CrossDocResult | null;
   combinedVerdict?: CombinedVerdict | null;
+  referenceCode?: string | null;
   urduTranslations?: Record<string, string>;
   phase2?: {
     result?: { decision?: string; pakkaScore?: number; findings?: any[]; blockers?: number };
@@ -996,7 +997,14 @@ export default function ScanPage() {
           <div ref={resultsRef} style={{ width: "100%", paddingTop: "24px", marginTop: "32px", backgroundColor: "#ffffff", padding: "28px", borderRadius: "16px", border: "1px solid #e2e8f0", boxSizing: "border-box", boxShadow: "0 10px 25px -5px rgba(0,0,0,0.08)" }}>
 
             <div style={{ marginBottom: "8px" }}>
-              <h3 style={{ fontSize: "22px", fontWeight: 800, color: "#0f172a", margin: "0 0 4px 0" }}>Due Diligence Report</h3>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
+                <h3 style={{ fontSize: "22px", fontWeight: 800, color: "#0f172a", margin: "0 0 4px 0" }}>Due Diligence Report</h3>
+                {results.referenceCode && (
+                  <div style={{ fontSize: "11px", color: "#64748b", fontFamily: "monospace", backgroundColor: "#f1f5f9", padding: "4px 10px", borderRadius: "6px", border: "1px solid #e2e8f0" }}>
+                    Ref: <span style={{ fontWeight: 700, color: "#0f172a" }}>{results.referenceCode}</span>
+                  </div>
+                )}
+              </div>
               <p style={{ fontSize: "13px", color: "#64748b", margin: 0 }}>
                 {results.documents.length === 1
                   ? humanDocType(results.documents[0]?.classification?.documentType)

@@ -470,14 +470,15 @@ export async function POST(request: Request) {
     recordScan(clientIp);
 
     // Consume the entitlement (one per scan session, not per file)
+    let scanReferenceCode: string | null = null;
     try {
       await consumeEntitlement(entitlementToUse.id);
-      await recordScanUsage({
+      scanReferenceCode = await recordScanUsage({
         userId: session.userId,
         entitlementId: entitlementToUse.id,
         reportType: entitlementToUse.report_type,
       });
-      console.log(`[beta/scan] Entitlement consumed: id=${entitlementToUse.id}`);
+      console.log(`[beta/scan] Entitlement consumed: id=${entitlementToUse.id} ref=${scanReferenceCode}`);
     } catch (err: any) {
       console.error(`[beta/scan] Failed to consume entitlement: ${err?.message || err}`);
       // Don't fail the scan - user already got their report
@@ -487,6 +488,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
+      referenceCode: scanReferenceCode,
       documents: perDocument,
       crossDoc,
       combinedVerdict,
