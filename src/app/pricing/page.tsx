@@ -105,7 +105,25 @@ export default function PricingPage() {
       <section style={{ padding: "48px 24px 64px 24px", backgroundColor: "#f8fafc" }}>
         <div style={{ maxWidth: "1100px", margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "20px" }}>
           {TIERS.map((tier, i) => (
-            <div key={i} style={{ backgroundColor: "#ffffff", border: tier.highlight ? "2px solid #16a34a" : "1px solid #e2e8f0", borderRadius: "16px", padding: "32px 24px", position: "relative", boxShadow: tier.highlight ? "0 10px 25px -5px rgba(22,163,74,0.15)" : "0 4px 6px -1px rgba(0,0,0,0.02)", display: "flex", flexDirection: "column" }}>
+            <Link
+              key={i}
+              href="/scan"
+              className={tier.highlight ? "pks-pricing-card pks-pricing-card-highlight" : "pks-pricing-card"}
+              style={{
+                backgroundColor: "#ffffff",
+                border: tier.highlight ? "2px solid #16a34a" : "1px solid #e2e8f0",
+                borderRadius: "16px",
+                padding: "32px 24px",
+                position: "relative",
+                boxShadow: tier.highlight ? "0 10px 25px -5px rgba(22,163,74,0.15)" : "0 4px 6px -1px rgba(0,0,0,0.02)",
+                display: "flex",
+                flexDirection: "column",
+                textDecoration: "none",
+                color: "inherit",
+                cursor: "pointer",
+                transition: "transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease",
+              }}
+            >
               {tier.highlight && (
                 <div style={{ position: "absolute", top: "-12px", left: "50%", transform: "translateX(-50%)", backgroundColor: "#16a34a", color: "#ffffff", fontSize: "11px", fontWeight: 800, padding: "4px 12px", borderRadius: "20px", letterSpacing: "0.05em" }}>MOST POPULAR</div>
               )}
@@ -114,7 +132,7 @@ export default function PricingPage() {
               <div style={{ fontSize: "13px", color: "#64748b", marginBottom: "20px", lineHeight: 1.5 }}>{tier.tagline}</div>
 
               <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: "20px", marginBottom: "20px", flex: 1 }}>
-                <div style={{ fontSize: "11px", fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "12px" }}>What's included</div>
+                <div style={{ fontSize: "11px", fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "12px" }}>What&apos;s included</div>
                 <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
                   {tier.includes.map((item, j) => (
                     <li key={j} style={{ display: "flex", gap: "10px", alignItems: "flex-start", padding: "6px 0", fontSize: "13px", color: "#334155", lineHeight: 1.5 }}>
@@ -130,8 +148,8 @@ export default function PricingPage() {
                 <div style={{ fontSize: "12px", color: "#334155", lineHeight: 1.5 }}>{tier.idealFor}</div>
               </div>
 
-              <Link href="/scan" style={{ display: "block", padding: "12px 20px", backgroundColor: tier.highlight ? "#16a34a" : "#0b132b", color: "#ffffff", fontWeight: 700, fontSize: "14px", borderRadius: "10px", textDecoration: "none", textAlign: "center" }}>Get Started</Link>
-            </div>
+              <div style={{ display: "block", padding: "12px 20px", backgroundColor: tier.highlight ? "#16a34a" : "#0b132b", color: "#ffffff", fontWeight: 700, fontSize: "14px", borderRadius: "10px", textDecoration: "none", textAlign: "center" }}>Get Started</div>
+            </Link>
           ))}
         </div>
       </section>

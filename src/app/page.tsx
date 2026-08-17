@@ -342,7 +342,7 @@ export default function LandingPage() {
             LEGAL DUE DILIGENCE <span style={{ margin: "0 6px", color: "#16a34a" }}>*</span> AI-POWERED
           </div>
           <h1 className="pks-hero-h1" style={{ fontSize: "40px", fontWeight: 800, lineHeight: 1.2, margin: "0 0 20px 0", letterSpacing: "-0.02em" }}>
-            Don&apos;t hand over <span style={{ color: "#d4af37" }}>bayana</span> until PakkaScan has read the fine print you didn&apos;t.
+            Don&apos;t hand over your <span style={{ color: "#d4af37" }}>deposit</span> until PakkaScan has read the fine print you didn&apos;t.
           </h1>
           <p className="pks-hero-tagline" style={{ fontSize: "17px", color: "#cbd5e1", lineHeight: 1.6, maxWidth: "580px", margin: "0 auto 36px auto" }}>
             AI-powered document verification for Pakistani property transactions. Upload your Bayana, Fard, or Sale Deed. Get a bilingual verdict in two minutes.

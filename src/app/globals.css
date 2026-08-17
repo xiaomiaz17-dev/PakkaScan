@@ -526,3 +526,18 @@ a.primary {
   color: #ffffff;
   font-style: normal;
 }
+/* ============================================================
+   PRICING CARD HOVER
+   Interactive hover state for pricing cards on /pricing page.
+   Pure CSS - no event handlers (works in Server Components).
+   ============================================================ */
+.pks-pricing-card:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 20px 40px -10px rgba(22, 163, 74, 0.25) !important;
+  border-color: #16a34a !important;
+}
+
+/* Highlighted card already has green border - keep it on hover */
+.pks-pricing-card-highlight:hover {
+  border-color: #16a34a !important;
+}
