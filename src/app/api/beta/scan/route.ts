@@ -15,6 +15,7 @@ import type { Jurisdiction, DocumentType } from "@/domain/models";
 import { randomUUID } from "node:crypto";
 import { getSession } from "@/lib/session";
 import { getUnusedEntitlements, consumeEntitlement, recordScanUsage } from "@/commercial/billing/entitlement-store";
+import { sendScanReportEmail } from "@/lib/email";
 import type { ReportType } from "@/commercial/billing/reports";
 
 const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
@@ -479,6 +480,28 @@ export async function POST(request: Request) {
         reportType: entitlementToUse.report_type,
       });
       console.log(`[beta/scan] Entitlement consumed: id=${entitlementToUse.id} ref=${scanReferenceCode}`);
+
+      // Send scan report email - awaited but never fails the scan response
+      if (scanReferenceCode && session?.email) {
+        const _verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://www.pakkascan.com"}/verify/${scanReferenceCode}`;
+        const _verdict   = phase2?.analysis?.decision ?? combinedVerdict?.verdict ?? null;
+        const _score     = phase2?.analysis?.pakkaScore ?? null;
+        const _steps     = (nextSteps ?? []) as Array<{ title: string; detail?: string }>;
+                try {
+          const emailResult = await sendScanReportEmail({
+            to:            session.email,
+            referenceCode: scanReferenceCode,
+            reportType:    entitlementToUse.report_type,
+            verdict:       _verdict,
+            pakkaScore:    _score,
+            nextSteps:     _steps,
+            verifyUrl:     _verifyUrl,
+          });
+          if (!emailResult.ok) console.warn("[beta/scan] scan report email failed:", emailResult.error);
+        } catch (err: any) {
+          console.warn("[beta/scan] scan report email threw:", err?.message || err);
+        }
+      }
     } catch (err: any) {
       console.error(`[beta/scan] Failed to consume entitlement: ${err?.message || err}`);
       // Don't fail the scan - user already got their report

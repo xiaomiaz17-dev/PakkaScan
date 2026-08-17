@@ -14,6 +14,7 @@ import { NextResponse } from "next/server";
 import { createHash } from "node:crypto";
 import { sql } from "@/lib/db";
 import { createSession, SESSION_COOKIE_NAME, SESSION_COOKIE_MAX_AGE_SECONDS } from "@/lib/session";
+import { ensureFreeRentalGrant } from "@/commercial/billing/entitlement-store";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -60,6 +61,8 @@ export async function GET(request: Request) {
     ` as Array<{ id: string }>;
     userId = inserted[0].id;
     console.log("[auth/verify] Created new user " + email);
+    await ensureFreeRentalGrant(userId);
+    console.log("[auth/verify] Free rental grant ensured for new user " + email);
   } else {
     userId = users[0].id;
     await sql`
@@ -69,6 +72,7 @@ export async function GET(request: Request) {
       WHERE id = ${userId}
     `;
     console.log("[auth/verify] Existing user logged in: " + email);
+    await ensureFreeRentalGrant(userId);
   }
 
   const ipAddress = request.headers.get("x-forwarded-for")?.split(",")[0].trim() || null;
