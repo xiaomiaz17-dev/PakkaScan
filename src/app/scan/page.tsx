@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Fraunces, Noto_Nastaliq_Urdu } from "next/font/google";
 import { DOCUMENT_TYPE_OPTIONS, groupedDocumentTypes, type DocumentTypeOption } from "@/lib/document-types";
 import { QRCodeSVG } from "qrcode.react";
+import { getCnicDistrict } from "@/intelligence/cnic-districts";
 
 type SessionUser = { email: string; name: string | null };
 
@@ -173,7 +174,14 @@ function SmartFieldsPanel({ data, urduSummary }: { data: any; urduSummary?: stri
   const partyRow = (label: string, party: any) => {
     if (!party?.name) return;
     let value = party.name;
-    if (party.cnic) value += " (CNIC " + party.cnic + ")";
+    if (party.cnic) {
+      value += " (CNIC " + party.cnic + ")";
+      // Enrich with district info if the CNIC prefix is in our verified lookup table
+      const district = getCnicDistrict(party.cnic);
+      if (district) {
+        value += " [issued in " + district.district + ", " + district.province + "]";
+      }
+    }
     rows.push({
       label,
       value,
