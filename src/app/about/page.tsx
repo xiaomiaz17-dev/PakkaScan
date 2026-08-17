@@ -102,7 +102,7 @@ export default function AboutPage() {
 
             <div style={{ backgroundColor: "#fef9c3", border: "1px solid #fde68a", borderRadius: "12px", padding: "20px 24px" }}>
               <p style={{ margin: 0, fontSize: "15px", color: "#713f12", lineHeight: 1.6 }}>
-                <strong>This is not a substitute for a licensed lawyer.</strong> For very high-value transactions, always confirm with your lawyer and the relevant authority (NADRA, Sub-Registrar, Patwari). PakkaScan gives you the confidence to know when you need one ? and when your paperwork is genuinely clean.
+                <strong>This is not a substitute for a licensed lawyer.</strong> For very high-value transactions, always confirm with your lawyer and the relevant authority (NADRA, Sub-Registrar, Patwari). PakkaScan gives you the confidence to know when you need one - and when your paperwork is genuinely clean.
               </p>
             </div>
           </div>
