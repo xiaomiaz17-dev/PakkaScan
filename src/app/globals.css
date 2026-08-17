@@ -497,3 +497,12 @@ a.primary {
 /* ============================================================
    END BUTTON TEXT VISIBILITY FIX
    ============================================================ */
+/* ============================================================
+   HOW-IT-WORKS TABLET RESPONSIVE
+   4-column grid collapses to 2 columns on tablet.
+   ============================================================ */
+@media (min-width: 769px) and (max-width: 900px) {
+  .pks-how-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}

@@ -1,19 +1,115 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { MarketingShell } from "@/components/SiteChrome";
 
-
 export const metadata: Metadata = {
-  title: "How it works",
-  description: "Upload documents, run evidence-linked analysis, receive a PakkaScore report and Property Passport.",
+  title: "How PakkaScan works - AI due diligence + public verification",
+  description: "Upload a property document, get a bilingual verdict in under 2 minutes, share a QR code so anyone can verify authenticity without seeing the document.",
 };
 
-export default function Page() {
+export default function HowItWorksPage() {
   return (
     <MarketingShell>
-      <div className="stack prose" style={{ margin: "0 auto", padding: "32px 16px 64px" }}>
-        <h1>How it works</h1>
-        <p className="muted">Upload documents, run evidence-linked analysis, receive a PakkaScore report and Property Passport.</p>
-        <p className="muted">This page is part of the commercial launch surface and will deepen with product content.</p>
+      <div className="shell prose">
+        <h1>How PakkaScan works</h1>
+        <p className="lead muted">
+          Property due diligence in Pakistan usually means chasing lawyers, waiting days for opinions,
+          and hoping the paperwork is legitimate. PakkaScan reads Bayanas, Fards, Sale Deeds, and CNICs
+          with AI + Urdu OCR - and gives you a verifiable report in minutes.
+        </p>
+
+        <section>
+          <h2>The 4 steps</h2>
+          <p className="muted">Under two minutes end-to-end. No jargon, no legal training required.</p>
+        </section>
+
+        <section className="panel" style={{ marginTop: "20px" }}>
+          <h3>1. Upload</h3>
+          <p>
+            Photograph any Pakistani property document with your phone, or upload a PDF.
+            PakkaScan handles Bayanas (agreements to sell), Fards (ownership records),
+            registered Sale Deeds, Mutations, CNICs, Power of Attorney, and more.
+            No preprocessing - phone photos work.
+          </p>
+        </section>
+
+        <section className="panel" style={{ marginTop: "16px" }}>
+          <h3>2. Analyse</h3>
+          <p>
+            Multiple AI models read the document in English AND Urdu (Nastaliq).
+            Structured fields (CNICs, amounts, dates, plot references) are extracted with
+            character-by-character verification against the source. Every extracted CNIC
+            is validated - fabricated numbers are stripped, not shown.
+          </p>
+          <p>
+            If you upload multiple documents, PakkaScan cross-references them
+            (does the seller on the Bayana match the owner on the Fard? Do the amounts
+            match the mutation record?).
+          </p>
+        </section>
+
+        <section className="panel" style={{ marginTop: "16px" }}>
+          <h3>3. Verdict</h3>
+          <p>
+            You get a bilingual report with one of three verdicts:
+          </p>
+          <ul>
+            <li><strong>Proceed</strong> - document looks safe to move forward with</li>
+            <li><strong>Proceed With Caution</strong> - specific items need to be checked in person</li>
+            <li><strong>Do Not Proceed</strong> - serious red flags found</li>
+          </ul>
+          <p>
+            Each verdict comes with concrete next steps, a Missing Evidence section (things
+            PakkaScan couldn't confirm), and a PakkaScore (0-100). Everything shown in both
+            English and Urdu so you can share with family, lawyers, or the counterparty.
+          </p>
+        </section>
+
+        <section className="panel" style={{ marginTop: "16px" }}>
+          <h3>4. Verify</h3>
+          <p>
+            Every report gets a unique reference code (like <span className="mono-badge">PKS-2026-08-A7F2</span>)
+            and a QR code. Share the reference or QR with your landlord, buyer, seller, or lawyer -
+            they visit <Link href="/verify">pakkascan.com/verify</Link> and instantly see whether the report
+            is authentic.
+          </p>
+          <p>
+            <strong>Public verification does not expose the document contents.</strong> The counterparty
+            only sees: "yes, this reference was issued by PakkaScan on [date] for [report type]".
+            Full details stay private to the report holder.
+          </p>
+        </section>
+
+        <section style={{ marginTop: "32px" }}>
+          <h2>Try it right now</h2>
+          <p>
+            Here is a real reference code from our sample Bayana report -
+            click below to see the verification page:
+          </p>
+          <p>
+            <Link
+              href="/verify/PKS-2026-08-A7F2"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="button primary"
+            >
+              Verify sample report -&gt;
+            </Link>
+          </p>
+          <p className="muted small">
+            Or go to <Link href="/verify">/verify</Link> and paste the code manually.
+          </p>
+        </section>
+
+        <section style={{ marginTop: "40px" }}>
+          <h2>Ready to run your own?</h2>
+          <p>
+            One document, bilingual verdict, verifiable report. All under two minutes.
+          </p>
+          <p>
+            <Link href="/scan" className="button primary">Scan your first document -&gt;</Link>
+          </p>
+        </section>
       </div>
     </MarketingShell>
   );

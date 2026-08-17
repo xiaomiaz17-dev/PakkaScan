@@ -364,7 +364,7 @@ export default function LandingPage() {
           {[
             { icon: "EN\u2022UR", title: "Bilingual reports", desc: "Every verdict, summary, and next-step in both English and Urdu (Nastaliq)." },
             { icon: "AI", title: "Anti-hallucination guard", desc: "CNICs verified character-by-character against the source. Fabricated data stripped." },
-            { icon: "X-REF", title: "Cross-document analysis", desc: "Upload multiple docs and PakkaScan cross-checks parties, plots, and amounts." },
+            { icon: "VERIFY", title: "Public verification", desc: "Every report gets a QR + reference code. Anyone can confirm authenticity at pakkascan.com/verify - no login, no document contents shared." },
           ].map((item, i) => (
             <div key={i} style={{ textAlign: "center" }}>
               <div style={{ fontSize: "13px", fontWeight: 900, letterSpacing: "0.05em", marginBottom: "12px", display: "inline-block", padding: "8px 16px", backgroundColor: "#0b132b", color: "#ffffff", borderRadius: "8px" }}>{item.icon}</div>
@@ -380,13 +380,14 @@ export default function LandingPage() {
         <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: "48px" }}>
             <h2 style={{ fontSize: "32px", fontWeight: 800, color: "#0f172a", margin: "0 0 12px 0", letterSpacing: "-0.02em" }}>How It Works</h2>
-            <p style={{ fontSize: "16px", color: "#64748b", margin: 0 }}>Three steps. Under two minutes. No jargon.</p>
+            <p style={{ fontSize: "16px", color: "#64748b", margin: 0 }}>Four steps. Under two minutes. No jargon.</p>
           </div>
-          <div className="pks-how-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "24px" }}>
+          <div className="pks-how-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "20px" }}>
             {[
               { num: "01", title: "Upload", desc: "Upload your Bayana, Fard, Sale Deed, CNIC, or any Pakistani property document. Phone photos work fine." },
-              { num: "02", title: "PakkaScan Analyses", desc: "AI reads every clause in English AND Urdu, cross-checks the details, and flags anything missing." },
-              { num: "03", title: "Get Verdict", desc: "Clear bilingual verdict ? Proceed, Proceed With Caution, or Do Not Proceed ? with concrete next steps." },
+              { num: "02", title: "Analyse", desc: "AI reads every clause in English AND Urdu, cross-checks the details, and flags anything missing." },
+              { num: "03", title: "Verdict", desc: "Clear bilingual verdict - Proceed, Proceed With Caution, or Do Not Proceed - with concrete next steps." },
+              { num: "04", title: "Verify", desc: "Every report gets a QR code + reference. Share with landlord or buyer - they scan to confirm authenticity, no login." },
             ].map((step, i) => (
               <Card key={i}>
                 <div style={{ fontSize: "12px", fontWeight: 800, color: "#16a34a", letterSpacing: "0.1em", marginBottom: "8px" }}>{step.num}</div>
