@@ -191,7 +191,7 @@ export default function FaqPage() {
             <p style={{ margin: "0 0 12px 0" }}>
               <strong style={{ color: "#94a3b8" }}>Disclaimer:</strong> PakkaScan is an AI-powered assistive tool. Not a licensed lawyer. Reports are advisory. Always confirm high-value transactions with qualified legal counsel.
             </p>
-            <p style={{ margin: 0 }}>? 2026 PakkaScan. All rights reserved.</p>
+            <p style={{ margin: 0 }}>&copy; 2026 PakkaScan. All rights reserved.</p>
           </div>
         </div>
       </footer>

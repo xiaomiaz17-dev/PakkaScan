@@ -14,7 +14,7 @@ const navLinkStyle: React.CSSProperties = { color: "#cbd5e1", fontSize: "14px", 
 const footerLinkStyle: React.CSSProperties = { display: "block", fontSize: "13px", color: "#94a3b8", textDecoration: "none", padding: "6px 0", lineHeight: 1.4 };
 
 export const metadata = {
-  title: "About PakkaScan ? Verify Before You Trust",
+  title: "About PakkaScan - Verify Before You Trust",
   description: "Why PakkaScan exists and how it protects Pakistani property buyers.",
 };
 
@@ -154,7 +154,7 @@ export default function AboutPage() {
             <p style={{ margin: "0 0 12px 0" }}>
               <strong style={{ color: "#94a3b8" }}>Disclaimer:</strong> PakkaScan is an AI-powered assistive tool for reviewing Pakistani property documents. It is not a licensed lawyer, does not provide certified legal counsel, and does not confirm authenticity with issuing authorities (NADRA, PLRA, Sub-Registrar, Patwari). Reports are advisory. For high-value transactions, always confirm with qualified legal counsel and directly with the relevant authority. PakkaScan is not responsible for financial losses arising from reliance on its reports.
             </p>
-            <p style={{ margin: 0 }}>? 2026 PakkaScan. All rights reserved.</p>
+            <p style={{ margin: 0 }}>&copy; 2026 PakkaScan. All rights reserved.</p>
           </div>
         </div>
       </footer>

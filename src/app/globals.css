@@ -506,3 +506,23 @@ a.primary {
     grid-template-columns: repeat(2, 1fr) !important;
   }
 }
+/* ============================================================
+   FOOTER BRAND MARK FIX
+   The .brand class is styled for the header context (large wordmark
+   with green Scan suffix). In the footer, it's used as a small stacked
+   logo that should NOT inherit those styles.
+   ============================================================ */
+.site-footer .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  color: #ffffff;
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+
+.site-footer .brand span {
+  color: #ffffff;
+  font-style: normal;
+}
