@@ -99,3 +99,401 @@ section[id] {
     grid-template-columns: 1fr !important;
   }
 }
+
+/* ============================================================
+   MARKETING SHELL DESIGN SYSTEM
+   Defines classes referenced across marketing pages that were
+   previously undefined. Uses existing product color palette.
+   Palette:
+     - Text:        #0f172a (heading), #64748b (body), #94a3b8 (muted small)
+     - Backgrounds: #ffffff, #f8fafc, #f1f5f9
+     - Borders:     #e2e8f0
+     - Primary:     #16a34a (green), #166534 (dark green)
+     - Success bg:  #dcfce7, #f0fdf4
+     - Error bg:    #fef2f2, #fecaca
+     - Dark UI:     #0b132b
+   ============================================================ */
+
+/* ---- Layout containers ---- */
+
+.shell {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+  box-sizing: border-box;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.stack.prose {
+  gap: 12px;
+}
+
+/* ---- Prose (long-form text pages: security, docs, help) ---- */
+
+.prose {
+  color: #0f172a;
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.prose h1 {
+  font-size: 30px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 12px 0;
+  letter-spacing: -0.02em;
+}
+
+.prose h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 32px 0 12px 0;
+}
+
+.prose h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 24px 0 8px 0;
+}
+
+.prose p {
+  margin: 0 0 12px 0;
+}
+
+.prose ul,
+.prose ol {
+  margin: 0 0 16px 0;
+  padding-left: 22px;
+}
+
+.prose li {
+  margin-bottom: 6px;
+}
+
+.prose a {
+  color: #16a34a;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.prose a:hover {
+  color: #166534;
+}
+
+.prose strong {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.prose section {
+  margin-bottom: 24px;
+}
+
+.prose hr {
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  margin: 32px 0;
+}
+
+/* ---- Text helpers ---- */
+
+.muted {
+  color: #64748b;
+}
+
+.small {
+  font-size: 12px;
+}
+
+.lead {
+  font-size: 17px;
+  line-height: 1.55;
+}
+
+/* ---- Panels & banners ---- */
+
+.panel {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px 22px;
+}
+
+.banner {
+  border-radius: 12px;
+  padding: 16px 20px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.banner.failed {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #991b1b;
+}
+
+/* ---- Badges & inline chips ---- */
+
+.badge-ok {
+  display: inline-block;
+  background: #dcfce7;
+  color: #166534;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid #bbf7d0;
+  letter-spacing: 0.02em;
+}
+
+.mono-badge {
+  display: inline-block;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  background: #f1f5f9;
+  color: #0f172a;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  letter-spacing: 0.02em;
+}
+
+/* ---- Form inputs ---- */
+
+.mono-input {
+  width: 100%;
+  padding: 10px 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 14px;
+  color: #0f172a;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-sizing: border-box;
+  letter-spacing: 0.03em;
+}
+
+.mono-input:focus {
+  outline: none;
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.12);
+}
+
+/* Labels wrapping inputs */
+.stack label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 6px;
+}
+
+.stack label .mono-input,
+.stack label input {
+  margin-top: 6px;
+}
+
+/* ---- Buttons ---- */
+
+.primary,
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: #16a34a;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  border: 1px solid #16a34a;
+  border-radius: 10px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s, transform 0.05s;
+}
+
+.primary:hover,
+.button:hover {
+  background: #166534;
+  border-color: #166534;
+}
+
+.primary:active,
+.button:active {
+  transform: translateY(1px);
+}
+
+/* Power CTA (nav "Upload or scan") - slightly heavier */
+.button.power {
+  padding: 12px 22px;
+  font-size: 15px;
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.25);
+}
+
+.button.power:hover {
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.35);
+}
+
+/* ---- Brand mark in header ---- */
+
+.brand {
+  color: #0f172a;
+  font-weight: 800;
+  font-size: 20px;
+}
+
+.brand span {
+  color: #16a34a;
+}
+
+/* ---- Site header ---- */
+
+.site-header {
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.site-header-inner {
+  max-width: 1200px;
+}
+
+.nav {
+  font-size: 14px;
+}
+
+.nav a {
+  color: #64748b;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s;
+}
+
+.nav a:hover {
+  color: #0f172a;
+  background: #f1f5f9;
+}
+
+.nav-toggle {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+  cursor: pointer;
+}
+
+.nav-toggle:hover {
+  background: #f8fafc;
+}
+
+/* ---- Site footer ---- */
+
+.site-footer {
+  background: #0b132b;
+  color: #94a3b8;
+  padding: 48px 24px 32px 24px;
+  margin-top: 80px;
+}
+
+.footer-grid {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 32px;
+  margin-bottom: 32px;
+}
+
+.footer-heading {
+  font-size: 12px;
+  font-weight: 800;
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 12px 0;
+}
+
+.footer-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer-list li {
+  margin-bottom: 6px;
+}
+
+.footer-list a,
+.site-footer a {
+  color: #94a3b8;
+  text-decoration: none;
+  font-size: 13px;
+  line-height: 1.5;
+  transition: color 0.15s;
+}
+
+.footer-list a:hover,
+.site-footer a:hover {
+  color: #ffffff;
+}
+
+.footer-legal {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 11px;
+  color: #64748b;
+  line-height: 1.7;
+}
+
+/* ============================================================
+   END MARKETING SHELL DESIGN SYSTEM
+   ============================================================ */
+/* ============================================================
+   BUTTON TEXT VISIBILITY FIX
+   Two issues addressed:
+   1. .button descendants (span, text nodes wrapped by parent) can
+      inherit unexpected colors. Force white text throughout.
+   2. When a .button appears inside .prose, the prose link color
+      rule (green) makes button text invisible on green background.
+   ============================================================ */
+
+/* Force white text for all button content, regardless of nesting */
+.button,
+.button *,
+.primary,
+.primary *,
+a.button,
+a.primary {
+  color: #ffffff !important;
+}
+
+/* Override prose link color when the link is styled as a button */
+.prose a.button,
+.prose a.primary {
+  color: #ffffff !important;
+  text-decoration: none;
+}
+
+/* Also handle button hover state (was inheriting prose hover color) */
+.prose a.button:hover,
+.prose a.primary:hover {
+  color: #ffffff !important;
+}
+
+/* ============================================================
+   END BUTTON TEXT VISIBILITY FIX
+   ============================================================ */
