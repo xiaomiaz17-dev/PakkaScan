@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Fraunces } from "next/font/google";
+import WhatsAppFAB from "@/components/WhatsAppFAB";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -507,6 +508,7 @@ export default function LandingPage() {
       </section>
 
       <Footer />
+      <WhatsAppFAB />
     </div>
   );
 }

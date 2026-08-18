@@ -110,7 +110,11 @@ function renderMagicLinkText(input: { magicLinkUrl: string; ipAddress: string | 
 // ─────────────────────────────────────────────────────────────────────────────
 // Scan Report Email
 // Auto-sent after every successful scan.
+// Tier-aware: Rental gets a short summary, Bayana/Full DD get the full HTML.
 // ─────────────────────────────────────────────────────────────────────────────
+
+const WHATSAPP_URL = "https://wa.me/923156507067";
+const WHATSAPP_DISPLAY = "+92 315 6507067";
 
 const REPORT_TYPE_LABEL: Record<string, string> = {
   rental:  "Rental Safety Check",
@@ -119,12 +123,14 @@ const REPORT_TYPE_LABEL: Record<string, string> = {
 };
 
 const VERDICT_LABEL: Record<string, { text: string; emoji: string; color: string }> = {
-  PROCEED:               { text: "Safe to Proceed",          emoji: "✅", color: "#16a34a" },
-  PROCEED_WITH_CAUTION:  { text: "Proceed with Caution",     emoji: "⚠️", color: "#d97706" },
-  LEGAL_REVIEW_REQUIRED: { text: "Legal Review Required",    emoji: "⚠️", color: "#d97706" },
-  DO_NOT_PROCEED:        { text: "Do Not Proceed",           emoji: "🚫", color: "#dc2626" },
-  INCONCLUSIVE:          { text: "Inconclusive",             emoji: "❓", color: "#64748b" },
+  PROCEED:               { text: "Safe to Proceed",          emoji: "\u2705", color: "#16a34a" },
+  PROCEED_WITH_CAUTION:  { text: "Proceed with Caution",     emoji: "\u26A0\uFE0F", color: "#d97706" },
+  LEGAL_REVIEW_REQUIRED: { text: "Legal Review Required",    emoji: "\u26A0\uFE0F", color: "#d97706" },
+  DO_NOT_PROCEED:        { text: "Do Not Proceed",           emoji: "\u{1F6AB}", color: "#dc2626" },
+  INCONCLUSIVE:          { text: "Inconclusive",             emoji: "\u2753", color: "#64748b" },
 };
+
+export type ScanEmailTier = "rental" | "bayana" | "full_dd";
 
 export async function sendScanReportEmail(input: {
   to: string;
@@ -139,16 +145,24 @@ export async function sendScanReportEmail(input: {
     return { ok: false, error: "RESEND_API_KEY not configured" };
   }
 
-  const tierLabel  = REPORT_TYPE_LABEL[input.reportType]  ?? input.reportType;
-  const verdictInfo = input.verdict ? (VERDICT_LABEL[input.verdict] ?? { text: input.verdict, emoji: "📋", color: "#0b132b" }) : null;
-  const scoreText  = input.pakkaScore !== null ? String(Math.round(input.pakkaScore)) + "/100" : null;
+  const tier = (input.reportType as ScanEmailTier);
+  const tierLabel = REPORT_TYPE_LABEL[input.reportType] ?? input.reportType;
+  const verdictInfo = input.verdict
+    ? (VERDICT_LABEL[input.verdict] ?? { text: input.verdict, emoji: "\u{1F4CB}", color: "#0b132b" })
+    : null;
+  const scoreText = input.pakkaScore !== null ? String(Math.round(input.pakkaScore)) + "/100" : null;
 
   const subject = verdictInfo
-    ? `PakkaScan Report: ${verdictInfo.emoji} ${verdictInfo.text} — Ref ${input.referenceCode}`
-    : `PakkaScan Report — Ref ${input.referenceCode}`;
+    ? `PakkaScan Report: ${verdictInfo.emoji} ${verdictInfo.text} - Ref ${input.referenceCode}`
+    : `PakkaScan Report - Ref ${input.referenceCode}`;
 
-  const html = renderScanReportHtml({ ...input, tierLabel, verdictInfo, scoreText });
-  const text = renderScanReportText({ ...input, tierLabel, verdictInfo, scoreText });
+  const renderArgs = { ...input, tier, tierLabel, verdictInfo, scoreText };
+  const html = tier === "rental"
+    ? renderRentalReportHtml(renderArgs)
+    : renderFullReportHtml(renderArgs);
+  const text = tier === "rental"
+    ? renderRentalReportText(renderArgs)
+    : renderFullReportText(renderArgs);
 
   try {
     const result = await resend.emails.send({
@@ -162,7 +176,7 @@ export async function sendScanReportEmail(input: {
       console.warn("[email] scan report Resend error:", result.error);
       return { ok: false, error: result.error.message };
     }
-    console.log("[email] Sent scan report to " + input.to + " ref=" + input.referenceCode + " (id=" + result.data?.id + ")");
+    console.log("[email] Sent " + tier + " report to " + input.to + " ref=" + input.referenceCode + " (id=" + result.data?.id + ")");
     return { ok: true };
   } catch (err: any) {
     console.error("[email] scan report send failed:", err?.message || err);
@@ -170,12 +184,134 @@ export async function sendScanReportEmail(input: {
   }
 }
 
-function renderScanReportHtml(input: {
-  to: string;
+// ─── Shared components ────────────────────────────────────────────────────────
+
+function whatsappHtmlBlock(referenceCode: string): string {
+  const prefill = encodeURIComponent("Hi PakkaScan, I have a question about my report " + referenceCode);
+  const link = WHATSAPP_URL + "?text=" + prefill;
+  return `
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:16px 20px;margin:24px 0;">
+      <div style="font-size:14px;font-weight:800;color:#166534;margin-bottom:6px;">Questions about your report?</div>
+      <div style="font-size:13px;color:#334155;margin-bottom:12px;line-height:1.5;">
+        Message us on WhatsApp - usually reply within an hour on weekdays (9am-9pm PKT).
+      </div>
+      <a href="${link}" style="display:inline-block;padding:10px 20px;background:#16a34a;color:#ffffff;text-decoration:none;font-weight:700;font-size:13px;border-radius:8px;">Chat on WhatsApp</a>
+    </div>`;
+}
+
+function whatsappTextBlock(referenceCode: string): string {
+  return [
+    "",
+    "QUESTIONS ABOUT YOUR REPORT?",
+    "----------------------------",
+    "Message us on WhatsApp - usually reply within an hour on weekdays (9am-9pm PKT).",
+    "WhatsApp: " + WHATSAPP_DISPLAY,
+    "Or click: " + WHATSAPP_URL + "?text=" + encodeURIComponent("Hi PakkaScan, I have a question about my report " + referenceCode),
+  ].join("\n");
+}
+
+// ─── Rental variant: short, minimal, upsell-friendly ─────────────────────────
+
+function renderRentalReportHtml(input: {
   referenceCode: string;
   tierLabel: string;
   verdictInfo: { text: string; emoji: string; color: string } | null;
-  pakkaScore: number | null;
+  scoreText: string | null;
+  verifyUrl: string;
+}): string {
+  const verdictBlock = input.verdictInfo ? `
+    <div style="background:${input.verdictInfo.color}14;border-left:4px solid ${input.verdictInfo.color};border-radius:8px;padding:16px 20px;margin:24px 0;">
+      <div style="font-size:20px;font-weight:900;color:${input.verdictInfo.color};">${input.verdictInfo.emoji} ${input.verdictInfo.text}</div>
+      ${input.scoreText ? `<div style="font-size:13px;color:#64748b;margin-top:4px;">PakkaScore: <strong>${input.scoreText}</strong></div>` : ""}
+    </div>` : "";
+
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Your PakkaScan Report</title></head>
+<body style="margin:0;padding:0;background-color:#f8fafc;font-family:system-ui,-apple-system,sans-serif;">
+  <div style="max-width:560px;margin:40px auto;background:#ffffff;border-radius:16px;padding:40px 32px;box-shadow:0 4px 12px rgba(0,0,0,0.05);">
+
+    <div style="text-align:center;margin-bottom:32px;">
+      <div style="font-size:28px;font-weight:900;color:#0f172a;letter-spacing:-0.02em;">Pakka<span style="color:#16a34a;font-style:italic;">Scan</span></div>
+      <div style="font-size:11px;font-weight:700;letter-spacing:0.15em;color:#94a3b8;text-transform:uppercase;margin-top:4px;">Legal Due Diligence</div>
+    </div>
+
+    <h1 style="font-size:20px;font-weight:800;color:#0f172a;margin:0 0 4px 0;">Your Scan Summary</h1>
+    <p style="font-size:14px;color:#64748b;margin:0 0 4px 0;">${input.tierLabel}</p>
+    <p style="font-size:12px;color:#94a3b8;margin:0 0 24px 0;">Reference: <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;font-family:monospace;">${input.referenceCode}</code></p>
+
+    ${verdictBlock}
+
+    <p style="font-size:14px;color:#334155;line-height:1.6;margin:16px 0;">
+      Your full report - including next steps and detailed findings - is available in your PakkaScan dashboard.
+    </p>
+
+    <div style="margin:24px 0;text-align:center;">
+      <a href="${input.verifyUrl}" style="display:inline-block;padding:14px 28px;background:#0b132b;color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;border-radius:10px;">View Verification Page</a>
+    </div>
+
+    ${whatsappHtmlBlock(input.referenceCode)}
+
+    <div style="background:#f8fafc;border-radius:8px;padding:16px;font-size:12px;color:#64748b;line-height:1.6;">
+      <strong style="color:#0f172a;">Keep this email.</strong> Your reference code is your permanent record.
+      Share it with your lawyer or agent to verify authenticity at:<br>
+      <a href="${input.verifyUrl}" style="color:#0b132b;word-break:break-all;">${input.verifyUrl}</a>
+    </div>
+
+    <div style="margin-top:24px;padding:16px;background:#fef3c7;border-radius:8px;font-size:12px;color:#78350f;">
+      <strong>Need more detail?</strong> Upgrade to Bayana Safety Check or Full Due Diligence for cross-document analysis, deeper findings, and richer reports.
+    </div>
+
+    <hr style="border:none;border-top:1px solid #e2e8f0;margin:32px 0 16px 0;">
+    <p style="font-size:11px;color:#94a3b8;text-align:center;margin:0;">PakkaScan &middot; AI-powered legal due diligence for Pakistani property</p>
+  </div>
+</body>
+</html>`.trim();
+}
+
+function renderRentalReportText(input: {
+  referenceCode: string;
+  tierLabel: string;
+  verdictInfo: { text: string; emoji: string; color: string } | null;
+  scoreText: string | null;
+  verifyUrl: string;
+}): string {
+  const lines: string[] = [
+    "PakkaScan - Your Scan Summary",
+    "================================",
+    "",
+    "Report type : " + input.tierLabel,
+    "Reference   : " + input.referenceCode,
+  ];
+  if (input.verdictInfo) lines.push("Verdict     : " + input.verdictInfo.emoji + " " + input.verdictInfo.text);
+  if (input.scoreText) lines.push("PakkaScore  : " + input.scoreText);
+  lines.push(
+    "",
+    "Your full report is available in your PakkaScan dashboard.",
+    "",
+    "VERIFY THIS SCAN",
+    "----------------",
+    input.verifyUrl,
+  );
+  lines.push(whatsappTextBlock(input.referenceCode));
+  lines.push(
+    "",
+    "NEED MORE DETAIL?",
+    "-----------------",
+    "Upgrade to Bayana Safety Check or Full Due Diligence for cross-document analysis and richer reports.",
+    "",
+    "--",
+    "PakkaScan - AI-powered legal due diligence for Pakistani property"
+  );
+  return lines.join("\n");
+}
+
+// ─── Full variant: Bayana + Full DD get everything ───────────────────────────
+
+function renderFullReportHtml(input: {
+  referenceCode: string;
+  tierLabel: string;
+  verdictInfo: { text: string; emoji: string; color: string } | null;
   scoreText: string | null;
   nextSteps: Array<{ title: string; detail?: string }>;
   verifyUrl: string;
@@ -189,7 +325,7 @@ function renderScanReportHtml(input: {
   const stepsHtml = input.nextSteps.length > 0 ? `
     <h2 style="font-size:16px;font-weight:800;color:#0f172a;margin:32px 0 12px 0;">What To Do Next</h2>
     <ol style="margin:0;padding-left:20px;color:#334155;font-size:14px;line-height:1.6;">
-      ${input.nextSteps.slice(0, 5).map(s => `<li style="margin-bottom:8px;"><strong>${s.title}</strong>${s.detail ? `<br><span style="color:#64748b;">${s.detail}</span>` : ""}</li>`).join("")}
+      ${input.nextSteps.map(s => `<li style="margin-bottom:8px;"><strong>${s.title}</strong>${s.detail ? `<br><span style="color:#64748b;">${s.detail}</span>` : ""}</li>`).join("")}
     </ol>` : "";
 
   return `<!DOCTYPE html>
@@ -215,6 +351,8 @@ function renderScanReportHtml(input: {
       <a href="${input.verifyUrl}" style="display:inline-block;padding:14px 28px;background:#0b132b;color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;border-radius:10px;">View Verification Page</a>
     </div>
 
+    ${whatsappHtmlBlock(input.referenceCode)}
+
     <div style="background:#f8fafc;border-radius:8px;padding:16px;font-size:12px;color:#64748b;line-height:1.6;">
       <strong style="color:#0f172a;">Keep this email.</strong> Your reference code is your permanent record of this scan.
       Share it with your lawyer or agent to verify authenticity at:<br>
@@ -228,32 +366,26 @@ function renderScanReportHtml(input: {
 </html>`.trim();
 }
 
-function renderScanReportText(input: {
-  to: string;
+function renderFullReportText(input: {
   referenceCode: string;
   tierLabel: string;
   verdictInfo: { text: string; emoji: string; color: string } | null;
-  pakkaScore: number | null;
   scoreText: string | null;
   nextSteps: Array<{ title: string; detail?: string }>;
   verifyUrl: string;
 }): string {
   const lines: string[] = [
-    "PakkaScan — Your Scan Report",
+    "PakkaScan - Your Scan Report",
     "================================",
     "",
     "Report type : " + input.tierLabel,
     "Reference   : " + input.referenceCode,
   ];
-  if (input.verdictInfo) {
-    lines.push("Verdict     : " + input.verdictInfo.emoji + " " + input.verdictInfo.text);
-  }
-  if (input.scoreText) {
-    lines.push("PakkaScore  : " + input.scoreText);
-  }
+  if (input.verdictInfo) lines.push("Verdict     : " + input.verdictInfo.emoji + " " + input.verdictInfo.text);
+  if (input.scoreText) lines.push("PakkaScore  : " + input.scoreText);
   if (input.nextSteps.length > 0) {
     lines.push("", "WHAT TO DO NEXT", "---------------");
-    input.nextSteps.slice(0, 5).forEach((s, i) => {
+    input.nextSteps.forEach((s, i) => {
       lines.push((i + 1) + ". " + s.title);
       if (s.detail) lines.push("   " + s.detail);
     });
@@ -264,6 +396,9 @@ function renderScanReportText(input: {
     "----------------",
     "Share this link with your lawyer or agent to verify authenticity:",
     input.verifyUrl,
+  );
+  lines.push(whatsappTextBlock(input.referenceCode));
+  lines.push(
     "",
     "Keep this email as your permanent record of this scan.",
     "",

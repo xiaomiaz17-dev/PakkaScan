@@ -5,6 +5,7 @@ import { Fraunces, Noto_Nastaliq_Urdu } from "next/font/google";
 import { DOCUMENT_TYPE_OPTIONS, groupedDocumentTypes, type DocumentTypeOption } from "@/lib/document-types";
 import { QRCodeSVG } from "qrcode.react";
 import { getCnicDistrict } from "@/intelligence/cnic-districts";
+import WhatsAppFAB from "@/components/WhatsAppFAB";
 
 type SessionUser = { email: string; name: string | null };
 
@@ -1004,6 +1005,10 @@ export default function ScanPage() {
 
         {results && (
           <div ref={resultsRef} style={{ width: "100%", paddingTop: "24px", marginTop: "32px", backgroundColor: "#ffffff", padding: "28px", borderRadius: "16px", border: "1px solid #e2e8f0", boxSizing: "border-box", boxShadow: "0 10px 25px -5px rgba(0,0,0,0.08)" }}>
+            <div className="no-print" style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 14px", marginBottom: "16px", backgroundColor: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: "8px", fontSize: "12px", color: "#1e40af", lineHeight: 1.5 }}>
+              <span style={{ fontSize: "14px" }}>&#128190;</span>
+              <span><strong>Tip:</strong> Press <kbd style={{ padding: "1px 6px", background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "4px", fontFamily: "monospace", fontSize: "11px" }}>Ctrl</kbd> + <kbd style={{ padding: "1px 6px", background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "4px", fontFamily: "monospace", fontSize: "11px" }}>P</kbd> to save this report as a PDF for your records.</span>
+            </div>
 
             <div style={{ marginBottom: "8px" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
@@ -1196,6 +1201,7 @@ export default function ScanPage() {
           </a>
         </div>
       </div>
+      <WhatsAppFAB />
     </div>
   );
 }

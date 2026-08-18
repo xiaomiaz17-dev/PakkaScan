@@ -100,6 +100,47 @@ function stringifyFindings(findings: any): string[] {
   });
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// Tier-based response filtering.
+// Rental: minimal report - no cross-doc, no combined verdict, next steps capped at 3
+// Bayana: adds cross-doc + combined verdict, next steps capped at 5
+// Full DD: everything, no caps
+// Assistant Q&A is removed for ALL tiers - users are directed to WhatsApp support.
+// ─────────────────────────────────────────────────────────────────────────
+function filterResponseByTier(payload: any, tier: string): any {
+  const filtered = { ...payload };
+
+  // Cap next steps by tier
+  if (filtered.phase2?.nextSteps && Array.isArray(filtered.phase2.nextSteps)) {
+    const maxSteps = tier === "rental" ? 3 : tier === "bayana" ? 5 : 10;
+    filtered.phase2 = {
+      ...filtered.phase2,
+      nextSteps: filtered.phase2.nextSteps.slice(0, maxSteps),
+    };
+  }
+
+  // Rental tier: strip multi-doc analysis (they only get 1 real doc anyway)
+  if (tier === "rental") {
+    filtered.crossDoc = null;
+    filtered.combinedVerdict = null;
+  }
+
+  // Only Full DD gets the deep-dive explanations (category scores, timeline, evidence appendix)
+  if (tier !== "full_dd" && filtered.phase2) {
+    filtered.phase2 = {
+      ...filtered.phase2,
+      explanations: null,
+    };
+  }
+
+  // Assistant Q&A removed for ALL tiers - direct users to WhatsApp
+  if (filtered.phase2) {
+    delete filtered.phase2.assistant;
+  }
+
+  return filtered;
+}
+
 export async function POST(request: Request) {
   const _t_scan_total = Date.now();
   try {
@@ -509,9 +550,10 @@ export async function POST(request: Request) {
 
     console.log(`[timing] SCAN_TOTAL: ${Date.now() - _t_scan_total}ms`);
 
-    return NextResponse.json({
+    const rawPayload = {
       success: true,
       referenceCode: scanReferenceCode,
+      tier: entitlementToUse.report_type,
       documents: perDocument,
       crossDoc,
       combinedVerdict,
@@ -533,7 +575,11 @@ export async function POST(request: Request) {
         },
         nextSteps,
       },
-    });
+    };
+
+    const filteredPayload = filterResponseByTier(rawPayload, entitlementToUse.report_type);
+    console.log(`[beta/scan] Tier-filtered response for tier=${entitlementToUse.report_type}`);
+    return NextResponse.json(filteredPayload);
   } catch (error: any) {
     console.error("[beta/scan] Error:", error);
     return NextResponse.json(

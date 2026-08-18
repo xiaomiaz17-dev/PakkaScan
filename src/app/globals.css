@@ -541,3 +541,13 @@ a.primary {
 .pks-pricing-card-highlight:hover {
   border-color: #16a34a !important;
 }
+
+/* Hide UI elements when printing (Ctrl+P) so PDF output is clean */
+@media print {
+  .no-print, [aria-label="Chat with PakkaScan on WhatsApp"] {
+    display: none !important;
+  }
+  body {
+    background: #ffffff !important;
+  }
+}
