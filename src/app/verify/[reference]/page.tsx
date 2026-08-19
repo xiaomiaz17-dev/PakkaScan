@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Fraunces } from "next/font/google";
+import WhatsAppShareButton from "@/components/WhatsAppShareButton";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -146,6 +147,14 @@ export default function VerifyResultPage() {
               <MetaRow label="Reference Code" value={result.referenceCode} mono />
               <MetaRow label="Report Type" value={formatReportType(result.reportType)} />
               <MetaRow label="Issued On" value={formatDate(result.scannedAt)} />
+            </div>
+
+            <div style={{ marginTop: "1.25rem", display: "flex", justifyContent: "center" }}>
+              <WhatsAppShareButton
+                variant="verify"
+                referenceCode={result.referenceCode}
+                verifyUrl={typeof window !== "undefined" ? `${window.location.origin}/verify/${result.referenceCode}` : `https://www.pakkascan.com/verify/${result.referenceCode}`}
+              />
             </div>
 
             <div style={{

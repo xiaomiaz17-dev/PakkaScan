@@ -6,6 +6,7 @@ import { DOCUMENT_TYPE_OPTIONS, groupedDocumentTypes, type DocumentTypeOption } 
 import { QRCodeSVG } from "qrcode.react";
 import { getCnicDistrict } from "@/intelligence/cnic-districts";
 import WhatsAppFAB from "@/components/WhatsAppFAB";
+import WhatsAppShareButton from "@/components/WhatsAppShareButton";
 
 type SessionUser = { email: string; name: string | null };
 
@@ -1168,6 +1169,15 @@ export default function ScanPage() {
                 </div>
                 <div style={{ fontSize: "10px", color: "#94a3b8", marginTop: "8px", fontStyle: "italic" }}>
                   Public verification does not reveal document contents.
+                </div>
+                <div style={{ marginTop: "14px" }}>
+                  <WhatsAppShareButton
+                    variant="results"
+                    referenceCode={results.referenceCode}
+                    verifyUrl={`https://www.pakkascan.com/verify/${results.referenceCode}`}
+                    verdict={verdict}
+                    pakkaScore={pakkaScore}
+                  />
                 </div>
               </div>
             </div>
