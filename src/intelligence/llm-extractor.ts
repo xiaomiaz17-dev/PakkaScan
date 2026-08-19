@@ -155,7 +155,8 @@ const SCHEMAS: Record<string, string> = {
     "stamp_duty":       { "amount": 0, "currency": "PKR", "percentage": "e.g. 3%", "rate_check": "Pakistani stamp duty rates: Punjab 3%, Sindh 4%, KPK 3-4%, ICT Islamabad 4%. If the stated stamp duty percentage or amount appears incorrect for the jurisdiction, flag it." },
     "registration_fee": { "amount": 0, "currency": "PKR" },
     "cvt":              { "amount": 0, "currency": "PKR", "percentage": "e.g. 2%" },
-    "declared_value_note": "If the total sale price appears significantly below market value for the described property type and area (e.g., 10 Marla DHA plot for under Rs 50 lakh), note: 'Declared value may be below DC rate. Verify with revenue authority.'"
+    "declared_value_note": "If the total sale price appears significantly below market value for the described property type and area (e.g., 10 Marla DHA plot under Rs 50 lakh), note: 'Declared value may be below DC rate. Verify with revenue authority.'",
+    "fbr_valuation": { "amount": 0, "currency": "PKR", "note": "If the document states an FBR or DC (District Collector) valuation separately from the declared sale price, extract it here as a number. This is the government benchmark value used for tax purposes. If not explicitly stated, omit this field entirely." }
   },
   "property": {
     "address": "Full one-line address",
@@ -191,7 +192,8 @@ const SCHEMAS: Record<string, string> = {
   "financials": {
     "total_price":  { "amount": 45000000, "currency": "PKR", "in_words": "..." },
     "token_amount": { "amount": 5000000,  "currency": "PKR", "payment_method": "cash/cheque/transfer" },
-    "balance_due":  { "amount": 0, "currency": "PKR" }
+    "balance_due":  { "amount": 0, "currency": "PKR" },
+    "fbr_valuation": { "amount": 0, "currency": "PKR", "note": "If the document states an FBR or DC valuation separately from the agreed sale price, extract it here as a number. If not explicitly stated, omit this field entirely." }
   },
   "property": {
     "address": "Full one-line address",

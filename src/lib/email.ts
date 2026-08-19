@@ -132,6 +132,63 @@ const VERDICT_LABEL: Record<string, { text: string; emoji: string; color: string
 
 export type ScanEmailTier = "rental" | "bayana" | "full_dd";
 
+type EmailRiskFactor = { label: string; points: number; category: string };
+
+function getRiskLabel(score: number): "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" {
+  if (score <= 3) return "LOW";
+  if (score <= 5) return "MEDIUM";
+  if (score <= 7) return "HIGH";
+  return "CRITICAL";
+}
+
+function getRiskColor(score: number): string {
+  if (score <= 3) return "#16a34a";
+  if (score <= 5) return "#ca8a04";
+  if (score <= 7) return "#ea580c";
+  return "#dc2626";
+}
+
+function renderRiskHtmlBlock(input: {
+  riskScore: number | null | undefined;
+  riskFactors?: EmailRiskFactor[];
+}): string {
+  if (input.riskScore == null) return "";
+
+  const label = getRiskLabel(input.riskScore);
+  const color = getRiskColor(input.riskScore);
+  const factors = (input.riskFactors ?? []).slice(0, 5);
+
+  const factorsHtml = factors.length > 0
+    ? `<ul style="margin:6px 0 0 0;padding-left:16px;color:#475569;font-size:12px;line-height:1.6;">${factors.map((f) => `<li>${f.label} (${f.points > 0 ? "+" : ""}${f.points})</li>`).join("")}</ul>`
+    : "";
+
+  return `
+    <div style="background:${color}14;border-left:4px solid ${color};border-radius:8px;padding:12px 16px;margin:12px 0 24px 0;">
+      <div style="font-size:14px;font-weight:800;color:${color};">Risk Score: ${input.riskScore}/10 (${label} RISK)</div>
+      ${factorsHtml}
+    </div>`;
+}
+
+function renderRiskTextBlock(input: {
+  riskScore: number | null | undefined;
+  riskFactors?: EmailRiskFactor[];
+}): string[] {
+  if (input.riskScore == null) return [];
+
+  const label = getRiskLabel(input.riskScore);
+  const factors = (input.riskFactors ?? []).slice(0, 5);
+  const lines = [`Risk Score  : ${input.riskScore}/10 (${label} RISK)`];
+
+  if (factors.length > 0) {
+    lines.push("Risk Factors:");
+    for (const factor of factors) {
+      lines.push("  - " + factor.label + " (" + (factor.points > 0 ? "+" : "") + factor.points + ")");
+    }
+  }
+
+  return lines;
+}
+
 export async function sendScanReportEmail(input: {
   to: string;
   referenceCode: string;
@@ -140,6 +197,8 @@ export async function sendScanReportEmail(input: {
   pakkaScore: number | null;
   nextSteps: Array<{ title: string; detail?: string }>;
   verifyUrl: string;
+  riskScore?: number | null;
+  riskFactors?: EmailRiskFactor[];
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   if (!resend) {
     return { ok: false, error: "RESEND_API_KEY not configured" };
@@ -151,12 +210,22 @@ export async function sendScanReportEmail(input: {
     ? (VERDICT_LABEL[input.verdict] ?? { text: input.verdict, emoji: "\u{1F4CB}", color: "#0b132b" })
     : null;
   const scoreText = input.pakkaScore !== null ? String(Math.round(input.pakkaScore)) + "/100" : null;
+  const riskSummary = input.riskScore != null ? " | Risk " + input.riskScore + "/10" : "";
 
   const subject = verdictInfo
-    ? `PakkaScan Report: ${verdictInfo.emoji} ${verdictInfo.text} - Ref ${input.referenceCode}`
-    : `PakkaScan Report - Ref ${input.referenceCode}`;
+    ? `PakkaScan Report: ${verdictInfo.emoji} ${verdictInfo.text}${riskSummary} - Ref ${input.referenceCode}`
+    : `PakkaScan Report${riskSummary} - Ref ${input.referenceCode}`;
 
-  const renderArgs = { ...input, tier, tierLabel, verdictInfo, scoreText };
+  const renderArgs = {
+    ...input,
+    tier,
+    tierLabel,
+    verdictInfo,
+    scoreText,
+    riskScore: input.riskScore ?? null,
+    riskFactors: input.riskFactors ?? [],
+  };
+
   const html = tier === "rental"
     ? renderRentalReportHtml(renderArgs)
     : renderFullReportHtml(renderArgs);
@@ -217,6 +286,8 @@ function renderRentalReportHtml(input: {
   tierLabel: string;
   verdictInfo: { text: string; emoji: string; color: string } | null;
   scoreText: string | null;
+  riskScore: number | null;
+  riskFactors: EmailRiskFactor[];
   verifyUrl: string;
 }): string {
   const verdictBlock = input.verdictInfo ? `
@@ -224,6 +295,11 @@ function renderRentalReportHtml(input: {
       <div style="font-size:20px;font-weight:900;color:${input.verdictInfo.color};">${input.verdictInfo.emoji} ${input.verdictInfo.text}</div>
       ${input.scoreText ? `<div style="font-size:13px;color:#64748b;margin-top:4px;">PakkaScore: <strong>${input.scoreText}</strong></div>` : ""}
     </div>` : "";
+
+  const riskBlock = renderRiskHtmlBlock({
+    riskScore: input.riskScore,
+    riskFactors: input.riskFactors,
+  });
 
   return `<!DOCTYPE html>
 <html>
@@ -241,6 +317,7 @@ function renderRentalReportHtml(input: {
     <p style="font-size:12px;color:#94a3b8;margin:0 0 24px 0;">Reference: <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;font-family:monospace;">${input.referenceCode}</code></p>
 
     ${verdictBlock}
+    ${riskBlock}
 
     <p style="font-size:14px;color:#334155;line-height:1.6;margin:16px 0;">
       Your full report - including next steps and detailed findings - is available in your PakkaScan dashboard.
@@ -274,6 +351,8 @@ function renderRentalReportText(input: {
   tierLabel: string;
   verdictInfo: { text: string; emoji: string; color: string } | null;
   scoreText: string | null;
+  riskScore: number | null;
+  riskFactors: EmailRiskFactor[];
   verifyUrl: string;
 }): string {
   const lines: string[] = [
@@ -285,6 +364,7 @@ function renderRentalReportText(input: {
   ];
   if (input.verdictInfo) lines.push("Verdict     : " + input.verdictInfo.emoji + " " + input.verdictInfo.text);
   if (input.scoreText) lines.push("PakkaScore  : " + input.scoreText);
+  lines.push(...renderRiskTextBlock({ riskScore: input.riskScore, riskFactors: input.riskFactors }));
   lines.push(
     "",
     "Your full report is available in your PakkaScan dashboard.",
@@ -313,6 +393,8 @@ function renderFullReportHtml(input: {
   tierLabel: string;
   verdictInfo: { text: string; emoji: string; color: string } | null;
   scoreText: string | null;
+  riskScore: number | null;
+  riskFactors: EmailRiskFactor[];
   nextSteps: Array<{ title: string; detail?: string }>;
   verifyUrl: string;
 }): string {
@@ -321,6 +403,11 @@ function renderFullReportHtml(input: {
       <div style="font-size:20px;font-weight:900;color:${input.verdictInfo.color};">${input.verdictInfo.emoji} ${input.verdictInfo.text}</div>
       ${input.scoreText ? `<div style="font-size:13px;color:#64748b;margin-top:4px;">PakkaScore: <strong>${input.scoreText}</strong></div>` : ""}
     </div>` : "";
+
+  const riskBlock = renderRiskHtmlBlock({
+    riskScore: input.riskScore,
+    riskFactors: input.riskFactors,
+  });
 
   const stepsHtml = input.nextSteps.length > 0 ? `
     <h2 style="font-size:16px;font-weight:800;color:#0f172a;margin:32px 0 12px 0;">What To Do Next</h2>
@@ -344,6 +431,7 @@ function renderFullReportHtml(input: {
     <p style="font-size:12px;color:#94a3b8;margin:0 0 24px 0;">Reference: <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;font-family:monospace;">${input.referenceCode}</code></p>
 
     ${verdictBlock}
+    ${riskBlock}
 
     ${stepsHtml}
 
@@ -371,6 +459,8 @@ function renderFullReportText(input: {
   tierLabel: string;
   verdictInfo: { text: string; emoji: string; color: string } | null;
   scoreText: string | null;
+  riskScore: number | null;
+  riskFactors: EmailRiskFactor[];
   nextSteps: Array<{ title: string; detail?: string }>;
   verifyUrl: string;
 }): string {
@@ -383,6 +473,7 @@ function renderFullReportText(input: {
   ];
   if (input.verdictInfo) lines.push("Verdict     : " + input.verdictInfo.emoji + " " + input.verdictInfo.text);
   if (input.scoreText) lines.push("PakkaScore  : " + input.scoreText);
+  lines.push(...renderRiskTextBlock({ riskScore: input.riskScore, riskFactors: input.riskFactors }));
   if (input.nextSteps.length > 0) {
     lines.push("", "WHAT TO DO NEXT", "---------------");
     input.nextSteps.forEach((s, i) => {

@@ -17,6 +17,7 @@ import { getSession } from "@/lib/session";
 import { getUnusedEntitlements, consumeEntitlement, recordScanUsage } from "@/commercial/billing/entitlement-store";
 import { sendScanReportEmail } from "@/lib/email";
 import type { ReportType } from "@/commercial/billing/reports";
+import { computeRiskFactors } from "@/intelligence/risk-scorer";
 
 const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
 const ALLOWED_TYPES = new Set([
@@ -173,6 +174,7 @@ function filterResponseByTier(payload: any, tier: string): any {
 
 export async function POST(request: Request) {
   const _t_scan_total = Date.now();
+
   try {
     // --- Authentication + Entitlement Gate ---
     const session = await getSession();
@@ -552,6 +554,13 @@ export async function POST(request: Request) {
       });
       console.log(`[beta/scan] Entitlement consumed: id=${entitlementToUse.id} ref=${scanReferenceCode}`);
 
+      const emailRiskResult = computeRiskFactors({
+        pakkaScore: phase2?.analysis?.pakkaScore ?? 0,
+        findings: stringifyFindings(phase2?.analysis?.findings),
+        missing: stringifyMissing(phase2?.missingEvidence),
+        smartFields: perDocument.find((d: any) => d.status === "ok" && d.smartFields && !d.smartFields.extractionError)?.smartFields ?? null,
+      });
+
       // Send scan report email - awaited but never fails the scan response
       if (scanReferenceCode && session?.email) {
         const _verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://www.pakkascan.com"}/verify/${scanReferenceCode}`;
@@ -567,6 +576,8 @@ export async function POST(request: Request) {
             pakkaScore:    _score,
             nextSteps:     _steps,
             verifyUrl:     _verifyUrl,
+            riskScore:     emailRiskResult.riskScore,
+            riskFactors:   emailRiskResult.riskFactors,
           });
           if (!emailResult.ok) console.warn("[beta/scan] scan report email failed:", emailResult.error);
         } catch (err: any) {
@@ -580,6 +591,19 @@ export async function POST(request: Request) {
 
     console.log(`[timing] SCAN_TOTAL: ${Date.now() - _t_scan_total}ms`);
 
+    // --- Risk Score computation (Session 4) ---
+    const _findingsStr = stringifyFindings(phase2?.analysis?.findings);
+    const _missingStr  = stringifyMissing(phase2?.missingEvidence);
+    const _firstSmartFields = perDocument.find((d: any) => d.status === "ok" && d.smartFields && !d.smartFields.extractionError)?.smartFields ?? null;
+    const riskResult = computeRiskFactors({
+      pakkaScore: phase2?.analysis?.pakkaScore ?? 0,
+      findings: _findingsStr,
+      missing: _missingStr,
+      smartFields: _firstSmartFields,
+    });
+    console.log(`[beta/scan] Risk: score=${riskResult.riskScore}/10 (${riskResult.riskLabel}), factors=${riskResult.riskFactors.length}`);
+
+
     const rawPayload = {
       success: true,
       referenceCode: scanReferenceCode,
@@ -588,6 +612,9 @@ export async function POST(request: Request) {
       crossDoc,
       combinedVerdict,
       urduTranslations,
+      riskScore: riskResult.riskScore,
+      riskFactors: riskResult.riskFactors,
+      riskLabel: riskResult.riskLabel,
       phase2: phase2 && {
         classification: phase2.classification,
         observations: phase2.observations,

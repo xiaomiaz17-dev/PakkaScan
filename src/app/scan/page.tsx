@@ -135,6 +135,9 @@ type BackendResponse = {
   combinedVerdict?: CombinedVerdict | null;
   referenceCode?: string | null;
   urduTranslations?: Record<string, string>;
+  riskScore?: number;
+  riskLabel?: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  riskFactors?: Array<{ label: string; points: number; category: string }>;
   phase2?: {
     result?: { decision?: string; pakkaScore?: number; findings?: any[]; blockers?: number };
     posture?: string;
@@ -487,6 +490,53 @@ function DocTypeDropdown({ value, onChange, onClose }: { value: string; onChange
   );
 }
 
+function RiskScoreCard({ riskScore, riskLabel, riskFactors }: {
+  riskScore: number;
+  riskLabel: string;
+  riskFactors: Array<{ label: string; points: number; category: string }>;
+}) {
+  const colorMap: Record<string, { bg: string; border: string; text: string; badge: string }> = {
+    LOW:      { bg: "#ecfdf5", border: "#a7f3d0", text: "#065f46", badge: "#16a34a" },
+    MEDIUM:   { bg: "#fefce8", border: "#fde68a", text: "#713f12", badge: "#ca8a04" },
+    HIGH:     { bg: "#fff7ed", border: "#fed7aa", text: "#7c2d12", badge: "#ea580c" },
+    CRITICAL: { bg: "#fef2f2", border: "#fecaca", text: "#7f1d1d", badge: "#dc2626" },
+  };
+  const c = colorMap[riskLabel] || colorMap.MEDIUM;
+  const categoryIcon: Record<string, string> = {
+    financial: "\u{1F4B0}",
+    identity: "\u{1F4CB}",
+    legal: "\u2696\uFE0F",
+    document: "\u{1F4C4}",
+    completeness: "\u{1F50D}",
+  };
+  return (
+    <div style={{ backgroundColor: c.bg, border: "1px solid " + c.border, borderRadius: "12px", padding: "20px", marginBottom: "20px" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: riskFactors.length > 0 ? "14px" : "0", flexWrap: "wrap", gap: "8px" }}>
+        <div>
+          <div style={{ fontSize: "11px", fontWeight: 800, color: c.text, letterSpacing: "0.1em", marginBottom: "4px", opacity: 0.75, textTransform: "uppercase" as const }}>Transaction Risk Score</div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
+            <span style={{ fontSize: "36px", fontWeight: 900, color: c.text, lineHeight: 1 }}>{riskScore}<span style={{ fontSize: "16px", opacity: 0.7 }}>/10</span></span>
+            <span style={{ fontSize: "13px", fontWeight: 800, color: c.badge, backgroundColor: c.badge + "18", padding: "2px 10px", borderRadius: "6px", letterSpacing: "0.05em" }}>{riskLabel} RISK</span>
+          </div>
+        </div>
+      </div>
+      {riskFactors.length > 0 && (
+        <div style={{ borderTop: "1px solid " + c.border, paddingTop: "12px" }}>
+          <div style={{ fontSize: "12px", fontWeight: 700, color: c.text, marginBottom: "8px" }}>Contributing Factors:</div>
+          <ul style={{ margin: 0, paddingLeft: "0", listStyle: "none" }}>
+            {riskFactors.map((f, i) => (
+              <li key={i} style={{ fontSize: "13px", color: c.text, lineHeight: 1.6, display: "flex", alignItems: "flex-start", gap: "6px", marginBottom: "4px" }}>
+                <span style={{ flexShrink: 0 }}>{categoryIcon[f.category] || "\u26A0\uFE0F"}</span>
+                <span>{f.label} <span style={{ fontSize: "11px", opacity: 0.7 }}>({f.points > 0 ? "+" : ""}{f.points})</span></span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function VerdictHero({ verdict, posture, pakkaScore, urduHeadline }: { verdict: string; posture: string; pakkaScore: number; urduHeadline?: string | null }) {
   const style = (() => {
     if (verdict === "PROCEED" || posture === "CLEAR") {
@@ -781,6 +831,9 @@ export default function ScanPage() {
   const crossDoc = results?.crossDoc ?? null;
   const isMultiDoc = (results?.documents?.length ?? 0) >= 2;
   const urduTranslations = results?.urduTranslations ?? {};
+  const riskScore = results?.riskScore ?? null;
+  const riskLabel = results?.riskLabel ?? null;
+  const riskFactors = results?.riskFactors ?? [];
 
   const stringifyItem = (m: any): string => {
     if (typeof m === "string") return m;
@@ -1055,6 +1108,9 @@ export default function ScanPage() {
             ) : (
               <>
                 <VerdictHero verdict={verdict} posture={posture} pakkaScore={pakkaScore} urduHeadline={urduTranslations["verdictHeadline"]} />
+                {riskScore !== null && riskLabel && (
+                  <RiskScoreCard riskScore={riskScore} riskLabel={riskLabel} riskFactors={riskFactors} />
+                )}
                 <NextStepsPanel steps={nextSteps} urduTranslations={urduTranslations} />
                 {results.tier === "rental" && isMultiDoc && (
                   <div style={{ marginTop: "20px", padding: "16px 20px", backgroundColor: "#fef3c7", border: "1px solid #fcd34d", borderRadius: "10px", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
