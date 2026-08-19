@@ -551,3 +551,31 @@ a.primary {
     background: #ffffff !important;
   }
 }
+
+/* ============================================================
+   WHATSAPP FAB — mobile compact mode
+   Hides the "Chat on WhatsApp" label on narrow screens so the
+   floating button doesn't overlap page content.
+   ============================================================ */
+@media (max-width: 640px) {
+  .pks-fab {
+    padding: 12px !important;
+    gap: 0 !important;
+    bottom: 16px !important;
+    right: 16px !important;
+  }
+  .pks-fab-label {
+    display: none !important;
+  }
+}
+
+/* ============================================================
+   CTRL+P TIP — hide on mobile
+   Mobile browsers don't have Ctrl+P. Users have their own save
+   mechanisms (browser menu, share sheet). Hiding avoids confusion.
+   ============================================================ */
+@media (max-width: 640px) {
+  .pks-ctrlp-tip {
+    display: none !important;
+  }
+}
