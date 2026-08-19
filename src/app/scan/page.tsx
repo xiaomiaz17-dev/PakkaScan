@@ -128,6 +128,7 @@ type CombinedVerdict = {
 
 type BackendResponse = {
   success: boolean;
+  tier?: "rental" | "bayana" | "full_dd" | null;
   documents: BackendDocument[];
   crossDoc?: CrossDocResult | null;
   combinedVerdict?: CombinedVerdict | null;
@@ -1012,7 +1013,7 @@ export default function ScanPage() {
 
             <div style={{ marginBottom: "8px" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
-                <h3 style={{ fontSize: "22px", fontWeight: 800, color: "#0f172a", margin: "0 0 4px 0" }}>Due Diligence Report</h3>
+                <h3 style={{ fontSize: "22px", fontWeight: 800, color: "#0f172a", margin: "0 0 4px 0" }}>{results.tier === "rental" ? "Rental Safety Check" : results.tier === "bayana" ? "Bayana Safety Check" : "Full Property Due Diligence"}</h3>
                 {results.referenceCode && (
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px" }}>
                     <div style={{ fontSize: "11px", color: "#64748b", fontFamily: "monospace", backgroundColor: "#f1f5f9", padding: "4px 10px", borderRadius: "6px", border: "1px solid #e2e8f0" }}>
@@ -1054,6 +1055,16 @@ export default function ScanPage() {
               <>
                 <VerdictHero verdict={verdict} posture={posture} pakkaScore={pakkaScore} urduHeadline={urduTranslations["verdictHeadline"]} />
                 <NextStepsPanel steps={nextSteps} urduTranslations={urduTranslations} />
+                {results.tier === "rental" && isMultiDoc && (
+                  <div style={{ marginTop: "20px", padding: "16px 20px", backgroundColor: "#fef3c7", border: "1px solid #fcd34d", borderRadius: "10px", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+                    <div style={{ fontSize: "20px", flexShrink: 0 }}>&#128200;</div>
+                    <div style={{ flex: 1, minWidth: "200px" }}>
+                      <div style={{ fontSize: "14px", fontWeight: 800, color: "#78350f", marginBottom: "2px" }}>Cross-document analysis available on Bayana</div>
+                      <div style={{ fontSize: "12px", color: "#92400e", lineHeight: 1.5 }}>You uploaded {results?.documents?.length ?? 0} files. Upgrade to Bayana Safety Check to see how your documents match up, including seller CNIC verification against the Fard.</div>
+                    </div>
+                    <a href="/pricing" style={{ padding: "8px 16px", backgroundColor: "#0b132b", color: "#ffffff", fontWeight: 700, fontSize: "13px", borderRadius: "8px", textDecoration: "none", flexShrink: 0 }}>See plans</a>
+                  </div>
+                )}
               </>
             )}
 
