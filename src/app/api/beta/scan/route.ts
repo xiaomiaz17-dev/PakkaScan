@@ -30,6 +30,36 @@ const ALLOWED_TYPES = new Set([
 ]);
 
 /**
+ * Verdict severity ranking - lower number = more severe.
+ * Used to pick the more severe verdict between per-doc and combined
+ * so users always see the strongest warning.
+ */
+const VERDICT_SEVERITY: Record<string, number> = {
+  DO_NOT_PROCEED: 1,
+  STOP: 1,
+  BLOCKED: 1,
+  REJECT: 1,
+  LEGAL_REVIEW_REQUIRED: 2,
+  PROCEED_WITH_CAUTION: 3,
+  PROCEED: 4,
+  INCONCLUSIVE: 5,
+};
+
+/**
+ * Pick the more severe verdict between two candidates.
+ * If one is null/undefined, returns the other. If both, returns
+ * whichever has the lower severity number (more severe).
+ * Unknown verdicts default to severity 5 (least severe).
+ */
+function pickMoreSevereVerdict(a: string | null | undefined, b: string | null | undefined): string | null {
+  if (!a) return b ?? null;
+  if (!b) return a ?? null;
+  const sevA = VERDICT_SEVERITY[a] ?? 5;
+  const sevB = VERDICT_SEVERITY[b] ?? 5;
+  return sevA <= sevB ? a : b;
+}
+
+/**
  * Choose the best classification by combining both classifiers.
  * See Path A launch notes for rationale.
  */
@@ -525,7 +555,7 @@ export async function POST(request: Request) {
       // Send scan report email - awaited but never fails the scan response
       if (scanReferenceCode && session?.email) {
         const _verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://www.pakkascan.com"}/verify/${scanReferenceCode}`;
-        const _verdict   = phase2?.analysis?.decision ?? combinedVerdict?.verdict ?? null;
+        const _verdict   = pickMoreSevereVerdict(phase2?.analysis?.decision, combinedVerdict?.verdict);
         const _score     = phase2?.analysis?.pakkaScore ?? null;
         const _steps     = (nextSteps ?? []) as Array<{ title: string; detail?: string }>;
                 try {
