@@ -458,6 +458,71 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* COMPARISON TABLE — anchor value vs traditional lawyer */}
+      <section style={{ padding: "72px 24px", backgroundColor: "#ffffff" }}>
+        <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: "40px" }}>
+            <h2 style={{ fontSize: "32px", fontWeight: 800, color: "#0f172a", margin: "0 0 12px 0", letterSpacing: "-0.02em" }}>Why not just hire a lawyer?</h2>
+            <p style={{ fontSize: "15px", color: "#64748b", margin: 0, maxWidth: "600px", marginLeft: "auto", marginRight: "auto" }}>You should — for the big stuff. But most property checks don&rsquo;t need a Rs 50,000 retainer.</p>
+          </div>
+
+          <div style={{ overflowX: "auto", border: "1px solid #e2e8f0", borderRadius: "12px" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "14px" }}>
+              <thead>
+                <tr style={{ backgroundColor: "#f8fafc" }}>
+                  <th style={{ padding: "16px", textAlign: "left", fontWeight: 700, color: "#64748b", fontSize: "12px", letterSpacing: "0.05em", textTransform: "uppercase", borderBottom: "1px solid #e2e8f0" }}></th>
+                  <th style={{ padding: "16px", textAlign: "center", fontWeight: 800, color: "#0b132b", fontSize: "14px", borderBottom: "1px solid #e2e8f0", backgroundColor: "#ecfdf5" }}>PakkaScan</th>
+                  <th style={{ padding: "16px", textAlign: "center", fontWeight: 700, color: "#64748b", fontSize: "14px", borderBottom: "1px solid #e2e8f0" }}>Property Lawyer</th>
+                  <th style={{ padding: "16px", textAlign: "center", fontWeight: 700, color: "#64748b", fontSize: "14px", borderBottom: "1px solid #e2e8f0" }}>DIY / Ask a friend</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style={{ padding: "16px", fontWeight: 700, color: "#0f172a", borderBottom: "1px solid #f1f5f9" }}>Cost</td>
+                  <td style={{ padding: "16px", textAlign: "center", color: "#065f46", fontWeight: 700, borderBottom: "1px solid #f1f5f9", backgroundColor: "#f0fdf4" }}>Rs 499 &ndash; 2,999</td>
+                  <td style={{ padding: "16px", textAlign: "center", color: "#334155", borderBottom: "1px solid #f1f5f9" }}>Rs 25,000 &ndash; 75,000</td>
+                  <td style={{ padding: "16px", textAlign: "center", color: "#334155", borderBottom: "1px solid #f1f5f9" }}>Free (risky)</td>
+                </tr>
+                <tr>
+                  <td style={{ padding: "16px", fontWeight: 700, color: "#0f172a", borderBottom: "1px solid #f1f5f9" }}>Turnaround</td>
+                  <td style={{ padding: "16px", textAlign: "center", color: "#065f46", fontWeight: 700, borderBottom: "1px solid #f1f5f9", backgroundColor: "#f0fdf4" }}>Under 1 minute</td>
+                  <td style={{ padding: "16px", textAlign: "center", color: "#334155", borderBottom: "1px solid #f1f5f9" }}>3 &ndash; 10 working days</td>
+                  <td style={{ padding: "16px", textAlign: "center", color: "#334155", borderBottom: "1px solid #f1f5f9" }}>Hours of Googling</td>
+                </tr>
+                <tr>
+                  <td style={{ padding: "16px", fontWeight: 700, color: "#0f172a", borderBottom: "1px solid #f1f5f9" }}>Bilingual (English + Urdu)</td>
+                  <td style={{ padding: "16px", textAlign: "center", color: "#16a34a", fontSize: "18px", fontWeight: 800, borderBottom: "1px solid #f1f5f9", backgroundColor: "#f0fdf4" }}>&#10003;</td>
+                  <td style={{ padding: "16px", textAlign: "center", color: "#94a3b8", borderBottom: "1px solid #f1f5f9" }}>Rarely</td>
+                  <td style={{ padding: "16px", textAlign: "center", color: "#dc2626", fontSize: "18px", fontWeight: 800, borderBottom: "1px solid #f1f5f9" }}>&#10007;</td>
+                </tr>
+                <tr>
+                  <td style={{ padding: "16px", fontWeight: 700, color: "#0f172a", borderBottom: "1px solid #f1f5f9" }}>Structured risk score</td>
+                  <td style={{ padding: "16px", textAlign: "center", color: "#16a34a", fontSize: "18px", fontWeight: 800, borderBottom: "1px solid #f1f5f9", backgroundColor: "#f0fdf4" }}>&#10003;</td>
+                  <td style={{ padding: "16px", textAlign: "center", color: "#94a3b8", borderBottom: "1px solid #f1f5f9" }}>Narrative only</td>
+                  <td style={{ padding: "16px", textAlign: "center", color: "#dc2626", fontSize: "18px", fontWeight: 800, borderBottom: "1px solid #f1f5f9" }}>&#10007;</td>
+                </tr>
+                <tr>
+                  <td style={{ padding: "16px", fontWeight: 700, color: "#0f172a", borderBottom: "1px solid #f1f5f9" }}>Shareable verification link</td>
+                  <td style={{ padding: "16px", textAlign: "center", color: "#16a34a", fontSize: "18px", fontWeight: 800, borderBottom: "1px solid #f1f5f9", backgroundColor: "#f0fdf4" }}>&#10003;</td>
+                  <td style={{ padding: "16px", textAlign: "center", color: "#dc2626", fontSize: "18px", fontWeight: 800, borderBottom: "1px solid #f1f5f9" }}>&#10007;</td>
+                  <td style={{ padding: "16px", textAlign: "center", color: "#dc2626", fontSize: "18px", fontWeight: 800, borderBottom: "1px solid #f1f5f9" }}>&#10007;</td>
+                </tr>
+                <tr>
+                  <td style={{ padding: "16px", fontWeight: 700, color: "#0f172a" }}>Best for</td>
+                  <td style={{ padding: "16px", textAlign: "center", color: "#065f46", borderBottom: "1px solid #f1f5f9", backgroundColor: "#f0fdf4", fontSize: "13px", lineHeight: 1.5 }}>Bayana, rental, quick DD before payment</td>
+                  <td style={{ padding: "16px", textAlign: "center", color: "#334155", fontSize: "13px", lineHeight: 1.5 }}>Complex disputes, litigation, big commercial deals</td>
+                  <td style={{ padding: "16px", textAlign: "center", color: "#334155", fontSize: "13px", lineHeight: 1.5 }}>Nothing you care about</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p style={{ fontSize: "13px", color: "#64748b", textAlign: "center", marginTop: "20px", maxWidth: "700px", marginLeft: "auto", marginRight: "auto", lineHeight: 1.6 }}>
+            PakkaScan doesn&rsquo;t replace a property lawyer for a Rs 5 crore commercial deal or an active dispute. But for the 90% of everyday property paperwork &mdash; tenancy agreements, Bayanas, plot purchases &mdash; it gives you a lawyer-grade check in under a minute.
+          </p>
+        </div>
+      </section>
+
       {/* WHAT WE SCAN */}
       <section style={{ padding: "64px 24px", backgroundColor: "#ffffff" }}>
         <div style={{ maxWidth: "1000px", margin: "0 auto", textAlign: "center" }}>
@@ -472,6 +537,61 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* TESTIMONIALS - pulled-headline design, on-brand light aesthetic */}
+      <section style={{ padding: "72px 24px", backgroundColor: "#f8fafc" }}>
+        <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: "48px" }}>
+            <div style={{ display: "inline-block", padding: "4px 12px", backgroundColor: "#ecfdf5", color: "#065f46", fontSize: "11px", fontWeight: 800, letterSpacing: "0.1em", borderRadius: "6px", marginBottom: "12px", textTransform: "uppercase" }}>Beta Feedback</div>
+            <h2 style={{ fontSize: "32px", fontWeight: 800, color: "#0f172a", margin: "0 0 12px 0", letterSpacing: "-0.02em" }}>What early users are saying</h2>
+            <p style={{ fontSize: "15px", color: "#64748b", margin: 0, maxWidth: "600px", marginLeft: "auto", marginRight: "auto" }}>Real feedback from Karachi beta testers who used PakkaScan before hitting sign on their paperwork.</p>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "20px" }}>
+            {[
+              {
+                headline: "Saved me from a major headache before giving token money.",
+                preview: "I was about to hand over the token money on an apartment near PECHS. PakkaScan flagged a missing witness CNIC and a weird forfeiture clause in seconds \u2014 got both fixed with the seller before paying.",
+                name: "Yusuf M.",
+                location: "Tariq Road, Karachi",
+                service: "Bayana Check",
+              },
+              {
+                headline: "Finally showed us exactly what we were signing.",
+                preview: "Renting out our house used to mean trusting whatever template the agent brought. PakkaScan pulled out the security deposit and maintenance terms in English AND Urdu. Wish I\u2019d had this two tenants ago.",
+                name: "Kashfiya K.",
+                location: "Malir, Karachi",
+                service: "Rental Check",
+              },
+              {
+                headline: "Gave my overseas family complete peace of mind.",
+                preview: "My brother in the UK was sending money for a plot in Korangi. I ran the registry and transfer papers through PakkaScan \u2014 every CNIC checked, dates verified, and a verification link to share. He signed off within an hour.",
+                name: "Husna S.",
+                location: "Korangi, Karachi",
+                service: "Full Due Diligence",
+              },
+              {
+                headline: "Caught one CNIC digit that was wrong on the original.",
+                preview: "Urdu property paperwork is a nightmare if you\u2019re not a lawyer. Uploaded our Fard and Sale Deed and got everything back as a clear risk breakdown \u2014 the CNIC-by-CNIC check caught an error that could have been a serious problem.",
+                name: "Maria A.",
+                location: "Malir, Karachi",
+                service: "Title Verification",
+              },
+            ].map((t, i) => (
+              <div key={i} style={{ padding: "28px 24px", backgroundColor: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", display: "flex", flexDirection: "column", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
+                <h3 className={fraunces.className} style={{ fontSize: "19px", fontWeight: 700, color: "#0f172a", lineHeight: 1.35, margin: "0 0 14px 0", letterSpacing: "-0.01em" }}>&ldquo;{t.headline}&rdquo;</h3>
+                <p style={{ fontSize: "13px", color: "#64748b", lineHeight: 1.65, margin: "0 0 20px 0", flex: 1 }}>{t.preview}</p>
+                <div style={{ paddingTop: "16px", borderTop: "1px solid #f1f5f9" }}>
+                  <div style={{ fontSize: "14px", fontWeight: 800, color: "#0f172a", marginBottom: "2px" }}>{t.name}</div>
+                  <div style={{ fontSize: "12px", color: "#94a3b8", marginBottom: "8px" }}>{t.location}</div>
+                  <div style={{ display: "inline-block", padding: "3px 10px", backgroundColor: "#ecfdf5", color: "#065f46", fontSize: "11px", fontWeight: 700, borderRadius: "999px", letterSpacing: "0.02em" }}>{t.service} &middot; Beta</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <p style={{ fontSize: "12px", color: "#94a3b8", textAlign: "center", marginTop: "32px", fontStyle: "italic" }}>Quoted with permission from real beta users. Names shown as they wished to be identified.</p>
+        </div>
+      </section>
       {/* FAQ */}
       <section id="faq" style={{ padding: "72px 24px", backgroundColor: "#f8fafc" }}>
         <div style={{ maxWidth: "760px", margin: "0 auto" }}>
