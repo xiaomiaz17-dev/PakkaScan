@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Fraunces } from "next/font/google";
 import WhatsAppShareButton from "@/components/WhatsAppShareButton";
+import Link from "next/link";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -15,7 +16,8 @@ type VerifyResult =
   | { status: "found"; referenceCode: string; reportType: string; scannedAt: string }
   | { status: "not_found" }
   | { status: "invalid" }
-  | { status: "error" };
+  | { status: "error" }
+  | { status: "sample" };
 
 function formatReportType(rt: string): string {
   const map: Record<string, string> = {
@@ -47,6 +49,11 @@ export default function VerifyResultPage() {
   useEffect(() => {
     let cancelled = false;
     async function run() {
+      // Short-circuit for demo/sample reference
+      if (reference === "PKS-SAMPLE-2026-DEMO") {
+        setResult({ status: "sample" });
+        return;
+      }
       try {
         const res = await fetch(`/api/verify/${encodeURIComponent(reference)}`, {
           cache: "no-store",
@@ -182,6 +189,41 @@ export default function VerifyResultPage() {
               shown on this page. Only the report holder has access to full details.
             </div>
           </>
+        )}
+
+        {result.status === "sample" && (
+          <div style={{
+            background: "#eff6ff",
+            border: "1px solid #bfdbfe",
+            borderRadius: 12,
+            padding: "1.5rem",
+            textAlign: "center",
+          }}>
+            <div style={{ fontSize: 32, marginBottom: 6 }}>&#128196;</div>
+            <div className={fraunces.className} style={{
+              fontSize: "1.25rem",
+              fontWeight: 900,
+              color: "#1e3a8a",
+              margin: "0 0 0.5rem 0",
+            }}>
+              Sample Reference
+            </div>
+            <div style={{ fontSize: 13, color: "#1e40af", marginBottom: "1rem", lineHeight: 1.5 }}>
+              <code>PKS-SAMPLE-2026-DEMO</code> is a demonstration reference used on our sample report page. It does not correspond to a real scan.
+            </div>
+            <Link href="/sample-report" style={{
+              display: "inline-block",
+              padding: "10px 20px",
+              backgroundColor: "#0b132b",
+              color: "#ffffff",
+              fontWeight: 700,
+              fontSize: 13,
+              borderRadius: 8,
+              textDecoration: "none",
+            }}>
+              See the sample report &rarr;
+            </Link>
+          </div>
         )}
 
         {result.status === "not_found" && (

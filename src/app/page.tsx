@@ -22,6 +22,10 @@ const FAQ_ITEMS = [
     a: "PakkaScan is an AI-powered document analyser built for Pakistani property transactions. Upload a Bayana, Fard, Sale Deed, CNIC, or any related document, and PakkaScan reads every clause in English and Urdu, cross-checks the details, and gives you a clear verdict in about two minutes.",
   },
   {
+    q: "What does a PakkaScan report actually look like?",
+    a: "You can see a full sample report at pakkascan.com/sample-report before you buy. It shows a fictional but realistic Bayana scenario where PakkaScan flags a high-risk deal \u2014 price under-declaration, unregistered Power of Attorney, one-sided forfeiture clause, and missing witness CNICs. The sample matches exactly what you get when you scan your own documents, in English and Urdu.",
+  },
+  {
     q: "Is PakkaScan a substitute for a lawyer?",
     a: "No. PakkaScan is an assistive tool — not a licensed lawyer or certified legal counsel. For very high-value transactions, always confirm your paperwork with a qualified lawyer and directly with the relevant authority (NADRA, Sub-Registrar, Patwari). PakkaScan helps you know when your papers look clean, and when you need a second opinion.",
   },
@@ -453,7 +457,8 @@ export default function LandingPage() {
                 </>
               )}
             </p>
-            <a href="/pricing" style={{ display: "inline-block", marginTop: "16px", padding: "10px 20px", color: "#0b132b", fontWeight: 700, fontSize: "14px", textDecoration: "none", borderBottom: "2px solid #16a34a" }}>Compare all features &rarr;</a>
+            <a href="/pricing" style={{ display: "inline-block", marginTop: "16px", marginRight: "12px", padding: "10px 20px", color: "#0b132b", fontWeight: 700, fontSize: "14px", textDecoration: "none", borderBottom: "2px solid #16a34a" }}>Compare all features &rarr;</a>
+            <a href="/sample-report" style={{ display: "inline-block", marginTop: "16px", padding: "10px 20px", color: "#0b132b", fontWeight: 700, fontSize: "14px", textDecoration: "none", borderBottom: "2px solid #94a3b8" }}>See a sample report &rarr;</a>
           </div>
         </div>
       </section>
