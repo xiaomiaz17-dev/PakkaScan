@@ -39,11 +39,11 @@ const FAQ_SECTIONS = [
     items: [
       {
         q: "What documents can PakkaScan read?",
-        a: "Bayana / Agreement to Sell, Registered Sale Deed, Tenancy Agreements, CNIC / NICOP / POC, Fard (ownership record), Mutation (Sale / Gift / Mortgage / Inheritance), Power of Attorney, Gift Deed, Non-Encumbrance Certificate, and more. PakkaScan auto-detects the document type ? you don't need to sort first.",
+        a: "Bayana / Agreement to Sell, Registered Sale Deed, Tenancy Agreements, CNIC / NICOP / POC, Fard (ownership record), Mutation (Sale / Gift / Mortgage / Inheritance), Power of Attorney, Gift Deed, Non-Encumbrance Certificate, and more. PakkaScan auto-detects the document type — you don't need to sort first.",
       },
       {
         q: "What formats work best?",
-        a: "PakkaScan works best on typed documents and clean photos taken with a phone. PDF, JPG, PNG, and HEIC all work. For handwritten documents, PakkaScan handles most modern (post-2000) records. Very old handwritten records (Shikastah script, faded ink) may not extract fully ? in that case, PakkaScan will tell you clearly rather than guess.",
+        a: "PakkaScan works best on typed documents and clean photos taken with a phone. PDF, JPG, PNG, and HEIC all work. For handwritten documents, PakkaScan handles most modern (post-2000) records. Very old handwritten records (Shikastah script, faded ink) may not extract fully — in that case, PakkaScan will tell you clearly rather than guess.",
       },
       {
         q: "What if PakkaScan can't read my document?",
@@ -64,7 +64,7 @@ const FAQ_SECTIONS = [
       },
       {
         q: "Is PakkaScan a substitute for a lawyer?",
-        a: "No. PakkaScan is an assistive tool ? not a licensed lawyer or certified legal counsel. For very high-value transactions, always confirm your paperwork with a qualified lawyer and directly with the relevant authority. PakkaScan helps you know when your papers look clean, and when you need a second opinion.",
+        a: "No. PakkaScan is an assistive tool — not a licensed lawyer or certified legal counsel. For very high-value transactions, always confirm your paperwork with a qualified lawyer and directly with the relevant authority. PakkaScan helps you know when your papers look clean, and when you need a second opinion.",
       },
     ],
   },
@@ -90,7 +90,7 @@ const FAQ_SECTIONS = [
     items: [
       {
         q: "How much does it cost?",
-        a: "Rs 499 for a Rental Safety Check, Rs 1,499 for a Bayana Safety Check, Rs 2,999 for a Full Property Due Diligence. Your first scan is free. No subscription ? pay per report.",
+        a: "Rs 499 for a Rental Safety Check, Rs 1,499 for a Bayana Safety Check, Rs 2,999 for a Full Property Due Diligence. Your first scan is free. No subscription — pay per report.",
       },
       {
         q: "How do I pay?",
@@ -98,7 +98,7 @@ const FAQ_SECTIONS = [
       },
       {
         q: "Can I get a refund?",
-        a: "If PakkaScan gave you clearly incorrect information ? fabricated a CNIC number, missed obvious red flags in a clear document, or crashed mid-scan ? message us on WhatsApp and we'll refund the scan and investigate. Refunds are handled case-by-case within 7 days.",
+        a: "If PakkaScan gave you clearly incorrect information — fabricated a CNIC number, missed obvious red flags in a clear document, or crashed mid-scan ? message us on WhatsApp and we'll refund the scan and investigate. Refunds are handled case-by-case within 7 days.",
       },
     ],
   },
@@ -148,7 +148,7 @@ export default function FaqPage() {
           ))}
           <div style={{ marginTop: "40px", padding: "24px", backgroundColor: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "12px", textAlign: "center" }}>
             <div style={{ fontSize: "15px", fontWeight: 700, color: "#0f172a", marginBottom: "8px" }}>Didn&apos;t find your answer?</div>
-            <div style={{ fontSize: "13px", color: "#475569", marginBottom: "16px" }}>Message us on WhatsApp ? a real person will reply.</div>
+            <div style={{ fontSize: "13px", color: "#475569", marginBottom: "16px" }}>Message us on WhatsApp — a real person will reply.</div>
             <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "12px 24px", backgroundColor: "#25D366", color: "#ffffff", fontWeight: 700, fontSize: "14px", borderRadius: "10px", textDecoration: "none" }}>
               Message us on WhatsApp
             </a>

@@ -23,7 +23,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Is PakkaScan a substitute for a lawyer?",
-    a: "No. PakkaScan is an assistive tool ? not a licensed lawyer or certified legal counsel. For very high-value transactions, always confirm your paperwork with a qualified lawyer and directly with the relevant authority (NADRA, Sub-Registrar, Patwari). PakkaScan helps you know when your papers look clean, and when you need a second opinion.",
+    a: "No. PakkaScan is an assistive tool — not a licensed lawyer or certified legal counsel. For very high-value transactions, always confirm your paperwork with a qualified lawyer and directly with the relevant authority (NADRA, Sub-Registrar, Patwari). PakkaScan helps you know when your papers look clean, and when you need a second opinion.",
   },
   {
     q: "What documents can PakkaScan read?",
@@ -31,7 +31,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "What if PakkaScan misses something?",
-    a: "PakkaScan flags what it finds AND what it can't verify. If a critical field is missing (like a CNIC that was fabricated by the AI or a document too blurry to read), PakkaScan tells you clearly and adds it to the 'What To Do Next' checklist. When in doubt, message us on WhatsApp ? a real person will help.",
+    a: "PakkaScan flags what it finds AND what it can't verify. If a critical field is missing (like a CNIC that was fabricated by the AI or a document too blurry to read), PakkaScan tells you clearly and adds it to the 'What To Do Next' checklist. When in doubt, message us on WhatsApp — a real person will help.",
   },
   {
     q: "What about my privacy?",

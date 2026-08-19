@@ -87,7 +87,7 @@ const FAQ_MINI = [
   },
   {
     q: "What payment methods will you accept?",
-    a: "Easypaisa, JazzCash, HBL/MCB/UBL debit and credit cards, and direct bank transfer. Payment integration launches shortly ? private beta users can use PakkaScan free right now.",
+    a: "Easypaisa, JazzCash, HBL/MCB/UBL debit and credit cards, and direct bank transfer. Payment integration launches shortly — private beta users can use PakkaScan free right now.",
   },
   {
     q: "What if the report is wrong?",
