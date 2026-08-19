@@ -149,6 +149,17 @@ export default function VerifyResultPage() {
               <MetaRow label="Issued On" value={formatDate(result.scannedAt)} />
             </div>
 
+            <div style={{ marginTop: "1.5rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=8&data=${encodeURIComponent(typeof window !== "undefined" ? `${window.location.origin}/verify/${result.referenceCode}` : `https://www.pakkascan.com/verify/${result.referenceCode}`)}`}
+                alt="QR code to verify this report"
+                width={180}
+                height={180}
+                style={{ borderRadius: 8, border: "1px solid #e5e7eb" }}
+              />
+              <div style={{ fontSize: 12, color: "#6b7280" }}>Scan to verify</div>
+            </div>
+
             <div style={{ marginTop: "1.25rem", display: "flex", justifyContent: "center" }}>
               <WhatsAppShareButton
                 variant="verify"
