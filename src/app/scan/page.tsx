@@ -1,5 +1,6 @@
-﻿import { ValuationComparisonCard } from "@/components/ValuationComparisonCard";
-"use client";
+﻿"use client";
+
+import { ValuationComparisonCard } from "@/components/ValuationComparisonCard";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Fraunces, Noto_Nastaliq_Urdu } from "next/font/google";
@@ -1358,4 +1359,5 @@ export default function ScanPage() {
     </div>
   );
 }
+
 
