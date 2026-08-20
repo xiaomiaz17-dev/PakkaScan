@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createHash } from "crypto";
 import { renderPassportPdf, type PassportData } from "@/reporting/pdf-passport";
+import { updatePdfHash } from "@/commercial/billing/session8-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -27,8 +29,9 @@ export async function POST(req: NextRequest) {
       };
     }
 
+    const referenceCode = String(body.referenceCode || "PKS-UNKNOWN");
     const data: PassportData = {
-      referenceCode: String(body.referenceCode || "PKS-UNKNOWN"),
+      referenceCode,
       scannedAt: String(body.scannedAt || new Date().toISOString()),
       reportType: String(body.reportType || "SCAN"),
       riskScore: Number(body.riskScore) || 1,
@@ -40,17 +43,30 @@ export async function POST(req: NextRequest) {
       verdict: String(body.verdict || "REVIEW"),
       pakkaScore: body.pakkaScore != null ? Number(body.pakkaScore) : null,
       keyFacts: Array.isArray(body.keyFacts) ? body.keyFacts : undefined,
-      verifyUrl: String(body.verifyUrl || `https://www.pakkascan.com/verify/${body.referenceCode || ""}`),
+      verifyUrl: String(body.verifyUrl || `https://www.pakkascan.com/verify/${referenceCode}`),
       valuation,
     };
+
     const pdfBuffer = await renderPassportPdf(data);
-    const filename = `PakkaScan-Passport-${data.referenceCode}.pdf`;
+    const pdfHash = createHash("sha256").update(pdfBuffer).digest("hex");
+
+    if (referenceCode && referenceCode !== "PKS-UNKNOWN") {
+      try {
+        await updatePdfHash({ referenceCode, pdfHash });
+      } catch (e: any) {
+        console.warn("[pdf-passport] could not store pdf_hash:", e?.message || e);
+      }
+    }
+
+    const filename = `PakkaScan-Passport-${referenceCode}.pdf`;
     return new NextResponse(new Uint8Array(pdfBuffer), {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="${filename}"`,
         "Cache-Control": "no-store",
+        "X-PakkaScan-Pdf-Hash": pdfHash,
+        "X-PakkaScan-Pdf-Hash-Alg": "sha256",
       },
     });
   } catch (err: any) {

@@ -1,6 +1,8 @@
 ﻿"use client";
 
 import { ValuationComparisonCard } from "@/components/ValuationComparisonCard";
+import { FlaggedClausesPanel } from "@/components/FlaggedClausesPanel";
+import { FeedbackButton } from "@/components/FeedbackButton";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Fraunces, Noto_Nastaliq_Urdu } from "next/font/google";
@@ -142,6 +144,7 @@ type BackendResponse = {
   riskLabel?: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
   riskFactors?: Array<{ label: string; points: number; category: string }>;
   valuationComparison?: any;
+  clauseConcerns?: { flagged: any[]; missing: string[] };
   scoreBreakdown?: string;
   chainOfTitle?: any;
   phase2?: {
@@ -1130,6 +1133,8 @@ export default function ScanPage() {
               <RiskScoreCard riskScore={riskScore} riskLabel={riskLabel} riskFactors={riskFactors} scoreBreakdown={scoreBreakdown} />
             )}
             <ValuationComparisonCard data={results?.valuationComparison} />
+            <FlaggedClausesPanel flagged={results?.clauseConcerns?.flagged} missing={results?.clauseConcerns?.missing} referenceCode={results?.referenceCode} />
+            <FeedbackButton referenceCode={results?.referenceCode} />
             {results?.chainOfTitle && (
               <OwnershipTimeline result={results.chainOfTitle} tier={results.tier ?? undefined} />
             )}
@@ -1359,5 +1364,6 @@ export default function ScanPage() {
     </div>
   );
 }
+
 
 

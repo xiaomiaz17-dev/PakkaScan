@@ -1,5 +1,7 @@
-"use client";
+﻿"use client";
 
+
+import { PdfHashVerifier } from "@/components/PdfHashVerifier";
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Fraunces } from "next/font/google";
@@ -96,6 +98,7 @@ export default function VerifyResultPage() {
             verdict: data.verdict ?? null,
             pakkaScore: data.pakkaScore ?? null,
             chainOfTitle: data.chainOfTitle ?? null,
+            hasPdfHash: data.hasPdfHash ?? false,
           });
         } else {
           setResult({ status: "not_found" });
@@ -204,7 +207,7 @@ export default function VerifyResultPage() {
               <div style={{ marginTop: "1.25rem", padding: "1rem", borderRadius: 12, border: "1px solid #e2e8f0", background: "#f8fafc" }}>
                 <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.08em", color: "#64748b", marginBottom: 8 }}>
                   OWNERSHIP TIMELINE
-                  {result.chainOfTitle.isComplete ? " · COMPLETE" : " · GAPS DETECTED"}
+                  {result.chainOfTitle.isComplete ? " Â· COMPLETE" : " Â· GAPS DETECTED"}
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                   {result.chainOfTitle.timeline.map((ev: any, i: number) => (
@@ -219,7 +222,7 @@ export default function VerifyResultPage() {
                       <div style={{ fontWeight: 800, color: "#0f172a" }}>{ev.eventType}</div>
                       <div style={{ color: "#64748b" }}>{ev.date || "Undated"}</div>
                       <div style={{ color: "#334155", marginTop: 2 }}>
-                        {ev.transferee?.canonicalName || ev.transferor?.canonicalName || "—"}
+                        {ev.transferee?.canonicalName || ev.transferor?.canonicalName || "â€”"}
                       </div>
                     </div>
                   ))}
@@ -230,7 +233,7 @@ export default function VerifyResultPage() {
                       .slice(0, 3)
                       .map((g: any, i: number) => (
                         <div key={i} style={{ marginBottom: 4 }}>
-                          <strong>{g.severity || "FLAG"}</strong> — {g.message}
+                          <strong>{g.severity || "FLAG"}</strong> â€” {g.message}
                         </div>
                       ))}
                   </div>

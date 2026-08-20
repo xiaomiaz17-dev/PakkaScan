@@ -1,3 +1,4 @@
+﻿import { AnalyticsProvider } from "@/components/AnalyticsProvider";
 import './globals.css';
 import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
@@ -53,6 +54,7 @@ export default function RootLayout({
             `,
           }}
         />
+              <AnalyticsProvider />
       </body>
     </html>
   );

@@ -1,3 +1,4 @@
+﻿import { buildContractConcernsEmailHtml } from "./email-clause-block";
 /**
  * Email sender via Resend.
  *
@@ -107,11 +108,11 @@ function renderMagicLinkText(input: { magicLinkUrl: string; ipAddress: string | 
 }
 
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Scan Report Email
 // Auto-sent after every successful scan.
 // Tier-aware: Rental gets a short summary, Bayana/Full DD get the full HTML.
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const WHATSAPP_URL = "https://wa.me/923156507067";
 const WHATSAPP_DISPLAY = "+92 315 6507067";
@@ -253,7 +254,7 @@ export async function sendScanReportEmail(input: {
   }
 }
 
-// ─── Shared components ────────────────────────────────────────────────────────
+// â”€â”€â”€ Shared components â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function whatsappHtmlBlock(referenceCode: string): string {
   const prefill = encodeURIComponent("Hi PakkaScan, I have a question about my report " + referenceCode);
@@ -279,7 +280,7 @@ function whatsappTextBlock(referenceCode: string): string {
   ].join("\n");
 }
 
-// ─── Rental variant: short, minimal, upsell-friendly ─────────────────────────
+// â”€â”€â”€ Rental variant: short, minimal, upsell-friendly â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function renderRentalReportHtml(input: {
   referenceCode: string;
@@ -386,7 +387,7 @@ function renderRentalReportText(input: {
   return lines.join("\n");
 }
 
-// ─── Full variant: Bayana + Full DD get everything ───────────────────────────
+// â”€â”€â”€ Full variant: Bayana + Full DD get everything â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function renderFullReportHtml(input: {
   referenceCode: string;

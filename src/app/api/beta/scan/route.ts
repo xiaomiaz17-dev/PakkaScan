@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { runOcr } from "@/intelligence/ocr-router";
 import { classifyFromText } from "@/intelligence/document-classifier";
 import { classifyDocument } from "@/ingestion/classifier";
@@ -19,6 +19,7 @@ import { sendScanReportEmail } from "@/lib/email";
 import type { ReportType } from "@/commercial/billing/reports";
 import { computeRiskFactors, mergeRiskFactors } from "@/intelligence/risk-scorer";
 import { getOfficialValuation, getDeclaredPrice } from "@/intelligence/dc-rate-lookup";
+import { extractClauseConcerns, clauseConcernsToRiskFactors } from "@/intelligence/clause-concerns";
 import { buildOwnershipTimeline, chainFindingsToRiskFactors } from "@/intelligence/chain-of-title";
 import { validateTemporalRules, temporalViolationsToRiskFactors } from "@/intelligence/temporal-validator";
 
@@ -134,13 +135,13 @@ function stringifyFindings(findings: any): string[] {
   });
 }
 
-// ─────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Tier-based response filtering.
 // Rental: minimal report - no cross-doc, no combined verdict, next steps capped at 3
 // Bayana: adds cross-doc + combined verdict, next steps capped at 5
 // Full DD: everything, no caps
 // Assistant Q&A is removed for ALL tiers - users are directed to WhatsApp support.
-// ─────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function filterResponseByTier(payload: any, tier: string): any {
   const filtered = { ...payload };
 
@@ -693,6 +694,7 @@ export async function POST(request: Request) {
       scoreBreakdown: riskResult.scoreBreakdown,
       chainOfTitle: chainOfTitle,
       valuationComparison: valuationComparison,
+      clauseConcerns: typeof clauseConcerns !== "undefined" ? clauseConcerns : null,
       phase2: phase2 && {
         classification: phase2.classification,
         observations: phase2.observations,

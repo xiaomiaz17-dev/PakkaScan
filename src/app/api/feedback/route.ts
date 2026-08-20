@@ -1,17 +1,26 @@
-import { NextResponse } from "next/server";
-import { resolveCustomerApp } from "@/server/customer-app";
-import { tokenFrom } from "@/commercial/auth";
+import { NextRequest, NextResponse } from "next/server";
+import { saveScanFeedback } from "@/commercial/billing/session8-store";
 
-export async function POST(request: Request) {
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+export async function POST(req: NextRequest) {
   try {
-    const token = tokenFrom(request);
-    const user = resolveCustomerApp().authenticate(token) as { id?: string };
-    const body = await request.json();
-    
-    // Process feedback here using user.id if needed
-    
-    return NextResponse.json({ success: true }, { status: 200 });
+    const body = await req.json();
+    if (typeof body?.helpful !== "boolean") {
+      return NextResponse.json({ error: "helpful_required" }, { status: 400 });
+    }
+    const comment =
+      typeof body.comment === "string" ? body.comment.slice(0, 1000) : null;
+    await saveScanFeedback({
+      referenceCode: body.referenceCode ? String(body.referenceCode).slice(0, 64) : null,
+      helpful: body.helpful,
+      comment,
+      page: body.page ? String(body.page).slice(0, 64) : "scan_results",
+    });
+    return NextResponse.json({ ok: true });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message || "FEEDBACK_FAILED" }, { status: 400 });
+    console.error("[feedback] save failed:", err?.message || err);
+    return NextResponse.json({ error: "save_failed" }, { status: 500 });
   }
 }
