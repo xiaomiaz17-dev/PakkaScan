@@ -1,0 +1,60 @@
+/**
+ * One plain-English sentence under the risk score for non-lawyers.
+ */
+export function plainEnglishRiskMeaning(
+  riskScore: number | null | undefined,
+  riskLabel: string | null | undefined,
+  riskFactors?: Array<{ label: string; points?: number }> | null
+): string {
+  const score = typeof riskScore === "number" ? riskScore : 1;
+  const label = (riskLabel || "").toUpperCase();
+  const top = (riskFactors || [])
+    .slice()
+    .sort((a, b) => Math.abs(b.points || 0) - Math.abs(a.points || 0))[0];
+
+  const topHint = top?.label
+    ? ` Main driver: ${top.label.replace(/\s+/g, " ").slice(0, 120)}.`
+    : "";
+
+  if (score <= 2 || label === "LOW") {
+    return (
+      "What this means: No major red flags stood out from the documents you uploaded. Still verify identity and ownership records before paying." +
+      topHint
+    );
+  }
+  if (score <= 4 || label === "MEDIUM") {
+    return (
+      "What this means: Some issues need attention before you proceed. Review the factors below and close the gaps (IDs, records, or contract terms) with the other party or a lawyer." +
+      topHint
+    );
+  }
+  if (score <= 7 || label === "HIGH") {
+    return (
+      "What this means: Several material risks were found. Do not treat this as a green light — resolve the items below (or get legal advice) before transferring money or signing further." +
+      topHint
+    );
+  }
+  return (
+    "What this means: Critical issues were detected. Pause the transaction until these are explained in writing and independently verified. A lawyer review is strongly recommended." +
+    topHint
+  );
+}
+
+/** Short Urdu companion (static; avoids extra LLM call). */
+export function plainEnglishRiskMeaningUrdu(
+  riskScore: number | null | undefined,
+  riskLabel: string | null | undefined
+): string {
+  const score = typeof riskScore === "number" ? riskScore : 1;
+  const label = (riskLabel || "").toUpperCase();
+  if (score <= 2 || label === "LOW") {
+    return "مطلب: دستاویزات میں بڑا خطرہ نظر نہیں آیا۔ ادائیگی سے پہلے شناختی کارڈ اور ملکیت ریکارڈ ضرور چیک کریں۔";
+  }
+  if (score <= 4 || label === "MEDIUM") {
+    return "مطلب: کچھ مسائل توجہ مانگتے ہیں۔ نیچے دیے عوامل دیکھیں اور مکمل کرنے سے پہلے فریقِ مقابل یا وکیل سے بات کریں۔";
+  }
+  if (score <= 7 || label === "HIGH") {
+    return "مطلب: اہم خطرات ملے ہیں۔ رقم بھیجنے یا مزید دستخط سے پہلے ان مسائل کا حل یا قانونی مشورہ لیں۔";
+  }
+  return "مطلب: سنگین مسائل سامنے آئے ہیں۔ لین دین روکیں جب تک تحریری وضاحت اور آزاد تصدیق نہ ہو۔ وکیل سے رجوع مضبوطی سے تجویز ہے۔";
+}
