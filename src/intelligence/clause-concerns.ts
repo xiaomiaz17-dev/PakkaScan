@@ -1,5 +1,5 @@
-/**
- * Session 9 — normalise LLM-extracted suspicious / missing clauses
+﻿/**
+ * Session 9 â€” normalise LLM-extracted suspicious / missing clauses
  * into UI rows + risk factors.
  *
  * Expected shapes (flexible):
@@ -116,10 +116,10 @@ export function extractClauseConcerns(smartFields: any): ClauseConcerns {
  */
 export function clauseConcernsToRiskFactors(
   concerns: ClauseConcerns
-): Array<{ label: string; points: number; category: string }> {
+): Array<{ label: string; points: number; category: "legal" }> {
   if (!concerns.flagged.length && !concerns.missing.length) return [];
 
-  const factors: Array<{ label: string; points: number; category: string }> = [];
+  const factors: Array<{ label: string; points: number; category: "legal" }> = [];
   let budget = 3.0; // max absolute deduction from clauses
 
   for (const f of concerns.flagged) {
@@ -128,7 +128,7 @@ export function clauseConcernsToRiskFactors(
     pts = Math.min(pts, budget);
     budget -= pts;
     const label = f.title
-      ? `Suspicious clause — ${f.title}: ${f.concern}`
+      ? `Suspicious clause â€” ${f.title}: ${f.concern}`
       : `Suspicious clause: ${f.concern}`;
     factors.push({
       label: label.slice(0, 200),
@@ -142,7 +142,7 @@ export function clauseConcernsToRiskFactors(
     const pts = Math.min(1.0, budget);
     factors.push({
       label: `Missing standard protections: ${concerns.missing.slice(0, 3).join("; ")}${
-        concerns.missing.length > 3 ? "…" : ""
+        concerns.missing.length > 3 ? "â€¦" : ""
       }`,
       points: -pts,
       category: "legal",
@@ -154,7 +154,7 @@ export function clauseConcernsToRiskFactors(
 
 export function formatClauseWhatsAppText(clause: FlaggedClause, referenceCode?: string): string {
   const lines = [
-    "PakkaScan — Contract concern",
+    "PakkaScan â€” Contract concern",
     referenceCode ? `Ref: ${referenceCode}` : null,
     "",
     clause.title ? `*${clause.title}*` : "*Flagged clause*",
@@ -163,7 +163,8 @@ export function formatClauseWhatsAppText(clause: FlaggedClause, referenceCode?: 
     "",
     `Why it matters: ${clause.concern}`,
     "",
-    "This is an AI assistive flag — confirm with a property lawyer before paying or signing.",
+    "This is an AI assistive flag â€” confirm with a property lawyer before paying or signing.",
   ];
   return lines.filter((l) => l != null).join("\n");
 }
+
