@@ -48,7 +48,7 @@ export default function AboutPage() {
               We built PakkaScan so no one else has to spend three days and Rs 30,000 to answer a simple question: <strong style={{ color: "#0f172a" }}>are these papers real?</strong>
             </p>
             <p style={{ margin: "0 0 32px 0" }}>
-              Upload your Bayana, Fard, Sale Deed, or CNIC. Typically within a few minutes, PakkaScan reads key clauses (in English and Urdu), cross-checks the details, and tells you honestly:
+              Upload your Bayana, Fard, Sale Deed, or CNIC. In under two minutes, PakkaScan reads every clause (in English and Urdu), cross-checks the details, and tells you honestly:
             </p>
 
             <div style={{ backgroundColor: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "24px", marginBottom: "32px" }}>
@@ -72,7 +72,7 @@ export default function AboutPage() {
             {/* Core Principles Strip */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px", margin: "32px 0" }}>
               {[
-                { badge: "EN—UR", title: "Bilingual Integrity", desc: "English and Urdu (Nastaliq) support on reports where text can be extracted." },
+                { badge: "EN—UR", title: "Bilingual Integrity", desc: "Full English and Urdu (Nastaliq) extraction on every report." },
                 { badge: "AI", title: "Anti-Hallucination", desc: "CNICs cross-checked character-by-character against the source document." },
                 { badge: "0", title: "Zero Retention", desc: "Document files processed in memory only and never stored to disk." },
               ].map((item, i) => (

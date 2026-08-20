@@ -40,11 +40,6 @@ export default function VerifyPage() {
     const trimmed = input.trim();
     if (!trimmed) return;
 
-    // Known sample demo code (does not match live PKS-YYYY-MM pattern)
-    if (trimmed.toUpperCase() === "PKS-SAMPLE-2026-DEMO") {
-      router.push(`/verify/PKS-SAMPLE-2026-DEMO`);
-      return;
-    }
     // Live PakkaScan reference -> navigate to dynamic result page
     if (PKS_PATTERN.test(trimmed)) {
       router.push(`/verify/${encodeURIComponent(trimmed.toUpperCase())}`);
@@ -78,7 +73,7 @@ export default function VerifyPage() {
               name="hash"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="e.g. PKS-SAMPLE-2026-DEMO or PKS-2026-08-XXXX"
+              placeholder="e.g. PKS-2026-08-XXXX or VR-2026-DEMO01"
               autoComplete="off"
               spellCheck={false}
               className="mono-input"
@@ -111,7 +106,7 @@ export default function VerifyPage() {
         ) : null}
         <p className="muted small">
           Reference codes appear on every PakkaScan report.
-          Try demo value <span className="mono-badge">PKS-SAMPLE-2026-DEMO</span> to see the sample response.
+          Try demo value <span className="mono-badge">VR-2026-DEMO01</span> to see the sample response.
         </p>
       </div>
     </MarketingShell>

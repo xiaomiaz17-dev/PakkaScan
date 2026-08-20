@@ -1,4 +1,4 @@
-/**
+﻿/**
  * LLM-based structured extractor.
  *
  * After OCR extracts raw text, this asks Gemini to intelligently identify
@@ -67,7 +67,7 @@ RULES:
 
 5. DATES: Use ISO YYYY-MM-DD format.
    DATE INTELLIGENCE: Check for date anomalies and flag them:
-   - Execution date STRICTLY AFTER today in Pakistan time (Asia/Karachi). Same calendar day is NOT future — do not flag it.
+   - Execution date in the FUTURE (document claims to be signed on a date that hasn't happened yet)
    - Sale Deed execution date MORE than 4 months before registration date (may violate Registration Act timelines)
    - Bayana/Agreement dated AFTER a Sale Deed for the same property (chronologically impossible)
    - Any date that appears unrealistic (e.g., year 1900, year 2099)

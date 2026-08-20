@@ -1307,18 +1307,9 @@ export default function ScanPage() {
                           body: JSON.stringify(payload),
                         });
                         if (!res.ok) throw new Error("PDF generation failed");
-                        let hdr = res.headers.get("X-PakkaScan-Pdf-Hash") || res.headers.get("x-pakkascan-pdf-hash") || res.headers.get("ETag") || res.headers.get("etag");
-                        if (hdr) hdr = hdr.replace(/"/g, "").trim();
-                        const blob = await res.blob();
-                        // F6: always derive hash from the blob so it is visible even if response headers are stripped
-                        let clientHash = "";
-                        try {
-                          const buf = await blob.arrayBuffer();
-                          const digest = await crypto.subtle.digest("SHA-256", buf);
-                          clientHash = Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
-                        } catch { /* subtle may be unavailable on non-secure contexts */ }
+                        let hdr = res.headers.get("X-PakkaScan-Pdf-Hash") || res.headers.get("x-pakkascan-pdf-hash") || res.headers.get("ETag") || res.headers.get("etag"); if (hdr) hdr = hdr.replace(/"/g, "").trim();
                         if (hdr && /^[a-f0-9]{64}$/i.test(hdr)) setPdfHashForCopy(hdr.toLowerCase());
-                        else if (clientHash) setPdfHashForCopy(clientHash);
+                        const blob = await res.blob();
                         const url = URL.createObjectURL(blob);
                         const a = document.createElement("a");
                         a.href = url;

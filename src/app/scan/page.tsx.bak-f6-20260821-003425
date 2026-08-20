@@ -1307,18 +1307,9 @@ export default function ScanPage() {
                           body: JSON.stringify(payload),
                         });
                         if (!res.ok) throw new Error("PDF generation failed");
-                        let hdr = res.headers.get("X-PakkaScan-Pdf-Hash") || res.headers.get("x-pakkascan-pdf-hash") || res.headers.get("ETag") || res.headers.get("etag");
-                        if (hdr) hdr = hdr.replace(/"/g, "").trim();
-                        const blob = await res.blob();
-                        // F6: always derive hash from the blob so it is visible even if response headers are stripped
-                        let clientHash = "";
-                        try {
-                          const buf = await blob.arrayBuffer();
-                          const digest = await crypto.subtle.digest("SHA-256", buf);
-                          clientHash = Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
-                        } catch { /* subtle may be unavailable on non-secure contexts */ }
+                        let hdr = res.headers.get("X-PakkaScan-Pdf-Hash") || res.headers.get("x-pakkascan-pdf-hash") || res.headers.get("ETag") || res.headers.get("etag"); if (hdr) hdr = hdr.replace(/"/g, "").trim();
                         if (hdr && /^[a-f0-9]{64}$/i.test(hdr)) setPdfHashForCopy(hdr.toLowerCase());
-                        else if (clientHash) setPdfHashForCopy(clientHash);
+                        const blob = await res.blob();
                         const url = URL.createObjectURL(blob);
                         const a = document.createElement("a");
                         a.href = url;
@@ -1348,25 +1339,19 @@ export default function ScanPage() {
                   >
                     Download PDF Passport
                   </button>
-                  <div style={{ marginTop: 10, padding: "10px 12px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: 12, maxWidth: 420 }}>
-                    <div style={{ fontWeight: 700, color: "#0f172a", marginBottom: 4 }}>PDF authenticity hash (SHA-256)</div>
-                    {pdfHashForCopy ? (
-                      <>
-                        <div style={{ fontFamily: "monospace", wordBreak: "break-all", color: "#334155", marginBottom: 8 }}>{pdfHashForCopy}</div>
-                        <button
-                          type="button"
-                          onClick={() => { void navigator.clipboard.writeText(pdfHashForCopy); }}
-                          style={{ padding: "6px 12px", borderRadius: 6, border: "1px solid #cbd5e1", background: "#fff", fontWeight: 700, cursor: "pointer", fontSize: 12 }}
-                        >
-                          Copy hash for verify page
-                        </button>
-                      </>
-                    ) : (
-                      <div style={{ color: "#64748b", lineHeight: 1.45 }}>
-                        Click <strong>Download PDF Passport</strong> above. The SHA-256 hash will appear here so anyone can confirm the file is unaltered on the verify page.
-                      </div>
-                    )}
-                  </div>
+                  {pdfHashForCopy && (
+                    <div style={{ marginTop: 10, padding: "10px 12px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: 12, maxWidth: 420 }}>
+                      <div style={{ fontWeight: 700, color: "#0f172a", marginBottom: 4 }}>PDF authenticity hash</div>
+                      <div style={{ fontFamily: "monospace", wordBreak: "break-all", color: "#334155", marginBottom: 8 }}>{pdfHashForCopy}</div>
+                      <button
+                        type="button"
+                        onClick={() => { void navigator.clipboard.writeText(pdfHashForCopy); }}
+                        style={{ padding: "6px 12px", borderRadius: 6, border: "1px solid #cbd5e1", background: "#fff", fontWeight: 700, cursor: "pointer", fontSize: 12 }}
+                      >
+                        Copy hash for verify page
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

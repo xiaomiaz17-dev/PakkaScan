@@ -1,4 +1,4 @@
-import { AnalyticsProvider } from "@/components/AnalyticsProvider";
+﻿import { AnalyticsProvider } from "@/components/AnalyticsProvider";
 import './globals.css';
 import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
@@ -6,26 +6,17 @@ import Script from 'next/script';
 export const metadata: Metadata = {
   title: 'PakkaScan',
   description: 'AI-powered legal due diligence for Pakistani property',
-  icons: {
-    icon: [
-      { url: '/favicon.svg', type: 'image/svg+xml' },
-      { url: '/logo.svg', type: 'image/svg+xml' },
-    ],
-    apple: '/logo.svg',
-  },
   openGraph: {
     title: 'PakkaScan ' + String.fromCharCode(0x2014) + ' AI Legal Due Diligence for Pakistani Property',
     description: "Don't hand over bayana until PakkaScan has read the fine print you didn't.",
     url: 'https://pakkascan.com',
     siteName: 'PakkaScan',
     type: 'website',
-    images: [{ url: '/logo.svg', width: 512, height: 512, alt: 'PakkaScan' }],
   },
   twitter: {
     card: 'summary',
     title: 'PakkaScan',
     description: "Don't hand over bayana until PakkaScan has read the fine print you didn't.",
-    images: ['/logo.svg'],
   },
   manifest: '/manifest.json',
 };
@@ -42,8 +33,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="/logo.svg" />
         <link rel="manifest" href="/manifest.json" />
       </head>
       <body className="bg-gray-50 text-gray-900 antialiased">

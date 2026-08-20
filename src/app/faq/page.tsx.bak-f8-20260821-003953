@@ -22,7 +22,7 @@ const FAQ_SECTIONS = [
     items: [
       {
         q: "What is PakkaScan?",
-        a: "PakkaScan is an AI-powered document analyser built for Pakistani property transactions. Upload a Bayana, Fard, Sale Deed, CNIC, or any related document, and PakkaScan reads key clauses in English and Urdu, cross-checks the details, and typically returns a clear verdict within a few minutes.",
+        a: "PakkaScan is an AI-powered document analyser built for Pakistani property transactions. Upload a Bayana, Fard, Sale Deed, CNIC, or any related document, and PakkaScan reads every clause in English and Urdu, cross-checks the details, and gives you a clear verdict in about two minutes.",
       },
       {
         q: "Who is PakkaScan for?",
@@ -94,7 +94,7 @@ const FAQ_SECTIONS = [
       },
       {
         q: "How do I pay?",
-        a: "Card payments are available now. Easypaisa, JazzCash, and direct bank transfer are planned next. During private beta, eligible users can use PakkaScan free.",
+        a: "Easypaisa, JazzCash, HBL/MCB/UBL debit and credit cards, and direct bank transfer. Payment integration is launching shortly. During private beta, PakkaScan is completely free.",
       },
       {
         q: "Can I get a refund?",

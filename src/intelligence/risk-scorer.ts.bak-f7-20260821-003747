@@ -157,50 +157,17 @@ function checkCnicLocationMismatch(smartFields: any): RiskFactor | null {
   };
 }
 
-/** Today's calendar date in Pakistan (Asia/Karachi). Same-day is never "future". */
-function pakistanTodayIso(): string {
-  try {
-    return new Intl.DateTimeFormat("en-CA", {
-      timeZone: "Asia/Karachi",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    }).format(new Date()); // en-CA => YYYY-MM-DD
-  } catch {
-    return new Date().toISOString().slice(0, 10);
-  }
-}
-
-function extractIsoDates(text: string): string[] {
-  const out: string[] = [];
-  const re = /\b(20\d{2})-(\d{2})-(\d{2})\b/g;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(text)) !== null) out.push(m[0]);
-  return out;
-}
-
 function factorsFromDateAnomalies(smartFields: any): RiskFactor[] {
   const anomalies = smartFields?.date_anomalies;
   if (!Array.isArray(anomalies) || anomalies.length === 0) return [];
   const factors: RiskFactor[] = [];
-  const todayPk = pakistanTodayIso();
   for (const item of anomalies) {
     if (!item || typeof item !== "object") continue;
     const anomaly = typeof item.anomaly === "string" ? item.anomaly.trim() : "";
     const explanation = typeof item.explanation === "string" ? item.explanation.trim() : "";
     if (!anomaly && !explanation) continue;
-    const combined = anomaly + " " + explanation;
-    const lower = combined.toLowerCase();
-    // F7: same-calendar-day (Pakistan) is not a future-date anomaly
-    if (lower.includes("future")) {
-      const dates = extractIsoDates(combined);
-      const onlyTodayOrPast = dates.length > 0 && dates.every((d) => d <= todayPk);
-      if (onlyTodayOrPast) continue;
-      // also skip pure "future" flags with no concrete date beyond today when execution equals today
-      const exec = smartFields?.dates?.execution_date;
-      if (typeof exec === "string" && exec.slice(0, 10) === todayPk) continue;
-    }
     const label = explanation ? `Date anomaly: ${explanation}` : `Date anomaly: ${anomaly}`;
+    const lower = (anomaly + " " + explanation).toLowerCase();
     let points = -1;
     if (lower.includes("future") || lower.includes("impossible") || lower.includes("after the sale")) points = -2;
     factors.push({ label: label.slice(0, 180), points, category: "document" });
