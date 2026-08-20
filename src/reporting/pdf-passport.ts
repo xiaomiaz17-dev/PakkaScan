@@ -1,5 +1,5 @@
 /**
- * Property Passport PDF — v1
+ * Property Passport PDF — v1.1 (with embedded QR)
  */
 import React from "react";
 import {
@@ -8,8 +8,10 @@ import {
   Text,
   View,
   StyleSheet,
+  Image,
   renderToBuffer,
 } from "@react-pdf/renderer";
+import QRCode from "qrcode";
 
 export type PassportRiskFactor = {
   label: string;
@@ -59,7 +61,14 @@ const styles = StyleSheet.create({
   scoreBadge: { width: 64, height: 64, borderRadius: 8, justifyContent: "center", alignItems: "center" },
   scoreNumber: { fontSize: 28, fontFamily: "Helvetica-Bold", color: "#fff" },
   scoreOutOf: { fontSize: 9, color: "#fff", opacity: 0.85 },
-  labelBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4, fontSize: 11, fontFamily: "Helvetica-Bold", color: "#fff" },
+  labelBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 4,
+    fontSize: 11,
+    fontFamily: "Helvetica-Bold",
+    color: "#fff",
+  },
   factorList: { marginTop: 6 },
   factorItem: { flexDirection: "row", marginBottom: 4, paddingLeft: 4 },
   factorBullet: { width: 14, fontSize: 9, color: "#64748b" },
@@ -79,6 +88,22 @@ const styles = StyleSheet.create({
   },
   factLabel: { fontSize: 7, color: "#64748b", textTransform: "uppercase", marginBottom: 2 },
   factValue: { fontSize: 10, fontFamily: "Helvetica-Bold", color: "#0f172a" },
+  verifyRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 20,
+    padding: 12,
+    backgroundColor: "#f8fafc",
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    gap: 14,
+  },
+  qrImage: { width: 90, height: 90 },
+  verifyTextCol: { flex: 1 },
+  verifyTitle: { fontSize: 10, fontFamily: "Helvetica-Bold", color: "#0f172a", marginBottom: 4 },
+  verifyUrl: { fontSize: 8, color: "#0d9488", marginBottom: 4 },
+  verifyHint: { fontSize: 8, color: "#64748b" },
   footer: {
     position: "absolute",
     bottom: 28,
@@ -92,7 +117,6 @@ const styles = StyleSheet.create({
     fontSize: 8,
     color: "#94a3b8",
   },
-  qrNote: { fontSize: 8, color: "#0d9488", marginTop: 12 },
   disclaimer: { fontSize: 7, color: "#94a3b8", marginTop: 16, lineHeight: 1.4 },
 });
 
@@ -120,7 +144,7 @@ function verdictStyle(verdict: string): { bg: string; color: string; label: stri
   return { bg: "#f8fafc", color: "#334155", label: verdict || "REVIEW" };
 }
 
-function PassportDocument({ data }: { data: PassportData }) {
+function PassportDocument({ data, qrDataUrl }: { data: PassportData; qrDataUrl: string | null }) {
   const colors = riskColors(data.riskLabel);
   const vs = verdictStyle(data.verdict);
   const scannedDisplay = data.scannedAt
@@ -135,6 +159,7 @@ function PassportDocument({ data }: { data: PassportData }) {
     React.createElement(
       Page,
       { size: "A4", style: styles.page },
+      // Header
       React.createElement(
         View,
         { style: styles.header },
@@ -152,6 +177,8 @@ function PassportDocument({ data }: { data: PassportData }) {
           React.createElement(Text, null, data.reportType.replace(/_/g, " "))
         )
       ),
+
+      // Risk Scorecard
       React.createElement(Text, { style: styles.sectionTitle }, "Transaction Risk Score"),
       React.createElement(
         View,
@@ -165,8 +192,14 @@ function PassportDocument({ data }: { data: PassportData }) {
         React.createElement(
           View,
           null,
-          React.createElement(Text, { style: [styles.labelBadge, { backgroundColor: colors.bg }] }, `${data.riskLabel} RISK`),
-          data.scoreBreakdown ? React.createElement(Text, { style: styles.breakdown }, data.scoreBreakdown) : null
+          React.createElement(
+            Text,
+            { style: [styles.labelBadge, { backgroundColor: colors.bg }] },
+            `${data.riskLabel} RISK`
+          ),
+          data.scoreBreakdown
+            ? React.createElement(Text, { style: styles.breakdown }, data.scoreBreakdown)
+            : null
         )
       ),
       data.riskFactors.length > 0
@@ -178,11 +211,17 @@ function PassportDocument({ data }: { data: PassportData }) {
                 View,
                 { key: i, style: styles.factorItem },
                 React.createElement(Text, { style: styles.factorBullet }, "•"),
-                React.createElement(Text, { style: styles.factorText }, `${f.label} (${f.points > 0 ? "+" : ""}${f.points})`)
+                React.createElement(
+                  Text,
+                  { style: styles.factorText },
+                  `${f.label} (${f.points > 0 ? "+" : ""}${f.points})`
+                )
               )
             )
           )
         : React.createElement(Text, { style: styles.factorText }, "No risk factors detected."),
+
+      // Verdict
       React.createElement(Text, { style: styles.sectionTitle }, "Verdict"),
       React.createElement(
         View,
@@ -192,6 +231,8 @@ function PassportDocument({ data }: { data: PassportData }) {
           ? React.createElement(Text, { style: styles.verdictSub }, `PakkaScore: ${data.pakkaScore}/100`)
           : null
       ),
+
+      // Key Facts
       data.keyFacts && data.keyFacts.length > 0
         ? React.createElement(
             View,
@@ -211,12 +252,35 @@ function PassportDocument({ data }: { data: PassportData }) {
             )
           )
         : null,
-      React.createElement(Text, { style: styles.qrNote }, `Verify this report: ${data.verifyUrl}`),
+
+      // Verify row with QR
+      React.createElement(
+        View,
+        { style: styles.verifyRow },
+        qrDataUrl
+          ? React.createElement(Image, { style: styles.qrImage, src: qrDataUrl })
+          : null,
+        React.createElement(
+          View,
+          { style: styles.verifyTextCol },
+          React.createElement(Text, { style: styles.verifyTitle }, "Verify this report"),
+          React.createElement(Text, { style: styles.verifyUrl }, data.verifyUrl),
+          React.createElement(
+            Text,
+            { style: styles.verifyHint },
+            "Scan the QR code or visit the URL to confirm this report was issued by PakkaScan. Public verification does not reveal document contents."
+          )
+        )
+      ),
+
+      // Disclaimer
       React.createElement(
         Text,
         { style: styles.disclaimer },
         "PakkaScan is an AI-powered assistive tool. This report is advisory and does not constitute certified legal counsel. Always confirm high-value transactions with a qualified property lawyer and the relevant authorities (NADRA, PLRA, Sub-Registrar)."
       ),
+
+      // Footer
       React.createElement(
         View,
         { style: styles.footer },
@@ -227,8 +291,24 @@ function PassportDocument({ data }: { data: PassportData }) {
   );
 }
 
+/**
+ * Render a Property Passport PDF to a Buffer (Node.js).
+ * Embeds a QR code pointing at the verify URL.
+ */
 export async function renderPassportPdf(data: PassportData): Promise<Buffer> {
-  const doc = React.createElement(PassportDocument, { data });
+  let qrDataUrl: string | null = null;
+  try {
+    qrDataUrl = await QRCode.toDataURL(data.verifyUrl, {
+      errorCorrectionLevel: "M",
+      margin: 1,
+      width: 180,
+      color: { dark: "#0f172a", light: "#ffffff" },
+    });
+  } catch (err) {
+    console.warn("[pdf-passport] QR generation failed, continuing without QR:", err);
+  }
+
+  const doc = React.createElement(PassportDocument, { data, qrDataUrl });
   const buffer = await renderToBuffer(doc as any);
   return Buffer.from(buffer);
 }
