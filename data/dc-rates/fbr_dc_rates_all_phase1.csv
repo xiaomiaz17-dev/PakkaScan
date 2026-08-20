@@ -1,0 +1,112 @@
+province,city,area,phase_or_block,sub_block,category,plot_type,rate_pkr,rate_unit,source_type,source_document,source_page,effective_date,notes
+Sindh,Karachi,DHA,Phase 1,,Residential,Regular,8200,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,2,2024-11-01,SRO groups Phase I-VII same rate
+Sindh,Karachi,DHA,Phase 1,,Commercial,Regular,18000,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,2,2024-11-01,Commercial open Phase I-VII excl Zamzama
+Sindh,Karachi,DHA,Phase 2,,Residential,Regular,8200,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,2,2024-11-01,SRO groups Phase I-VII same rate
+Sindh,Karachi,DHA,Phase 2,,Commercial,Regular,18000,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,2,2024-11-01,Commercial open Phase I-VII excl Zamzama
+Sindh,Karachi,DHA,Phase 3,,Residential,Regular,8200,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,2,2024-11-01,SRO groups Phase I-VII same rate
+Sindh,Karachi,DHA,Phase 3,,Commercial,Regular,18000,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,2,2024-11-01,Commercial open Phase I-VII excl Zamzama
+Sindh,Karachi,DHA,Phase 4,,Residential,Regular,8200,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,2,2024-11-01,SRO groups Phase I-VII same rate
+Sindh,Karachi,DHA,Phase 4,,Commercial,Regular,18000,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,2,2024-11-01,Commercial open Phase I-VII excl Zamzama
+Sindh,Karachi,DHA,Phase 5,,Residential,Regular,8200,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,2,2024-11-01,SRO groups Phase I-VII same rate
+Sindh,Karachi,DHA,Phase 5,,Commercial,Regular,18000,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,2,2024-11-01,Commercial open Phase I-VII excl Zamzama
+Sindh,Karachi,DHA,Phase 6,,Residential,Regular,8200,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,2,2024-11-01,SRO groups Phase I-VII same rate
+Sindh,Karachi,DHA,Phase 6,,Commercial,Regular,18000,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,2,2024-11-01,Commercial open Phase I-VII excl Zamzama
+Sindh,Karachi,DHA,Phase 7,,Residential,Regular,8200,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,2,2024-11-01,SRO groups Phase I-VII same rate
+Sindh,Karachi,DHA,Phase 7,,Commercial,Regular,18000,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,2,2024-11-01,Commercial open Phase I-VII excl Zamzama
+Sindh,Karachi,DHA,Phase 7 Extension,,Residential,Regular,5000,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,2,2024-11-01,Including commissioner society
+Sindh,Karachi,DHA,Phase 7 Extension,,Commercial,Regular,14000,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,2,2024-11-01,
+Sindh,Karachi,DHA,Phase 8,,Residential,Regular,7300,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,2,2024-11-01,Phase VIII
+Sindh,Karachi,DHA,Phase 8,,Commercial,Regular,18000,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,2,2024-11-01,
+Sindh,Karachi,DHA,Phase 5,Zamzama,Residential,Regular,55000,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,4,2024-11-01,Naval Housing Society Zamzama
+Sindh,Karachi,DHA,Phase 5,Zamzama,Commercial,Regular,70000,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,4,2024-11-01,Zamzama commercial open
+Sindh,Karachi,DHA,Phase 9,,Residential,Regular,700,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,2,2024-11-01,DHA City excl sector 1 and 3
+Sindh,Karachi,DHA,Phase 9,Sector 1,Residential,Regular,1400,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,2,2024-11-01,DHA City Sector 1 and 3
+Sindh,Karachi,DHA,Phase 9,Sector 3,Residential,Regular,1400,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,2,2024-11-01,DHA City Sector 1 and 3
+Sindh,Karachi,Clifton,Block 1,,Residential,Regular,5000,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,2,2024-11-01,Clifton Block I
+Sindh,Karachi,Clifton,Block 1,,Commercial,Regular,20000,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,2,2024-11-01,
+Sindh,Karachi,Clifton,,,Residential,Regular,8200,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,2,2024-11-01,Clifton Quarters excl Block I
+Sindh,Karachi,Clifton,,,Commercial,Regular,20000,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,2,2024-11-01,
+Sindh,Karachi,Bahria Town,,,Residential,Regular,1100,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,1,2024-11-01,Excl precinct 1 2 5 8 19
+Sindh,Karachi,Bahria Town,,,Commercial,Regular,4250,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,1,2024-11-01,
+Sindh,Karachi,Bahria Town,Precinct 1,,Residential,Regular,1400,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,1,2024-11-01,
+Sindh,Karachi,Bahria Town,Precinct 2,,Residential,Regular,1400,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,1,2024-11-01,
+Sindh,Karachi,Bahria Town,Precinct 5,,Residential,Regular,1400,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,1,2024-11-01,
+Sindh,Karachi,Bahria Town,Precinct 8,,Residential,Regular,1400,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,1,2024-11-01,
+Sindh,Karachi,Bahria Town,Precinct 19,,Residential,Regular,1400,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,1,2024-11-01,
+Sindh,Karachi,Bahria Town,Jinnah Commercial,,Commercial,Regular,12000,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,1,2024-11-01,
+Sindh,Karachi,Gulshan-e-Iqbal,Block 1,,Residential,Regular,8200,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,3,2024-11-01,
+Sindh,Karachi,Gulshan-e-Iqbal,Block 2,,Residential,Regular,8200,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,3,2024-11-01,
+Sindh,Karachi,Gulshan-e-Iqbal,Block 3,,Residential,Regular,8200,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,3,2024-11-01,
+Sindh,Karachi,Gulshan-e-Iqbal,Block 4,,Residential,Regular,8000,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,2,2024-11-01,
+Sindh,Karachi,Gulshan-e-Iqbal,Block 6,,Residential,Regular,8000,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,2,2024-11-01,
+Sindh,Karachi,Gulshan-e-Iqbal,Block 7,,Residential,Regular,8000,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,2,2024-11-01,
+Sindh,Karachi,Gulshan-e-Iqbal,Block 17,,Residential,Regular,8000,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,2,2024-11-01,
+Sindh,Karachi,Gulshan-e-Iqbal,,,Residential,Regular,5000,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,3,2024-11-01,Excluding blocks 4 6 7 17
+Sindh,Karachi,Gulshan-e-Iqbal,Block 1,,Commercial,Regular,20000,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,3,2024-11-01,
+Sindh,Karachi,Gulshan-e-Iqbal,Block 4,,Commercial,Regular,18000,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,2,2024-11-01,
+Sindh,Karachi,PECHS,,,Residential,Regular,8200,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,4,2024-11-01,Pakistan Employees Cooperative Housing Society
+Sindh,Karachi,PECHS,,,Commercial,Regular,20000,per_sq_ft,FBR,FBR_Karachi_SRO1724_I_2024.pdf,4,2024-11-01,
+Punjab,Lahore,DHA,Phase 1,,Residential,Regular,1550000,per_marla,FBR,FBR_Lahore_SRO1722_I_2024.pdf,78,2024-11-01,Defence Phase
+Punjab,Lahore,DHA,Phase 1,,Commercial,Regular,6193570,per_marla,FBR,FBR_Lahore_SRO1722_I_2024.pdf,78,2024-11-01,
+Punjab,Lahore,DHA,Phase 2,,Residential,Regular,1527800,per_marla,FBR,FBR_Lahore_SRO1722_I_2024.pdf,78,2024-11-01,Defence Phase
+Punjab,Lahore,DHA,Phase 2,,Commercial,Regular,6242100,per_marla,FBR,FBR_Lahore_SRO1722_I_2024.pdf,78,2024-11-01,
+Punjab,Lahore,DHA,Phase 3,,Residential,Regular,1732800,per_marla,FBR,FBR_Lahore_SRO1722_I_2024.pdf,78,2024-11-01,Defence Phase
+Punjab,Lahore,DHA,Phase 3,,Commercial,Regular,6362100,per_marla,FBR,FBR_Lahore_SRO1722_I_2024.pdf,78,2024-11-01,
+Punjab,Lahore,DHA,Phase 4,,Residential,Regular,1672800,per_marla,FBR,FBR_Lahore_SRO1722_I_2024.pdf,78,2024-11-01,Defence Phase
+Punjab,Lahore,DHA,Phase 4,,Commercial,Regular,6362100,per_marla,FBR,FBR_Lahore_SRO1722_I_2024.pdf,78,2024-11-01,
+Punjab,Lahore,DHA,Phase 5,,Residential,Regular,1937800,per_marla,FBR,FBR_Lahore_SRO1722_I_2024.pdf,78,2024-11-01,Defence Phase
+Punjab,Lahore,DHA,Phase 5,,Commercial,Regular,8712100,per_marla,FBR,FBR_Lahore_SRO1722_I_2024.pdf,78,2024-11-01,
+Punjab,Lahore,DHA,Phase 6,,Residential,Regular,1617800,per_marla,FBR,FBR_Lahore_SRO1722_I_2024.pdf,78,2024-11-01,Defence Phase
+Punjab,Lahore,DHA,Phase 6,,Commercial,Regular,6832100,per_marla,FBR,FBR_Lahore_SRO1722_I_2024.pdf,78,2024-11-01,
+Punjab,Lahore,DHA,Phase 7,,Residential,Regular,1292800,per_marla,FBR,FBR_Lahore_SRO1722_I_2024.pdf,79,2024-11-01,Defence Phase
+Punjab,Lahore,DHA,Phase 7,,Commercial,Regular,4772100,per_marla,FBR,FBR_Lahore_SRO1722_I_2024.pdf,79,2024-11-01,
+Punjab,Lahore,DHA,Phase 8,,Residential,Regular,1527800,per_marla,FBR,FBR_Lahore_SRO1722_I_2024.pdf,79,2024-11-01,Defence Phase
+Punjab,Lahore,DHA,Phase 8,,Commercial,Regular,5597100,per_marla,FBR,FBR_Lahore_SRO1722_I_2024.pdf,79,2024-11-01,
+Punjab,Lahore,DHA,Phase 9,,Residential,Regular,822800,per_marla,FBR,FBR_Lahore_SRO1722_I_2024.pdf,79,2024-11-01,Defence Phase
+Punjab,Lahore,DHA,Phase 9,,Commercial,Regular,4477100,per_marla,FBR,FBR_Lahore_SRO1722_I_2024.pdf,79,2024-11-01,
+Punjab,Lahore,DHA,Phase 5,M-Block,Residential,Regular,907800,per_marla,FBR,FBR_Lahore_SRO1722_I_2024.pdf,78,2024-11-01,Phase V Ext M-Block
+Punjab,Lahore,Bahria Town,,,Residential,Regular,1350600,per_marla,FBR,FBR_Lahore_SRO1722_I_2024.pdf,3,2024-11-01,
+Punjab,Lahore,Bahria Town,,,Commercial,Regular,4704800,per_marla,FBR,FBR_Lahore_SRO1722_I_2024.pdf,3,2024-11-01,
+Punjab,Lahore,Gulberg,Gulberg I,,Residential,Regular,2464400,per_marla,FBR,FBR_Lahore_SRO1722_I_2024.pdf,42,2024-11-01,Gulberg I-V grouped
+Punjab,Lahore,Gulberg,Gulberg I,,Commercial,Regular,5850300,per_marla,FBR,FBR_Lahore_SRO1722_I_2024.pdf,42,2024-11-01,
+Punjab,Lahore,Gulberg,Gulberg II,,Residential,Regular,2464400,per_marla,FBR,FBR_Lahore_SRO1722_I_2024.pdf,42,2024-11-01,Gulberg I-V grouped
+Punjab,Lahore,Gulberg,Gulberg II,,Commercial,Regular,5850300,per_marla,FBR,FBR_Lahore_SRO1722_I_2024.pdf,42,2024-11-01,
+Punjab,Lahore,Gulberg,Gulberg III,,Residential,Regular,2464400,per_marla,FBR,FBR_Lahore_SRO1722_I_2024.pdf,42,2024-11-01,Gulberg I-V grouped
+Punjab,Lahore,Gulberg,Gulberg III,,Commercial,Regular,5850300,per_marla,FBR,FBR_Lahore_SRO1722_I_2024.pdf,42,2024-11-01,
+Punjab,Lahore,Gulberg,Gulberg IV,,Residential,Regular,2464400,per_marla,FBR,FBR_Lahore_SRO1722_I_2024.pdf,42,2024-11-01,Gulberg I-V grouped
+Punjab,Lahore,Gulberg,Gulberg IV,,Commercial,Regular,5850300,per_marla,FBR,FBR_Lahore_SRO1722_I_2024.pdf,42,2024-11-01,
+Punjab,Lahore,Gulberg,Gulberg V,,Residential,Regular,2464400,per_marla,FBR,FBR_Lahore_SRO1722_I_2024.pdf,42,2024-11-01,Gulberg I-V grouped
+Punjab,Lahore,Gulberg,Gulberg V,,Commercial,Regular,5850300,per_marla,FBR,FBR_Lahore_SRO1722_I_2024.pdf,42,2024-11-01,
+Punjab,Lahore,Model Town,,,Residential,Regular,1619400,per_marla,FBR,FBR_Lahore_SRO1722_I_2024.pdf,44,2024-11-01,Model Town Old
+Punjab,Lahore,Model Town,,,Commercial,Regular,3205880,per_marla,FBR,FBR_Lahore_SRO1722_I_2024.pdf,44,2024-11-01,
+Punjab,Lahore,Model Town,Extension,,Residential,Regular,1114400,per_marla,FBR,FBR_Lahore_SRO1722_I_2024.pdf,44,2024-11-01,
+Punjab,Lahore,Johar Town,,,Residential,Regular,1570600,per_marla,FBR,FBR_Lahore_SRO1722_I_2024.pdf,6,2024-11-01,
+Punjab,Lahore,Johar Town,,,Commercial,Regular,3114800,per_marla,FBR,FBR_Lahore_SRO1722_I_2024.pdf,6,2024-11-01,
+Punjab,Lahore,Johar Town,Main Roads,,Residential,Regular,1930600,per_marla,FBR,FBR_Lahore_SRO1722_I_2024.pdf,6,2024-11-01,
+Punjab,Rawalpindi,Bahria Town,Phase 1,,Residential,Regular,5502.6,per_sq_ft,FBR,FBR_Rawalpindi_SRO1728_I_2024.pdf,374,2024-11-01,Off Road
+Punjab,Rawalpindi,Bahria Town,Phase 1,,Commercial,Regular,16528.9,per_sq_ft,FBR,FBR_Rawalpindi_SRO1728_I_2024.pdf,374,2024-11-01,On Road
+Punjab,Rawalpindi,Bahria Town,Phase 2,,Residential,Regular,5502.6,per_sq_ft,FBR,FBR_Rawalpindi_SRO1728_I_2024.pdf,374,2024-11-01,Off Road
+Punjab,Rawalpindi,Bahria Town,Phase 2,,Commercial,Regular,16528.9,per_sq_ft,FBR,FBR_Rawalpindi_SRO1728_I_2024.pdf,374,2024-11-01,On Road
+Punjab,Rawalpindi,Bahria Town,Phase 3,,Residential,Regular,5502.6,per_sq_ft,FBR,FBR_Rawalpindi_SRO1728_I_2024.pdf,374,2024-11-01,Off Road
+Punjab,Rawalpindi,Bahria Town,Phase 3,,Commercial,Regular,16758.4,per_sq_ft,FBR,FBR_Rawalpindi_SRO1728_I_2024.pdf,374,2024-11-01,On Road
+Punjab,Rawalpindi,Bahria Town,Phase 4,,Residential,Regular,5502.6,per_sq_ft,FBR,FBR_Rawalpindi_SRO1728_I_2024.pdf,374,2024-11-01,Off Road
+Punjab,Rawalpindi,Bahria Town,Phase 4,,Commercial,Regular,16758.4,per_sq_ft,FBR,FBR_Rawalpindi_SRO1728_I_2024.pdf,374,2024-11-01,On Road
+Punjab,Rawalpindi,Bahria Town,Phase 5,,Residential,Regular,5502.6,per_sq_ft,FBR,FBR_Rawalpindi_SRO1728_I_2024.pdf,374,2024-11-01,Off Road
+Punjab,Rawalpindi,Bahria Town,Phase 5,,Commercial,Regular,16758.4,per_sq_ft,FBR,FBR_Rawalpindi_SRO1728_I_2024.pdf,374,2024-11-01,On Road
+Punjab,Rawalpindi,Bahria Town,Phase 6,,Residential,Regular,5502.6,per_sq_ft,FBR,FBR_Rawalpindi_SRO1728_I_2024.pdf,375,2024-11-01,Off Road
+Punjab,Rawalpindi,Bahria Town,Phase 7,,Residential,Regular,3966.9,per_sq_ft,FBR,FBR_Rawalpindi_SRO1728_I_2024.pdf,375,2024-11-01,Off Road
+Punjab,Rawalpindi,Bahria Town,Phase 7,,Commercial,Regular,16758.8,per_sq_ft,FBR,FBR_Rawalpindi_SRO1728_I_2024.pdf,375,2024-11-01,On Road
+Punjab,Rawalpindi,Bahria Town,Phase 8,,Residential,Regular,3085.4,per_sq_ft,FBR,FBR_Rawalpindi_SRO1728_I_2024.pdf,375,2024-11-01,Off Road
+Punjab,Rawalpindi,Bahria Town,Phase 8,,Commercial,Regular,13085.7,per_sq_ft,FBR,FBR_Rawalpindi_SRO1728_I_2024.pdf,375,2024-11-01,On Road
+ICT,Islamabad,E-7,,,Residential,Regular,225000,per_sq_yd,FBR,FBR_Islamabad_SRO644_I_2026.pdf,2,2026-04-16,Open plot; header OCR weak
+ICT,Islamabad,E-11,E-11/1-2,,Residential,Regular,70000,per_sq_yd,FBR,FBR_Islamabad_SRO644_I_2026.pdf,2,2026-04-16,
+ICT,Islamabad,E-11,E-11/3-4,,Residential,Regular,100000,per_sq_yd,FBR,FBR_Islamabad_SRO644_I_2026.pdf,2,2026-04-16,
+ICT,Islamabad,F-6,,,Residential,Regular,210000,per_sq_yd,FBR,FBR_Islamabad_SRO644_I_2026.pdf,2,2026-04-16,F-6/F-7 grouped
+ICT,Islamabad,F-7,,,Residential,Regular,210000,per_sq_yd,FBR,FBR_Islamabad_SRO644_I_2026.pdf,2,2026-04-16,F-6/F-7 grouped
+ICT,Islamabad,F-8,,,Residential,Regular,200000,per_sq_yd,FBR,FBR_Islamabad_SRO644_I_2026.pdf,2,2026-04-16,
+ICT,Islamabad,F-10,,,Residential,Regular,175000,per_sq_yd,FBR,FBR_Islamabad_SRO644_I_2026.pdf,3,2026-04-16,
+ICT,Islamabad,F-11,,,Residential,Regular,160000,per_sq_yd,FBR,FBR_Islamabad_SRO644_I_2026.pdf,3,2026-04-16,
+ICT,Islamabad,G-9,,,Residential,Regular,130000,per_sq_yd,FBR,FBR_Islamabad_SRO644_I_2026.pdf,5,2026-04-16,
+ICT,Islamabad,G-10,,,Residential,Regular,125000,per_sq_yd,FBR,FBR_Islamabad_SRO644_I_2026.pdf,6,2026-04-16,
+ICT,Islamabad,G-11,,,Residential,Regular,125000,per_sq_yd,FBR,FBR_Islamabad_SRO644_I_2026.pdf,6,2026-04-16,
+ICT,Islamabad,G-13,,,Residential,Regular,70000,per_sq_yd,FBR,FBR_Islamabad_SRO644_I_2026.pdf,6,2026-04-16,
