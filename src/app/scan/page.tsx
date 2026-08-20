@@ -1,6 +1,8 @@
 ﻿"use client";
 
 
+
+import { BilingualGrid, urduFromMap } from "@/components/BilingualGrid";
 import { RiskMeaningStrip } from "@/components/RiskMeaningStrip";
 import { ValuationComparisonCard } from "@/components/ValuationComparisonCard";
 import { FlaggedClausesPanel } from "@/components/FlaggedClausesPanel";
@@ -633,21 +635,26 @@ function NextStepsPanel({ steps, urduTranslations }: { steps: NextStep[]; urduTr
       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
         {steps.map((s, i) => {
           const ps = priorityStyle(s.priority);
+          const urTitle = urduTranslations?.["nextStepTitle_" + i];
+          const urDetail = urduTranslations?.["nextStepDetail_" + i];
+          const urduCombined = [urTitle, urDetail].filter(Boolean).join("\n\n") || null;
           return (
             <div key={i} style={{ backgroundColor: ps.bg, border: "1px solid " + ps.border, borderRadius: "12px", padding: "14px 16px", display: "flex", gap: "14px", alignItems: "flex-start" }}>
               <div style={{ width: "28px", height: "28px", borderRadius: "50%", backgroundColor: "#0b132b", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: 800, flexShrink: 0 }}>{i + 1}</div>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px", flexWrap: "wrap" }}>
-                  <span style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a" }}>{s.title}</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px", flexWrap: "wrap" }}>
                   <span style={{ fontSize: "9px", fontWeight: 800, color: ps.tag, backgroundColor: ps.tagBg, padding: "2px 6px", borderRadius: "4px", letterSpacing: "0.05em" }}>{ps.label}</span>
                 </div>
-                {urduTranslations?.["nextStepTitle_" + i] && (
-                  <div className={nastaliq.className} dir="rtl" style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a", marginBottom: "4px", lineHeight: 1.8, textAlign: "right" }}>{urduTranslations["nextStepTitle_" + i]}</div>
-                )}
-                <div style={{ fontSize: "13px", color: "#334155", lineHeight: 1.5 }}>{s.detail}</div>
-                {urduTranslations?.["nextStepDetail_" + i] && (
-                  <div className={nastaliq.className} dir="rtl" style={{ fontSize: "13px", color: "#334155", marginTop: "4px", lineHeight: 1.9, textAlign: "right" }}>{urduTranslations["nextStepDetail_" + i]}</div>
-                )}
+                <BilingualGrid
+                  dense
+                  english={
+                    <>
+                      <div style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a" }}>{s.title}</div>
+                      <div style={{ fontSize: "13px", color: "#334155", lineHeight: 1.5, marginTop: 4 }}>{s.detail}</div>
+                    </>
+                  }
+                  urdu={urduCombined}
+                />
               </div>
             </div>
           );
@@ -1369,6 +1376,8 @@ export default function ScanPage() {
     </div>
   );
 }
+
+
 
 
 

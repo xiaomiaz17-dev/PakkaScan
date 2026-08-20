@@ -711,6 +711,25 @@ export async function POST(request: Request) {
       `[beta/scan] clauses: suspicious=${clauseConcerns.flagged.length} missing=${clauseConcerns.missing.length} (llm+rules ruleHits=${ruleHits.clauses.length})`
     );
     riskResult = mergeRiskFactors(riskResult, clauseConcernsToRiskFactors(clauseConcerns));
+    // Feature 3c: translate clause concerns (computed after main Urdu batch)
+    try {
+      const clauseUrduInputs: Record<string, string> = {};
+      (clauseConcerns?.flagged || []).forEach((c: any, i: number) => {
+        if (c?.concern) clauseUrduInputs["clauseConcern_" + i] = String(c.concern);
+        if (c?.title) clauseUrduInputs["clauseTitle_" + i] = String(c.title);
+      });
+      (clauseConcerns?.missing || []).forEach((m: string, i: number) => {
+        if (m) clauseUrduInputs["missingProtection_" + i] = String(m);
+      });
+      if (Object.keys(clauseUrduInputs).length > 0) {
+        const more = await translateToUrdu(clauseUrduInputs);
+        urduTranslations = { ...urduTranslations, ...more };
+        console.log(`[beta/scan] Urdu clauses: ${Object.keys(more).length} string(s)`);
+      }
+    } catch (e: any) {
+      console.warn("[beta/scan] clause Urdu translate failed:", e?.message || e);
+    }
+
     riskResult = mergeRiskFactors(riskResult, suspiciousClausesToRiskFactors(ruleHits) as any);
 
     const rawPayload = {
@@ -789,6 +808,7 @@ function buildEvidenceFromExtracted(documentId: string, fields: any[], documentT
     warnings: [],
   }) as any;
 }
+
 
 
 

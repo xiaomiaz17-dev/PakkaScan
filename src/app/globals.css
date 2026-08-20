@@ -579,3 +579,16 @@ a.primary {
     display: none !important;
   }
 }
+/* Feature 3c — append to globals.css */
+.bilingual-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px 20px;
+  width: 100%;
+}
+@media (min-width: 768px) {
+  .bilingual-grid--dual {
+    grid-template-columns: minmax(280px, 1fr) minmax(280px, 1fr);
+  }
+}
+
