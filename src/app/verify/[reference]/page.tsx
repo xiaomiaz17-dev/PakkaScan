@@ -13,7 +13,18 @@ const fraunces = Fraunces({
 
 type VerifyResult =
   | { status: "loading" }
-  | { status: "found"; referenceCode: string; reportType: string; scannedAt: string }
+  | {
+      status: "found";
+      referenceCode: string;
+      reportType: string;
+      scannedAt: string;
+      riskScore?: number | null;
+      riskLabel?: string | null;
+      scoreBreakdown?: string | null;
+      verdict?: string | null;
+      pakkaScore?: number | null;
+      chainOfTitle?: any;
+    }
   | { status: "not_found" }
   | { status: "invalid" }
   | { status: "error" }
@@ -79,6 +90,12 @@ export default function VerifyResultPage() {
             referenceCode: data.referenceCode,
             reportType: data.reportType,
             scannedAt: data.scannedAt,
+            riskScore: data.riskScore ?? null,
+            riskLabel: data.riskLabel ?? null,
+            scoreBreakdown: data.scoreBreakdown ?? null,
+            verdict: data.verdict ?? null,
+            pakkaScore: data.pakkaScore ?? null,
+            chainOfTitle: data.chainOfTitle ?? null,
           });
         } else {
           setResult({ status: "not_found" });
@@ -154,7 +171,72 @@ export default function VerifyResultPage() {
               <MetaRow label="Reference Code" value={result.referenceCode} mono />
               <MetaRow label="Report Type" value={formatReportType(result.reportType)} />
               <MetaRow label="Issued On" value={formatDate(result.scannedAt)} />
+              {result.verdict && (
+                <MetaRow label="Verdict" value={String(result.verdict).replace(/_/g, " ")} />
+              )}
+              {result.pakkaScore != null && (
+                <MetaRow label="PakkaScore" value={`${result.pakkaScore}/100`} />
+              )}
             </div>
+
+            {result.riskScore != null && result.riskLabel && (
+              <div style={{
+                marginTop: "1.25rem",
+                padding: "1rem",
+                borderRadius: 12,
+                border: "1px solid #e2e8f0",
+                background: result.riskLabel === "LOW" ? "#ecfdf5" : result.riskLabel === "CRITICAL" ? "#fef2f2" : result.riskLabel === "HIGH" ? "#fff7ed" : "#fefce8",
+              }}>
+                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.08em", color: "#64748b", marginBottom: 6 }}>
+                  TRANSACTION RISK SCORE
+                </div>
+                <div style={{ fontSize: 28, fontWeight: 900, color: "#0f172a" }}>
+                  {result.riskScore}<span style={{ fontSize: 14, opacity: 0.7 }}>/10</span>
+                  <span style={{ marginLeft: 10, fontSize: 13, fontWeight: 800 }}>{result.riskLabel} RISK</span>
+                </div>
+                {result.scoreBreakdown && (
+                  <div style={{ fontSize: 11, color: "#64748b", marginTop: 6 }}>{result.scoreBreakdown}</div>
+                )}
+              </div>
+            )}
+
+            {result.chainOfTitle?.timeline?.length > 0 && (
+              <div style={{ marginTop: "1.25rem", padding: "1rem", borderRadius: 12, border: "1px solid #e2e8f0", background: "#f8fafc" }}>
+                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.08em", color: "#64748b", marginBottom: 8 }}>
+                  OWNERSHIP TIMELINE
+                  {result.chainOfTitle.isComplete ? " · COMPLETE" : " · GAPS DETECTED"}
+                </div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {result.chainOfTitle.timeline.map((ev: any, i: number) => (
+                    <div key={i} style={{
+                      padding: "8px 10px",
+                      borderRadius: 8,
+                      border: "1px solid #cbd5e1",
+                      background: "#fff",
+                      fontSize: 12,
+                      minWidth: 100,
+                    }}>
+                      <div style={{ fontWeight: 800, color: "#0f172a" }}>{ev.eventType}</div>
+                      <div style={{ color: "#64748b" }}>{ev.date || "Undated"}</div>
+                      <div style={{ color: "#334155", marginTop: 2 }}>
+                        {ev.transferee?.canonicalName || ev.transferor?.canonicalName || "—"}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {(result.chainOfTitle.gaps?.length > 0 || result.chainOfTitle.conflicts?.length > 0) && (
+                  <div style={{ marginTop: 10, fontSize: 12, color: "#7f1d1d" }}>
+                    {[...(result.chainOfTitle.gaps || []), ...(result.chainOfTitle.conflicts || [])]
+                      .slice(0, 3)
+                      .map((g: any, i: number) => (
+                        <div key={i} style={{ marginBottom: 4 }}>
+                          <strong>{g.severity || "FLAG"}</strong> — {g.message}
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             <div style={{ marginTop: "1.5rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
               <img
