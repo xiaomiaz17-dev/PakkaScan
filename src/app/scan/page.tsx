@@ -1126,7 +1126,6 @@ export default function ScanPage() {
             {/* Always show risk + chain when present (all tiers / multi-doc) */}
             {riskScore !== null && riskLabel && (
               <RiskScoreCard riskScore={riskScore} riskLabel={riskLabel} riskFactors={riskFactors} scoreBreakdown={scoreBreakdown} />
-              <ValuationComparisonCard data={results?.valuationComparison} />
             )}
             {results?.chainOfTitle && (
               <OwnershipTimeline result={results.chainOfTitle} tier={results.tier ?? undefined} />
