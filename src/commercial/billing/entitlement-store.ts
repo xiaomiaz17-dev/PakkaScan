@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Neon-backed entitlement + purchase store.
  * Uses the same raw SQL pattern as the rest of the app (src/lib/db.ts).
  *
@@ -190,8 +190,21 @@ export async function updateScanSnapshot(input: {
   verdict?: string | null;
   pakkaScore?: number | null;
   chainOfTitle?: unknown;
+  /** Public-safe summary for /verify (no OCR, no CNICs) */
+  publicSummary?: {
+    riskFactors?: Array<{ label: string; points?: number; category?: string }>;
+    valuation?: {
+      declaredPricePkr?: number | null;
+      officialValuePkr?: number | null;
+      ratio?: number | null;
+      section111?: string | null;
+    } | null;
+    missingProtections?: string[];
+    clauseFlagCount?: number;
+  } | null;
 }): Promise<void> {
   const chainJson = input.chainOfTitle != null ? JSON.stringify(input.chainOfTitle) : null;
+  const summaryJson = input.publicSummary != null ? JSON.stringify(input.publicSummary) : null;
   await sql`
     UPDATE scan_usage
     SET
@@ -200,7 +213,9 @@ export async function updateScanSnapshot(input: {
       score_breakdown = ${input.scoreBreakdown ?? null},
       verdict = ${input.verdict ?? null},
       pakka_score = ${input.pakkaScore ?? null},
-      chain_of_title = ${chainJson}::jsonb
+      chain_of_title = ${chainJson}::jsonb,
+      public_summary = ${summaryJson}::jsonb
     WHERE reference_code = ${input.referenceCode}
   `;
 }
+

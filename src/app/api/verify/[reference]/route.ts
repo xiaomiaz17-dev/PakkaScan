@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db";
 import { getPdfHash } from "@/commercial/billing/session8-store";
 
@@ -23,7 +23,7 @@ export async function GET(
       SELECT
         reference_code, report_type, created_at,
         risk_score, risk_label, score_breakdown, verdict, pakka_score,
-        chain_of_title, pdf_hash, pdf_generated_at
+        chain_of_title, pdf_hash, pdf_generated_at, public_summary
       FROM scan_usage
       WHERE reference_code = ${reference}
       LIMIT 1
@@ -47,6 +47,10 @@ export async function GET(
       chainOfTitle: row.chain_of_title ?? null,
       hasPdfHash: Boolean(row.pdf_hash),
       pdfGeneratedAt: row.pdf_generated_at ?? null,
+      publicSummary: row.public_summary ?? null,
+      riskFactors: Array.isArray(row.public_summary?.riskFactors) ? row.public_summary.riskFactors : [],
+      valuationSummary: row.public_summary?.valuation ?? null,
+      missingProtections: Array.isArray(row.public_summary?.missingProtections) ? row.public_summary.missingProtections : [],
     });
   } catch (err) {
     console.error("[verify] lookup failed:", err);
@@ -92,7 +96,7 @@ export async function POST(
       match,
       reason: match ? "hash_match" : "hash_mismatch",
       message: match
-        ? "PDF hash matches the original issued by PakkaScan — document has not been tampered with."
+        ? "PDF hash matches the original issued by PakkaScan â€” document has not been tampered with."
         : "PDF hash does not match the original. This file may have been altered or is not the official passport.",
     });
   } catch (err) {
@@ -100,3 +104,4 @@ export async function POST(
     return NextResponse.json({ error: "server_error" }, { status: 500 });
   }
 }
+

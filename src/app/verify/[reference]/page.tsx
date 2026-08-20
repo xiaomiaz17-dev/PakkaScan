@@ -27,6 +27,14 @@ type VerifyResult =
       pakkaScore?: number | null;
       chainOfTitle?: any;
       hasPdfHash?: boolean;
+      riskFactors?: Array<{ label: string; points?: number; category?: string }>;
+      valuationSummary?: {
+        declaredPricePkr?: number | null;
+        officialValuePkr?: number | null;
+        ratio?: number | null;
+        section111?: string | null;
+      } | null;
+      missingProtections?: string[];
     }
   | { status: "not_found" }
   | { status: "invalid" }
@@ -100,6 +108,9 @@ export default function VerifyResultPage() {
             pakkaScore: data.pakkaScore ?? null,
             chainOfTitle: data.chainOfTitle ?? null,
             hasPdfHash: data.hasPdfHash ?? false,
+            riskFactors: data.riskFactors ?? [],
+            valuationSummary: data.valuationSummary ?? null,
+            missingProtections: data.missingProtections ?? [],
           });
         } else {
           setResult({ status: "not_found" });
@@ -201,6 +212,34 @@ export default function VerifyResultPage() {
                 {result.scoreBreakdown && (
                   <div style={{ fontSize: 11, color: "#64748b", marginTop: 6 }}>{result.scoreBreakdown}</div>
                 )}
+                {Array.isArray(result.riskFactors) && result.riskFactors.length > 0 && (
+                  <ul style={{ margin: "10px 0 0", paddingLeft: 18, fontSize: 12, color: "#334155", lineHeight: 1.5 }}>
+                    {result.riskFactors.slice(0, 6).map((f, i) => (
+                      <li key={i}>{f.label}{f.points != null ? ` (${f.points})` : ""}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+            {result.valuationSummary && (result.valuationSummary.declaredPricePkr || result.valuationSummary.officialValuePkr) && (
+              <div style={{ marginTop: "1rem", padding: "1rem", borderRadius: 12, border: "1px solid #fecaca", background: "#fef2f2", fontSize: 13 }}>
+                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.08em", color: "#991b1b", marginBottom: 6 }}>OFFICIAL VALUATION</div>
+                <div>
+                  Declared: {result.valuationSummary.declaredPricePkr != null ? `PKR ${Number(result.valuationSummary.declaredPricePkr).toLocaleString()}` : "—"}
+                  {" · "}
+                  Official: {result.valuationSummary.officialValuePkr != null ? `PKR ${Number(result.valuationSummary.officialValuePkr).toLocaleString()}` : "—"}
+                  {result.valuationSummary.ratio != null ? ` · Ratio: ${Math.round(result.valuationSummary.ratio * 100)}%` : ""}
+                </div>
+              </div>
+            )}
+            {Array.isArray(result.missingProtections) && result.missingProtections.length > 0 && (
+              <div style={{ marginTop: "1rem", padding: "1rem", borderRadius: 12, border: "1px solid #e2e8f0", background: "#f8fafc", fontSize: 13 }}>
+                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.08em", color: "#64748b", marginBottom: 6 }}>MISSING STANDARD PROTECTIONS</div>
+                <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.5 }}>
+                  {result.missingProtections.slice(0, 6).map((m, i) => (
+                    <li key={i}>{m}</li>
+                  ))}
+                </ul>
               </div>
             )}
 
@@ -411,6 +450,7 @@ function MetaRow({ label, value, mono }: { label: string; value: string; mono?: 
     </div>
   );
 }
+
 
 
 
