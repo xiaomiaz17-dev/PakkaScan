@@ -244,8 +244,14 @@ export default function VerifyResultPage() {
 
             <div style={{ marginTop: "1.5rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
               <img
-                src={`https://<PdfHashVerifier referenceCode={result.referenceCode} hasPdfHash={Boolean((result as any).hasPdfHash)} />
-api.qrserver.com/v1/create-qr-code/?size=180x180&margin=8&data=${encodeURIComponent(typeof window !== "undefined" ? `${window.location.origin}/verify/${result.referenceCode}` : `https://www.pakkascan.com/verify/${result.referenceCode}`)}`}
+                <div style={{ marginBottom: 16 }}>
+              <PdfHashVerifier
+                referenceCode={result.referenceCode}
+                hasPdfHash={Boolean((result as any).hasPdfHash)}
+              />
+            </div>
+            <img
+              src={https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=8&data=${encodeURIComponent(typeof window !== "undefined" ? `${window.location.origin}/verify/${result.referenceCode}` : `https://www.pakkascan.com/verify/${result.referenceCode}`)}`}
                 alt="QR code to verify this report"
                 width={180}
                 height={180}
@@ -406,5 +412,6 @@ function MetaRow({ label, value, mono }: { label: string; value: string; mono?: 
     </div>
   );
 }
+
 
 
