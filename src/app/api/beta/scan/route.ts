@@ -601,7 +601,7 @@ export async function POST(request: Request) {
       missing: _missingStr,
       smartFields: _firstSmartFields,
     });
-    console.log(`[beta/scan] Risk: score=${riskResult.riskScore}/10 (${riskResult.riskLabel}), factors=${riskResult.riskFactors.length}`);
+    console.log(`[beta/scan] Risk: score=${riskResult.riskScore}/10 (${riskResult.riskLabel}), factors=${riskResult.riskFactors.length}, breakdown=${riskResult.scoreBreakdown}`);
 
 
     const rawPayload = {
@@ -615,6 +615,7 @@ export async function POST(request: Request) {
       riskScore: riskResult.riskScore,
       riskFactors: riskResult.riskFactors,
       riskLabel: riskResult.riskLabel,
+      scoreBreakdown: riskResult.scoreBreakdown,
       phase2: phase2 && {
         classification: phase2.classification,
         observations: phase2.observations,

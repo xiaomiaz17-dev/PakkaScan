@@ -29,6 +29,7 @@
     "@libsql/client": "^0.17.4",
     "@napi-rs/canvas": "0.1.88",
     "@neondatabase/serverless": "^1.1.0",
+    "@react-pdf/renderer": "^4.6.1",
     "@sentry/nextjs": "^10.69.0",
     "drizzle-orm": "^0.45.2",
     "jose": "^6.2.8",

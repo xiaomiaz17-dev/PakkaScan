@@ -138,6 +138,7 @@ type BackendResponse = {
   riskScore?: number;
   riskLabel?: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
   riskFactors?: Array<{ label: string; points: number; category: string }>;
+  scoreBreakdown?: string;
   phase2?: {
     result?: { decision?: string; pakkaScore?: number; findings?: any[]; blockers?: number };
     posture?: string;
@@ -490,10 +491,11 @@ function DocTypeDropdown({ value, onChange, onClose }: { value: string; onChange
   );
 }
 
-function RiskScoreCard({ riskScore, riskLabel, riskFactors }: {
+function RiskScoreCard({ riskScore, riskLabel, riskFactors, scoreBreakdown }: {
   riskScore: number;
   riskLabel: string;
   riskFactors: Array<{ label: string; points: number; category: string }>;
+  scoreBreakdown?: string;
 }) {
   const colorMap: Record<string, { bg: string; border: string; text: string; badge: string }> = {
     LOW:      { bg: "#ecfdf5", border: "#a7f3d0", text: "#065f46", badge: "#16a34a" },
@@ -531,12 +533,24 @@ function RiskScoreCard({ riskScore, riskLabel, riskFactors }: {
               </li>
             ))}
           </ul>
+          {scoreBreakdown && (
+            <details style={{ marginTop: "10px" }}>
+              <summary style={{ fontSize: "11px", fontWeight: 600, color: c.text, opacity: 0.7, cursor: "pointer", userSelect: "none" as const }}>
+                How is this score calculated?
+              </summary>
+              <p style={{ fontSize: "11px", color: c.text, opacity: 0.8, margin: "6px 0 0", lineHeight: 1.5 }}>
+                {scoreBreakdown}. Base starts at 1 (no issues). Each factor adds its absolute points. Maximum 10.
+              </p>
+            </details>
+          )}
         </div>
+      )}
+      {riskFactors.length === 0 && scoreBreakdown && (
+        <p style={{ fontSize: "11px", color: c.text, opacity: 0.7, margin: "8px 0 0" }}>{scoreBreakdown}</p>
       )}
     </div>
   );
 }
-
 function VerdictHero({ verdict, posture, pakkaScore, urduHeadline }: { verdict: string; posture: string; pakkaScore: number; urduHeadline?: string | null }) {
   const style = (() => {
     if (verdict === "PROCEED" || posture === "CLEAR") {
@@ -834,6 +848,7 @@ export default function ScanPage() {
   const riskScore = results?.riskScore ?? null;
   const riskLabel = results?.riskLabel ?? null;
   const riskFactors = results?.riskFactors ?? [];
+  const scoreBreakdown = results?.scoreBreakdown ?? undefined;
 
   const stringifyItem = (m: any): string => {
     if (typeof m === "string") return m;
@@ -1109,7 +1124,7 @@ export default function ScanPage() {
               <>
                 <VerdictHero verdict={verdict} posture={posture} pakkaScore={pakkaScore} urduHeadline={urduTranslations["verdictHeadline"]} />
                 {riskScore !== null && riskLabel && (
-                  <RiskScoreCard riskScore={riskScore} riskLabel={riskLabel} riskFactors={riskFactors} />
+                  <RiskScoreCard riskScore={riskScore} riskLabel={riskLabel} riskFactors={riskFactors} scoreBreakdown={scoreBreakdown} />
                 )}
                 <NextStepsPanel steps={nextSteps} urduTranslations={urduTranslations} />
                 {results.tier === "rental" && isMultiDoc && (
@@ -1226,7 +1241,7 @@ export default function ScanPage() {
                 <div style={{ fontSize: "10px", color: "#94a3b8", marginTop: "8px", fontStyle: "italic" }}>
                   Public verification does not reveal document contents.
                 </div>
-                <div style={{ marginTop: "14px" }}>
+                <div style={{ marginTop: "14px", display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "center" }}>
                   <WhatsAppShareButton
                     variant="results"
                     referenceCode={results.referenceCode}
@@ -1234,6 +1249,59 @@ export default function ScanPage() {
                     verdict={verdict}
                     pakkaScore={pakkaScore}
                   />
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        const payload = {
+                          referenceCode: results.referenceCode,
+                          scannedAt: new Date().toISOString(),
+                          reportType: results.tier || "SCAN",
+                          riskScore: riskScore ?? 1,
+                          riskLabel: riskLabel || "MEDIUM",
+                          riskFactors: riskFactors || [],
+                          scoreBreakdown: scoreBreakdown,
+                          verdict: verdict || "REVIEW",
+                          pakkaScore: pakkaScore,
+                          verifyUrl: `https://www.pakkascan.com/verify/${results.referenceCode}`,
+                          keyFacts: [],
+                        };
+                        const res = await fetch("/api/beta/report/pdf", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify(payload),
+                        });
+                        if (!res.ok) throw new Error("PDF generation failed");
+                        const blob = await res.blob();
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = `PakkaScan-Passport-${results.referenceCode}.pdf`;
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                        URL.revokeObjectURL(url);
+                      } catch (e) {
+                        console.error("PDF download failed", e);
+                        alert("Could not generate PDF. Please try again.");
+                      }
+                    }}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      padding: "8px 14px",
+                      backgroundColor: "#0f172a",
+                      color: "#ffffff",
+                      fontWeight: 700,
+                      fontSize: "13px",
+                      borderRadius: "8px",
+                      border: "none",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Download PDF Passport
+                  </button>
                 </div>
               </div>
             </div>
