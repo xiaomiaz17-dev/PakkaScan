@@ -171,3 +171,36 @@ export async function recordScanUsage(input: {
   `;
   return ref;
 }
+/**
+ * Persist risk + chain-of-title snapshot onto scan_usage for the public verify page.
+ * Requires columns (run once in Neon):
+ *   ALTER TABLE scan_usage
+ *     ADD COLUMN IF NOT EXISTS risk_score integer,
+ *     ADD COLUMN IF NOT EXISTS risk_label text,
+ *     ADD COLUMN IF NOT EXISTS score_breakdown text,
+ *     ADD COLUMN IF NOT EXISTS verdict text,
+ *     ADD COLUMN IF NOT EXISTS pakka_score integer,
+ *     ADD COLUMN IF NOT EXISTS chain_of_title jsonb;
+ */
+export async function updateScanSnapshot(input: {
+  referenceCode: string;
+  riskScore: number;
+  riskLabel: string;
+  scoreBreakdown?: string;
+  verdict?: string | null;
+  pakkaScore?: number | null;
+  chainOfTitle?: unknown;
+}): Promise<void> {
+  const chainJson = input.chainOfTitle != null ? JSON.stringify(input.chainOfTitle) : null;
+  await sql`
+    UPDATE scan_usage
+    SET
+      risk_score = ${input.riskScore},
+      risk_label = ${input.riskLabel},
+      score_breakdown = ${input.scoreBreakdown ?? null},
+      verdict = ${input.verdict ?? null},
+      pakka_score = ${input.pakkaScore ?? null},
+      chain_of_title = ${chainJson}::jsonb
+    WHERE reference_code = ${input.referenceCode}
+  `;
+}

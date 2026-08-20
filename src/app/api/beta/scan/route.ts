@@ -14,12 +14,12 @@ import { checkRateLimit, recordScan, extractClientIp, getGlobalSpendState } from
 import type { Jurisdiction, DocumentType } from "@/domain/models";
 import { randomUUID } from "node:crypto";
 import { getSession } from "@/lib/session";
-import { getUnusedEntitlements, consumeEntitlement, recordScanUsage } from "@/commercial/billing/entitlement-store";
+import { getUnusedEntitlements, consumeEntitlement, recordScanUsage, updateScanSnapshot } from "@/commercial/billing/entitlement-store";
 import { sendScanReportEmail } from "@/lib/email";
 import type { ReportType } from "@/commercial/billing/reports";
-import { computeRiskFactors } from "@/intelligence/risk-scorer";
-import { buildOwnershipTimeline } from "@/intelligence/chain-of-title";
-import { validateTemporalRules } from "@/intelligence/temporal-validator";
+import { computeRiskFactors, mergeRiskFactors } from "@/intelligence/risk-scorer";
+import { buildOwnershipTimeline, chainFindingsToRiskFactors } from "@/intelligence/chain-of-title";
+import { validateTemporalRules, temporalViolationsToRiskFactors } from "@/intelligence/temporal-validator";
 
 const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
 const ALLOWED_TYPES = new Set([
@@ -626,12 +626,22 @@ export async function POST(request: Request) {
     ];
     const _missingStr  = stringifyMissing(phase2?.missingEvidence);
     const _firstSmartFields = perDocument.find((d: any) => d.status === "ok" && d.smartFields && !d.smartFields.extractionError)?.smartFields ?? null;
-    const riskResult = computeRiskFactors({
+    let riskResult = computeRiskFactors({
       pakkaScore: phase2?.analysis?.pakkaScore ?? 0,
       findings: _findingsStr,
       missing: _missingStr,
       smartFields: _firstSmartFields,
     });
+
+    // Strongly weight chain-of-title + temporal findings into the risk score
+    if (chainOfTitle) {
+      const chainFactors = chainFindingsToRiskFactors(chainOfTitle);
+      const temporalFactors = temporalViolationsToRiskFactors(
+        (chainOfTitle as any).temporalViolations || []
+      );
+      riskResult = mergeRiskFactors(riskResult, [...chainFactors, ...temporalFactors]);
+    }
+
     console.log(`[beta/scan] Risk: score=${riskResult.riskScore}/10 (${riskResult.riskLabel}), factors=${riskResult.riskFactors.length}, breakdown=${riskResult.scoreBreakdown}`);
 
 
@@ -666,6 +676,23 @@ export async function POST(request: Request) {
         nextSteps,
       },
     };
+
+    // Persist risk + chain snapshot for public verify page
+    if (scanReferenceCode) {
+      try {
+        await updateScanSnapshot({
+          referenceCode: scanReferenceCode,
+          riskScore: riskResult.riskScore,
+          riskLabel: riskResult.riskLabel,
+          scoreBreakdown: riskResult.scoreBreakdown,
+          verdict: (combinedVerdict?.verdict || phase2?.analysis?.decision || null) as string | null,
+          pakkaScore: phase2?.analysis?.pakkaScore ?? null,
+          chainOfTitle: chainOfTitle,
+        });
+      } catch (err: any) {
+        console.warn("[beta/scan] snapshot persist failed:", err?.message || err);
+      }
+    }
 
     const filteredPayload = filterResponseByTier(rawPayload, entitlementToUse.report_type);
     console.log(`[beta/scan] Tier-filtered response for tier=${entitlementToUse.report_type}`);

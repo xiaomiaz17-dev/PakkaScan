@@ -299,3 +299,23 @@ export function computeRiskFactors(input: {
     scoreBreakdown: breakdown,
   };
 }
+
+
+/**
+ * Merge additional factors (e.g. chain-of-title / temporal) into a RiskScoreResult
+ * and recompute the weighted score.
+ */
+export function mergeRiskFactors(
+  base: RiskScoreResult,
+  extra: RiskFactor[]
+): RiskScoreResult {
+  if (!extra || extra.length === 0) return base;
+  const combined = dedupe([...base.riskFactors, ...extra]).slice(0, 10);
+  const { score, breakdown } = computeWeightedScore(combined);
+  return {
+    riskScore: score,
+    riskLabel: riskLabel(score),
+    riskFactors: combined,
+    scoreBreakdown: breakdown,
+  };
+}

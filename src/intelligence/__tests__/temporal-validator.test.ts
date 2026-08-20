@@ -97,4 +97,25 @@ describe("validateTemporalRules", () => {
     const v = validateTemporalRules([], docs);
     expect(v.filter((x) => x.ruleId === "REG_ACT_1908_4MO")).toHaveLength(0);
   });
+
+  it("smoke: registration 8 months after execution is CRITICAL", () => {
+    const docs = [
+      {
+        documentId: "late-reg",
+        documentType: "REGISTERED_SALE_DEED",
+        fileName: "late-sale.pdf",
+        smartFields: {
+          dates: {
+            execution_date: "2019-01-10",
+            registration_date: "2019-09-20",
+          },
+        },
+      },
+    ];
+    const v = validateTemporalRules([], docs as any);
+    const hit = v.find((x) => x.ruleId === "REG_ACT_1908_4MO");
+    expect(hit).toBeTruthy();
+    expect(hit!.severity).toBe("CRITICAL");
+    expect(hit!.message).toMatch(/4-month/i);
+  });
 });
