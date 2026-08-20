@@ -20,6 +20,7 @@ import type { ReportType } from "@/commercial/billing/reports";
 import { computeRiskFactors, mergeRiskFactors } from "@/intelligence/risk-scorer";
 import { getOfficialValuation, getDeclaredPrice } from "@/intelligence/dc-rate-lookup";
 import { extractClauseConcerns, clauseConcernsToRiskFactors } from "@/intelligence/clause-concerns";
+import { detectSuspiciousClauses, suspiciousClausesToRiskFactors } from "@/intelligence/suspicious-clauses";
 import { buildOwnershipTimeline, chainFindingsToRiskFactors } from "@/intelligence/chain-of-title";
 import { validateTemporalRules, temporalViolationsToRiskFactors } from "@/intelligence/temporal-validator";
 
@@ -682,9 +683,35 @@ export async function POST(request: Request) {
 
     
     // Session 9: suspicious clauses from LLM smartFields
+    // Session 9 hybrid: LLM smartFields + rule-based OCR scan
     const clauseConcerns = extractClauseConcerns(_firstSmartFields);
-    console.log(`[beta/scan] clauses: suspicious=${clauseConcerns.flagged.length} missing=${clauseConcerns.missing.length}`);
+    const ocrBlob = (perDocument || [])
+      .map((d: any) => d?.ocr?.text || d?.ocrText || d?.text || "")
+      .filter(Boolean)
+      .join("\n");
+    const ruleHits = detectSuspiciousClauses({
+      ocrText: ocrBlob,
+      smartFields: _firstSmartFields,
+    });
+    // Map rule hits into clauseConcerns.flagged shape
+    for (const h of ruleHits.clauses) {
+      const already = clauseConcerns.flagged.some(
+        (f: any) => (f.quote || "").toLowerCase().includes((h.evidence || h.title || "").toLowerCase().slice(0, 40))
+      );
+      if (!already) {
+        clauseConcerns.flagged.push({
+          quote: h.evidence || h.title,
+          concern: h.message,
+          severity: h.severity === "CRITICAL" ? "critical" : h.severity === "HIGH" ? "high" : "medium",
+          title: h.title,
+        });
+      }
+    }
+    console.log(
+      `[beta/scan] clauses: suspicious=${clauseConcerns.flagged.length} missing=${clauseConcerns.missing.length} (llm+rules ruleHits=${ruleHits.clauses.length})`
+    );
     riskResult = mergeRiskFactors(riskResult, clauseConcernsToRiskFactors(clauseConcerns));
+    riskResult = mergeRiskFactors(riskResult, suspiciousClausesToRiskFactors(ruleHits) as any);
 
     const rawPayload = {
       success: true,
@@ -762,5 +789,6 @@ function buildEvidenceFromExtracted(documentId: string, fields: any[], documentT
     warnings: [],
   }) as any;
 }
+
 
 
