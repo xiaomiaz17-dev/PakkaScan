@@ -242,9 +242,15 @@ export default function VerifyResultPage() {
               </div>
             )}
 
+            <div style={{ marginBottom: 16, width: "100%", maxWidth: 420 }}>
+              <PdfHashVerifier
+                referenceCode={result.referenceCode}
+                hasPdfHash={Boolean((result as any).hasPdfHash)}
+              />
+            </div>
             <div style={{ marginTop: "1.5rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
               <img
-              src={https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=8&data=${encodeURIComponent(typeof window !== "undefined" ? `${window.location.origin}/verify/${result.referenceCode}` : `https://www.pakkascan.com/verify/${result.referenceCode}`)}`}
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=8&data=${encodeURIComponent(typeof window !== "undefined" ? `${window.location.origin}/verify/${result.referenceCode}` : `https://www.pakkascan.com/verify/${result.referenceCode}`)}`}
                 alt="QR code to verify this report"
                 width={180}
                 height={180}
