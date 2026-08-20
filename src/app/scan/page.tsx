@@ -1133,7 +1133,9 @@ export default function ScanPage() {
             {/* Always show risk + chain when present (all tiers / multi-doc) */}
             {riskScore !== null && riskLabel && (
               <RiskScoreCard riskScore={riskScore} riskLabel={riskLabel} riskFactors={riskFactors} scoreBreakdown={scoreBreakdown} />
-            {riskScore !== null && riskLabel && <RiskMeaningStrip riskScore={riskScore} riskLabel={riskLabel} riskFactors={riskFactors} />}
+            )}
+            {riskScore !== null && riskLabel && (
+              <RiskMeaningStrip riskScore={riskScore} riskLabel={riskLabel} riskFactors={riskFactors} />
             )}
             <ValuationComparisonCard data={results?.valuationComparison} />
             <FlaggedClausesPanel flagged={results?.clauseConcerns?.flagged} missing={results?.clauseConcerns?.missing} referenceCode={results?.referenceCode} />
@@ -1367,6 +1369,7 @@ export default function ScanPage() {
     </div>
   );
 }
+
 
 
 
