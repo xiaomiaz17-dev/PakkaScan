@@ -75,6 +75,35 @@ function checkFbrRatio(financials: any): RiskFactor | null {
   return null;
 }
 
+/**
+ * Session 7: compare declared sale price to DC-rate benchmark from lookup engine.
+ * Spec: ratio < 0.5 → -3.0; ratio < 0.8 → -1.5
+ */
+export function checkDeclaredVsBenchmark(
+  declaredPrice: number | null | undefined,
+  officialValuePkr: number | null | undefined
+): RiskFactor | null {
+  if (!declaredPrice || !officialValuePkr || declaredPrice <= 0 || officialValuePkr <= 0) {
+    return null;
+  }
+  const ratio = declaredPrice / officialValuePkr;
+  if (ratio < 0.5) {
+    return {
+      label: `Declared price (PKR ${Math.round(declaredPrice).toLocaleString("en-PK")}) is ${Math.round((1 - ratio) * 100)}% below official DC/FBR benchmark (PKR ${Math.round(officialValuePkr).toLocaleString("en-PK")}) — severe Section 111 tax exposure`,
+      points: -3,
+      category: "financial",
+    };
+  }
+  if (ratio < 0.8) {
+    return {
+      label: `Declared price (PKR ${Math.round(declaredPrice).toLocaleString("en-PK")}) is ${Math.round((1 - ratio) * 100)}% below official DC/FBR benchmark (PKR ${Math.round(officialValuePkr).toLocaleString("en-PK")}) — mild under-declaration`,
+      points: -1.5,
+      category: "financial",
+    };
+  }
+  return null;
+}
+
 function inferProvinceFromText(...texts: Array<string | null | undefined>): string | null {
   const combined = texts
     .filter((t): t is string => typeof t === "string" && t.trim().length > 0)
@@ -280,10 +309,20 @@ export function computeRiskFactors(input: {
   findings: string[];
   missing: string[];
   smartFields: any;
+  /** Session 7: official DC/FBR benchmark PKR from dc-rate-lookup (optional) */
+  officialValuationPkr?: number | null;
+  declaredPricePkr?: number | null;
 }): RiskScoreResult {
   const factors: RiskFactor[] = [];
   const fbrFactor = checkFbrRatio(input.smartFields?.financials ?? null);
   if (fbrFactor) factors.push(fbrFactor);
+
+  // Session 7: DC rate table benchmark (preferred when available)
+  const dcFactor = checkDeclaredVsBenchmark(
+    input.declaredPricePkr ?? null,
+    input.officialValuationPkr ?? null
+  );
+  if (dcFactor) factors.push(dcFactor);
   const cnicLocationFactor = checkCnicLocationMismatch(input.smartFields);
   if (cnicLocationFactor) factors.push(cnicLocationFactor);
   factors.push(...factorsFromDateAnomalies(input.smartFields));

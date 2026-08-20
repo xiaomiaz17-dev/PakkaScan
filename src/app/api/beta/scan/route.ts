@@ -18,6 +18,7 @@ import { getUnusedEntitlements, consumeEntitlement, recordScanUsage, updateScanS
 import { sendScanReportEmail } from "@/lib/email";
 import type { ReportType } from "@/commercial/billing/reports";
 import { computeRiskFactors, mergeRiskFactors } from "@/intelligence/risk-scorer";
+import { getOfficialValuation, getDeclaredPrice } from "@/intelligence/dc-rate-lookup";
 import { buildOwnershipTimeline, chainFindingsToRiskFactors } from "@/intelligence/chain-of-title";
 import { validateTemporalRules, temporalViolationsToRiskFactors } from "@/intelligence/temporal-validator";
 
@@ -626,11 +627,44 @@ export async function POST(request: Request) {
     ];
     const _missingStr  = stringifyMissing(phase2?.missingEvidence);
     const _firstSmartFields = perDocument.find((d: any) => d.status === "ok" && d.smartFields && !d.smartFields.extractionError)?.smartFields ?? null;
+    // Session 7: DC rate / official valuation lookup (silent if no match)
+    let valuationComparison: any = null;
+    let officialValuationPkr: number | null = null;
+    let declaredPricePkr: number | null = null;
+    try {
+      declaredPricePkr = getDeclaredPrice(_firstSmartFields);
+      const valuation = await getOfficialValuation(_firstSmartFields);
+      if (valuation.matched) {
+        officialValuationPkr = valuation.officialValuePkr;
+        valuationComparison = {
+          declaredPricePkr,
+          officialValuePkr: valuation.officialValuePkr,
+          ratio: declaredPricePkr && valuation.officialValuePkr
+            ? declaredPricePkr / valuation.officialValuePkr
+            : null,
+          match: valuation.match,
+          confidence: valuation.confidence,
+          areaUsed: valuation.areaUsed,
+          ratePkr: valuation.ratePkr,
+          rateUnit: valuation.rateUnit,
+        };
+        console.log(
+          `[beta/scan] DC valuation: official=${valuation.officialValuePkr} declared=${declaredPricePkr} ratio=${valuationComparison.ratio} match=${valuation.matchReason}`
+        );
+      } else {
+        console.log(`[beta/scan] DC valuation: no match (${valuation.reason})`);
+      }
+    } catch (err: any) {
+      console.warn("[beta/scan] DC valuation lookup failed:", err?.message || err);
+    }
+
     let riskResult = computeRiskFactors({
       pakkaScore: phase2?.analysis?.pakkaScore ?? 0,
       findings: _findingsStr,
       missing: _missingStr,
       smartFields: _firstSmartFields,
+      officialValuationPkr,
+      declaredPricePkr,
     });
 
     // Strongly weight chain-of-title + temporal findings into the risk score
@@ -658,6 +692,7 @@ export async function POST(request: Request) {
       riskLabel: riskResult.riskLabel,
       scoreBreakdown: riskResult.scoreBreakdown,
       chainOfTitle: chainOfTitle,
+      valuationComparison: valuationComparison,
       phase2: phase2 && {
         classification: phase2.classification,
         observations: phase2.observations,

@@ -151,9 +151,14 @@ export function extractLocationHints(smartFields: any): {
     prop.property_address ||
     prop.location ||
     smartFields?.property_address ||
+    smartFields?.address ||
     "";
-  const areaName = prop.area || prop.society || prop.colony || "";
-  const city = prop.city || prop.district || "";
+  // Society/colony only — skip values that look like plot sizes (e.g. "500 Square Yards")
+  const rawAreaName = prop.society || prop.colony || prop.scheme || prop.area || "";
+  const areaName = /\d/.test(String(rawAreaName)) && /yard|marla|kanal|sq/i.test(String(rawAreaName))
+    ? ""
+    : String(rawAreaName);
+  const city = prop.city || prop.district || smartFields?.city || "";
   const phase = prop.phase || prop.block || prop.phase_or_block || "";
   const categoryRaw = (prop.property_type || prop.category || prop.use || "").toLowerCase();
   const category = categoryRaw.includes("commercial")
@@ -307,15 +312,41 @@ export async function getOfficialValuation(
       };
     }
 
-    const prop = smartFields?.property ?? {};
-    const areaStr =
-      prop.area ||
-      prop.size ||
-      prop.plot_size ||
-      prop.total_area ||
-      smartFields?.area ||
-      "";
-    const parsedArea = parseAreaString(String(areaStr));
+    const prop = smartFields?.property ?? smartFields?.property_details ?? {};
+    // Prefer size fields; prop.area is often a society name (DHA), not "500 sq yd"
+    const areaCandidates = [
+      prop.size,
+      prop.plot_size,
+      prop.total_area,
+      prop.area_size,
+      prop.land_area,
+      smartFields?.plot_size,
+      smartFields?.total_area,
+      // only use prop.area / smartFields.area if they look like a measurement
+      prop.area,
+      smartFields?.area,
+    ];
+    let parsedArea: ParsedArea | null = null;
+    for (const c of areaCandidates) {
+      if (c == null || c === "") continue;
+      const p = parseAreaString(String(c));
+      if (p) {
+        parsedArea = p;
+        break;
+      }
+    }
+    // Last resort: scrape any "N square yards/marla" from address blob
+    if (!parsedArea) {
+      const blob = [
+        prop.address,
+        prop.property_address,
+        smartFields?.property_address,
+        hints.addressText,
+      ]
+        .filter(Boolean)
+        .join(" ");
+      parsedArea = parseAreaString(blob);
+    }
     if (!parsedArea) {
       return { matched: false, reason: "could not parse plot area from smartFields" };
     }
