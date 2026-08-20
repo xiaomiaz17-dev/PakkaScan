@@ -406,8 +406,8 @@ export default function LandingPage() {
       </section>
 
       {/* PRICING */}
-      <section id="sample-cta-anchor" />
-        <div style={{ maxWidth: 900, margin: "0 auto 28px", padding: "16px 20px", borderRadius: 12, background: "#ecfdf5", border: "1px solid #a7f3d0", display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", justifyContent: "space-between" }}>
+      <section id="pricing" style={{ padding: "72px 24px", backgroundColor: "#f8fafc" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto 24px", padding: "16px 20px", borderRadius: 12, background: "#ecfdf5", border: "1px solid #a7f3d0", display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ fontSize: 14, color: "#065f46", fontWeight: 600, flex: "1 1 220px" }}>
             See what a Full DD report looks like — no signup or credit required.
           </div>
@@ -415,7 +415,7 @@ export default function LandingPage() {
             See sample report →
           </a>
         </div>
-        <div id="pricing" style={{ padding: "72px 24px", backgroundColor: "#f8fafc" }}>
+        
         <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: "48px" }}>
             <h2 style={{ fontSize: "32px", fontWeight: 800, color: "#0f172a", margin: "0 0 12px 0", letterSpacing: "-0.02em" }}>Pricing</h2>
@@ -648,3 +648,5 @@ export default function LandingPage() {
     </div>
   );
 }
+
+
