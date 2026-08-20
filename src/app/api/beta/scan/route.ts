@@ -777,6 +777,23 @@ export async function POST(request: Request) {
           verdict: (combinedVerdict?.verdict || phase2?.analysis?.decision || null) as string | null,
           pakkaScore: phase2?.analysis?.pakkaScore ?? null,
           chainOfTitle: chainOfTitle,
+      publicSummary: {
+        riskFactors: (riskResult.riskFactors || []).slice(0, 8).map((f: any) => ({
+          label: String(f.label || "").slice(0, 220),
+          points: f.points,
+          category: f.category,
+        })),
+        valuation: valuationComparison
+          ? {
+              declaredPricePkr: valuationComparison.declaredPricePkr ?? null,
+              officialValuePkr: valuationComparison.officialValuePkr ?? null,
+              ratio: valuationComparison.ratio ?? null,
+              section111: valuationComparison.section111 ?? null,
+            }
+          : null,
+        missingProtections: (typeof clauseConcerns !== "undefined" && clauseConcerns?.missing ? clauseConcerns.missing : []).slice(0, 8).map((m: any) => String(m).slice(0, 160)),
+        clauseFlagCount: typeof clauseConcerns !== "undefined" && clauseConcerns?.flagged ? clauseConcerns.flagged.length : 0,
+      },
         });
       } catch (err: any) {
         console.warn("[beta/scan] snapshot persist failed:", err?.message || err);
