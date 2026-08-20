@@ -1111,17 +1111,7 @@ export default function ScanPage() {
             <div style={{ height: "16px" }} />
 
             {isMultiDoc && combinedVerdict ? (
-              <>
-                <CombinedVerdictHero combined={combinedVerdict} docCount={results?.documents?.length ?? 0} urduReasoning={urduTranslations["combinedReasoning"]} />
-                {riskScore !== null && riskLabel && (
-                  <RiskScoreCard riskScore={riskScore} riskLabel={riskLabel} riskFactors={riskFactors} scoreBreakdown={scoreBreakdown} />
-                )}
-                {results?.chainOfTitle && (
-                  <OwnershipTimeline result={results.chainOfTitle} tier={results.tier ?? undefined} />
-                )}
-                {crossDoc && <CrossDocPanel crossDoc={crossDoc} urduAssessment={urduTranslations["crossDocAssessment"]} />}
-                <NextStepsPanel steps={nextSteps} urduTranslations={urduTranslations} />
-              </>
+              <CombinedVerdictHero combined={combinedVerdict} docCount={results?.documents?.length ?? 0} urduReasoning={urduTranslations["combinedReasoning"]} />
             ) : isTemplateOrPartial && completeness ? (
               <>
                 <TemplateVerdictHero report={completeness} />
@@ -1129,26 +1119,29 @@ export default function ScanPage() {
                 {firstDoc?.smartFields && <ClausesDetectedPanel smartFields={firstDoc.smartFields} />}
               </>
             ) : (
-              <>
-                <VerdictHero verdict={verdict} posture={posture} pakkaScore={pakkaScore} urduHeadline={urduTranslations["verdictHeadline"]} />
-                {riskScore !== null && riskLabel && (
-                  <RiskScoreCard riskScore={riskScore} riskLabel={riskLabel} riskFactors={riskFactors} scoreBreakdown={scoreBreakdown} />
-                )}
-                {results?.chainOfTitle && (
-                  <OwnershipTimeline result={results.chainOfTitle} tier={results.tier ?? undefined} />
-                )}
-                <NextStepsPanel steps={nextSteps} urduTranslations={urduTranslations} />
-                {results.tier === "rental" && isMultiDoc && (
-                  <div style={{ marginTop: "20px", padding: "16px 20px", backgroundColor: "#fef3c7", border: "1px solid #fcd34d", borderRadius: "10px", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
-                    <div style={{ fontSize: "20px", flexShrink: 0 }}>&#128200;</div>
-                    <div style={{ flex: 1, minWidth: "200px" }}>
-                      <div style={{ fontSize: "14px", fontWeight: 800, color: "#78350f", marginBottom: "2px" }}>Cross-document analysis available on Bayana</div>
-                      <div style={{ fontSize: "12px", color: "#92400e", lineHeight: 1.5 }}>You uploaded {results?.documents?.length ?? 0} files. Upgrade to Bayana Safety Check to see how your documents match up, including seller CNIC verification against the Fard.</div>
-                    </div>
-                    <a href="/pricing" style={{ padding: "8px 16px", backgroundColor: "#0b132b", color: "#ffffff", fontWeight: 700, fontSize: "13px", borderRadius: "8px", textDecoration: "none", flexShrink: 0 }}>See plans</a>
-                  </div>
-                )}
-              </>
+              <VerdictHero verdict={verdict} posture={posture} pakkaScore={pakkaScore} urduHeadline={urduTranslations["verdictHeadline"]} />
+            )}
+
+            {/* Always show risk + chain when present (all tiers / multi-doc) */}
+            {riskScore !== null && riskLabel && (
+              <RiskScoreCard riskScore={riskScore} riskLabel={riskLabel} riskFactors={riskFactors} scoreBreakdown={scoreBreakdown} />
+            )}
+            {results?.chainOfTitle && (
+              <OwnershipTimeline result={results.chainOfTitle} tier={results.tier ?? undefined} />
+            )}
+            {crossDoc && <CrossDocPanel crossDoc={crossDoc} urduAssessment={urduTranslations["crossDocAssessment"]} />}
+            {!isTemplateOrPartial && (
+              <NextStepsPanel steps={nextSteps} urduTranslations={urduTranslations} />
+            )}
+            {results.tier === "rental" && isMultiDoc && (
+              <div style={{ marginTop: "20px", padding: "16px 20px", backgroundColor: "#fef3c7", border: "1px solid #fcd34d", borderRadius: "10px", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+                <div style={{ fontSize: "20px", flexShrink: 0 }}>&#128200;</div>
+                <div style={{ flex: 1, minWidth: "200px" }}>
+                  <div style={{ fontSize: "14px", fontWeight: 800, color: "#78350f", marginBottom: "2px" }}>Cross-document analysis available on Bayana</div>
+                  <div style={{ fontSize: "12px", color: "#92400e", lineHeight: 1.5 }}>You uploaded {results?.documents?.length ?? 0} files. Upgrade to Bayana Safety Check to see how your documents match up, including seller CNIC verification against the Fard.</div>
+                </div>
+                <a href="/pricing" style={{ padding: "8px 16px", backgroundColor: "#0b132b", color: "#ffffff", fontWeight: 700, fontSize: "13px", borderRadius: "8px", textDecoration: "none", flexShrink: 0 }}>See plans</a>
+              </div>
             )}
 
             {missing.length > 0 && (
