@@ -680,6 +680,11 @@ export async function POST(request: Request) {
     console.log(`[beta/scan] Risk: score=${riskResult.riskScore}/10 (${riskResult.riskLabel}), factors=${riskResult.riskFactors.length}, breakdown=${riskResult.scoreBreakdown}`);
 
 
+    
+    // Session 9: suspicious clauses from LLM smartFields
+    const clauseConcerns = extractClauseConcerns(_firstSmartFields);
+    riskResult = mergeRiskFactors(riskResult, clauseConcernsToRiskFactors(clauseConcerns));
+
     const rawPayload = {
       success: true,
       referenceCode: scanReferenceCode,
@@ -694,7 +699,7 @@ export async function POST(request: Request) {
       scoreBreakdown: riskResult.scoreBreakdown,
       chainOfTitle: chainOfTitle,
       valuationComparison: valuationComparison,
-      clauseConcerns: typeof clauseConcerns !== "undefined" ? clauseConcerns : null,
+      clauseConcerns,
       phase2: phase2 && {
         classification: phase2.classification,
         observations: phase2.observations,
@@ -756,3 +761,4 @@ function buildEvidenceFromExtracted(documentId: string, fields: any[], documentT
     warnings: [],
   }) as any;
 }
+

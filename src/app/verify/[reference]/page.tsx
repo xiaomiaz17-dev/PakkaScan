@@ -26,6 +26,7 @@ type VerifyResult =
       verdict?: string | null;
       pakkaScore?: number | null;
       chainOfTitle?: any;
+      hasPdfHash?: boolean;
     }
   | { status: "not_found" }
   | { status: "invalid" }
@@ -404,3 +405,4 @@ function MetaRow({ label, value, mono }: { label: string; value: string; mono?: 
     </div>
   );
 }
+
