@@ -614,6 +614,7 @@ export async function POST(request: Request) {
           ...temporal.map((v) => v.message),
         ];
         (chainOfTitle as any).temporalViolations = temporal;
+        console.log(`[beta/scan] Chain of Title: events=${chainOfTitle.timeline.length}, gaps=${chainOfTitle.gaps.length}, conflicts=${chainOfTitle.conflicts.length}, entities=${chainOfTitle.entities.length}, temporal=${temporal.length}`);
       }
     } catch (err: any) {
       console.warn("[beta/scan] chain of title failed:", err?.message || err);

@@ -1113,6 +1113,12 @@ export default function ScanPage() {
             {isMultiDoc && combinedVerdict ? (
               <>
                 <CombinedVerdictHero combined={combinedVerdict} docCount={results?.documents?.length ?? 0} urduReasoning={urduTranslations["combinedReasoning"]} />
+                {riskScore !== null && riskLabel && (
+                  <RiskScoreCard riskScore={riskScore} riskLabel={riskLabel} riskFactors={riskFactors} scoreBreakdown={scoreBreakdown} />
+                )}
+                {results?.chainOfTitle && (
+                  <OwnershipTimeline result={results.chainOfTitle} tier={results.tier ?? undefined} />
+                )}
                 {crossDoc && <CrossDocPanel crossDoc={crossDoc} urduAssessment={urduTranslations["crossDocAssessment"]} />}
                 <NextStepsPanel steps={nextSteps} urduTranslations={urduTranslations} />
               </>
