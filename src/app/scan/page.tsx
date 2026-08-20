@@ -1,4 +1,5 @@
-﻿"use client";
+﻿import { ValuationComparisonCard } from "@/components/ValuationComparisonCard";
+"use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Fraunces, Noto_Nastaliq_Urdu } from "next/font/google";
@@ -1127,6 +1128,7 @@ export default function ScanPage() {
             {riskScore !== null && riskLabel && (
               <RiskScoreCard riskScore={riskScore} riskLabel={riskLabel} riskFactors={riskFactors} scoreBreakdown={scoreBreakdown} />
             )}
+            <ValuationComparisonCard data={results?.valuationComparison} />
             {results?.chainOfTitle && (
               <OwnershipTimeline result={results.chainOfTitle} tier={results.tier ?? undefined} />
             )}
@@ -1356,3 +1358,4 @@ export default function ScanPage() {
     </div>
   );
 }
+
