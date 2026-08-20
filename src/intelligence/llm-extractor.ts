@@ -1,4 +1,4 @@
-/**
+﻿/**
  * LLM-based structured extractor.
  *
  * After OCR extracts raw text, this asks Gemini to intelligently identify
@@ -26,7 +26,7 @@ export type SmartFields = {
   dates?: any;
   legal?: any;
   clauses?: any;
-  suspicious_clauses?: Array<{ clause: string; concern: string }>;
+  suspicious_clauses?: Array<{ clause: string; concern: string; severity?: string; quote?: string }>;
   date_anomalies?: Array<{ anomaly: string; explanation: string }>;
   summary?: string;
   extractionEngine?: string;
@@ -77,14 +77,11 @@ RULES:
 
 7. HANDWRITTEN or URDU DOCS: Use context clues to identify roles. Common role indicators include: S/o, D/o, W/o for son/daughter/wife of; malik or malkiat for owner; mustajir or kirayadar for tenant; baye or vendor for seller; mushtari or vendee for buyer. When a role is truly unclear, put the party in additional_parties with role "unknown" - but still include their name and other visible details.
 
-8. SUSPICIOUS CLAUSES: Flag any unusual, one-sided, or potentially harmful clauses you notice. Examples include:
-   - Seller can cancel without penalty or refund
-   - Buyer waives right to refund of token/deposit
-   - Property sold "as-is" with no inspection right
-   - Unusually short deadline for balance payment
-   - Power of Attorney used without clear justification
-   - Any clause that disproportionately favours one party
-   Add these to a "suspicious_clauses" array in the output with a brief explanation of why each is concerning.
+8. SUSPICIOUS CLAUSES (ALWAYS INCLUDE THE KEY): Always return a top-level "suspicious_clauses" array.
+   - If you find any unusual, one-sided, or harmful wording, add objects: { "clause": "short quote or close paraphrase from the text", "concern": "plain-English why this hurts the buyer/tenant", "severity": "critical|high|medium" }.
+   - Examples to flag: seller cancels without refund; token/deposit forfeited only by buyer; sold "as-is" with no inspection; balance due in an unreasonably short time; general/unregistered POA; one-sided termination; blank consideration.
+   - If nothing concerning is present, return "suspicious_clauses": [] (empty array). Do NOT omit the key.
+   - Also return "missing_standard_clauses" inside "clauses" (or top-level if no clauses object) as a string array of standard protections that are ABSENT. Use [] if none are missing.
 
 9. OMIT ONLY WHEN TRULY ABSENT: If a field is genuinely not present in the text, omit it. But err on the side of extraction - if information IS in the text, include it.
 
