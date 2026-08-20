@@ -693,6 +693,7 @@ export default function ScanPage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [currentStageIndex, setCurrentStageIndex] = useState(-1);
   const [results, setResults] = useState<BackendResponse | null>(null);
+  const [pdfHashForCopy, setPdfHashForCopy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [isDocsExpanded, setIsDocsExpanded] = useState(false);
@@ -1298,6 +1299,8 @@ export default function ScanPage() {
                           body: JSON.stringify(payload),
                         });
                         if (!res.ok) throw new Error("PDF generation failed");
+                        const hdr = res.headers.get("X-PakkaScan-Pdf-Hash") || res.headers.get("x-pakkascan-pdf-hash");
+                        if (hdr && /^[a-f0-9]{64}$/i.test(hdr)) setPdfHashForCopy(hdr.toLowerCase());
                         const blob = await res.blob();
                         const url = URL.createObjectURL(blob);
                         const a = document.createElement("a");
@@ -1328,6 +1331,19 @@ export default function ScanPage() {
                   >
                     Download PDF Passport
                   </button>
+                  {pdfHashForCopy && (
+                    <div style={{ marginTop: 10, padding: "10px 12px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: 12, maxWidth: 420 }}>
+                      <div style={{ fontWeight: 700, color: "#0f172a", marginBottom: 4 }}>PDF authenticity hash</div>
+                      <div style={{ fontFamily: "monospace", wordBreak: "break-all", color: "#334155", marginBottom: 8 }}>{pdfHashForCopy}</div>
+                      <button
+                        type="button"
+                        onClick={() => { void navigator.clipboard.writeText(pdfHashForCopy); }}
+                        style={{ padding: "6px 12px", borderRadius: 6, border: "1px solid #cbd5e1", background: "#fff", fontWeight: 700, cursor: "pointer", fontSize: 12 }}
+                      >
+                        Copy hash for verify page
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -1376,6 +1392,7 @@ export default function ScanPage() {
     </div>
   );
 }
+
 
 
 

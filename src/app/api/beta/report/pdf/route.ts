@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "crypto";
 import { renderPassportPdf, type PassportData } from "@/reporting/pdf-passport";
 import { updatePdfHash } from "@/commercial/billing/session8-store";
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="${filename}"`,
         "Cache-Control": "no-store",
-        "X-PakkaScan-Pdf-Hash": pdfHash,
+        "X-PakkaScan-Pdf-Hash": pdfHash,`r`n      "Access-Control-Expose-Headers": "X-PakkaScan-Pdf-Hash, X-PakkaScan-Pdf-Hash-Alg",
         "X-PakkaScan-Pdf-Hash-Alg": "sha256",
       },
     });
@@ -77,3 +77,4 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
