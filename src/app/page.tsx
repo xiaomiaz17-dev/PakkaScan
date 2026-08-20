@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import { Fraunces } from "next/font/google";
@@ -27,7 +27,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Is PakkaScan a substitute for a lawyer?",
-    a: "No. PakkaScan is an assistive tool — not a licensed lawyer or certified legal counsel. For very high-value transactions, always confirm your paperwork with a qualified lawyer and directly with the relevant authority (NADRA, Sub-Registrar, Patwari). PakkaScan helps you know when your papers look clean, and when you need a second opinion.",
+    a: "No. PakkaScan is an assistive tool â€” not a licensed lawyer or certified legal counsel. For very high-value transactions, always confirm your paperwork with a qualified lawyer and directly with the relevant authority (NADRA, Sub-Registrar, Patwari). PakkaScan helps you know when your papers look clean, and when you need a second opinion.",
   },
   {
     q: "What documents can PakkaScan read?",
@@ -35,7 +35,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "What if PakkaScan misses something?",
-    a: "PakkaScan flags what it finds AND what it can't verify. If a critical field is missing (like a CNIC that was fabricated by the AI or a document too blurry to read), PakkaScan tells you clearly and adds it to the 'What To Do Next' checklist. When in doubt, message us on WhatsApp — a real person will help.",
+    a: "PakkaScan flags what it finds AND what it can't verify. If a critical field is missing (like a CNIC that was fabricated by the AI or a document too blurry to read), PakkaScan tells you clearly and adds it to the 'What To Do Next' checklist. When in doubt, message us on WhatsApp â€” a real person will help.",
   },
   {
     q: "What about my privacy?",
@@ -121,6 +121,7 @@ function Footer() {
           <div>
             <div style={{ fontSize: "12px", fontWeight: 800, color: "#ffffff", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "12px" }}>Product</div>
             <a href="/scan" style={footerLinkStyle}>Scan a Document</a>
+              <a href="/sample-report" style={footerLinkStyle}>Sample Report</a>
             <a href="/sample-report" style={footerLinkStyle}>See a Sample Report</a>
             <a href="/#pricing" style={footerLinkStyle}>Pricing</a>
             <a href="/#how-it-works" style={footerLinkStyle}>How it Works</a>
@@ -256,7 +257,7 @@ function PricingCta({
     return <a href="/login" style={cardBtnStyle}>Sign in to Buy</a>;
   }
 
-  // PAID MODE: signed in — show BOTH buttons (Raast disabled, Card active)
+  // PAID MODE: signed in â€” show BOTH buttons (Raast disabled, Card active)
   async function handleCardClick() {
     setLoading(true);
     try {
@@ -405,7 +406,16 @@ export default function LandingPage() {
       </section>
 
       {/* PRICING */}
-      <section id="pricing" style={{ padding: "72px 24px", backgroundColor: "#f8fafc" }}>
+      <section id="sample-cta-anchor" />
+        <div style={{ maxWidth: 900, margin: "0 auto 28px", padding: "16px 20px", borderRadius: 12, background: "#ecfdf5", border: "1px solid #a7f3d0", display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ fontSize: 14, color: "#065f46", fontWeight: 600, flex: "1 1 220px" }}>
+            See what a Full DD report looks like — no signup or credit required.
+          </div>
+          <a href="/sample-report" style={{ padding: "10px 16px", borderRadius: 8, background: "#0d9488", color: "#fff", fontWeight: 800, fontSize: 13, textDecoration: "none", whiteSpace: "nowrap" }}>
+            See sample report →
+          </a>
+        </div>
+        <div id="pricing" style={{ padding: "72px 24px", backgroundColor: "#f8fafc" }}>
         <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: "48px" }}>
             <h2 style={{ fontSize: "32px", fontWeight: 800, color: "#0f172a", margin: "0 0 12px 0", letterSpacing: "-0.02em" }}>Pricing</h2>
@@ -463,12 +473,12 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* COMPARISON TABLE — anchor value vs traditional lawyer */}
+      {/* COMPARISON TABLE â€” anchor value vs traditional lawyer */}
       <section style={{ padding: "72px 24px", backgroundColor: "#ffffff" }}>
         <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: "40px" }}>
             <h2 style={{ fontSize: "32px", fontWeight: 800, color: "#0f172a", margin: "0 0 12px 0", letterSpacing: "-0.02em" }}>Why not just hire a lawyer?</h2>
-            <p style={{ fontSize: "15px", color: "#64748b", margin: 0, maxWidth: "600px", marginLeft: "auto", marginRight: "auto" }}>You should — for the big stuff. But most property checks don&rsquo;t need a Rs 50,000 retainer.</p>
+            <p style={{ fontSize: "15px", color: "#64748b", margin: 0, maxWidth: "600px", marginLeft: "auto", marginRight: "auto" }}>You should â€” for the big stuff. But most property checks don&rsquo;t need a Rs 50,000 retainer.</p>
           </div>
 
           <div style={{ overflowX: "auto", border: "1px solid #e2e8f0", borderRadius: "12px" }}>
@@ -532,13 +542,13 @@ export default function LandingPage() {
       <section style={{ padding: "64px 24px", backgroundColor: "#ffffff" }}>
         <div style={{ maxWidth: "1000px", margin: "0 auto", textAlign: "center" }}>
           <h2 style={{ fontSize: "24px", fontWeight: 800, color: "#0f172a", margin: "0 0 12px 0", letterSpacing: "-0.02em" }}>What We Scan</h2>
-          <p style={{ fontSize: "14px", color: "#64748b", margin: "0 0 32px 0" }}>All Pakistani property documents supported. Auto-detected — no need to sort first.</p>
+          <p style={{ fontSize: "14px", color: "#64748b", margin: "0 0 32px 0" }}>All Pakistani property documents supported. Auto-detected â€” no need to sort first.</p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", justifyContent: "center" }}>
             {["Bayana / Agreement to Sell", "Registered Sale Deed", "Tenancy Agreement", "CNIC / NICOP / POC", "Fard (Ownership)", "Mutation (Sale)", "Mutation (Gift)", "Mutation (Mortgage)", "Mutation (Inheritance)", "Power of Attorney", "Gift Deed (Hiba)", "Non-Encumbrance Certificate"].map((doc, i) => (
               <div key={i} style={{ padding: "10px 16px", backgroundColor: "#f0fdf4", color: "#166534", fontSize: "13px", fontWeight: 600, border: "1px solid #bbf7d0", borderRadius: "8px" }}>{doc}</div>
             ))}
           </div>
-          <p style={{ fontSize: "13px", color: "#64748b", marginTop: "20px" }}>Have a different document? Upload it anyway — our auto-detection engine will parse and highlight key terms.</p>
+          <p style={{ fontSize: "13px", color: "#64748b", marginTop: "20px" }}>Have a different document? Upload it anyway â€” our auto-detection engine will parse and highlight key terms.</p>
         </div>
       </section>
 
