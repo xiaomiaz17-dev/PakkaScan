@@ -1299,7 +1299,7 @@ export default function ScanPage() {
                           body: JSON.stringify(payload),
                         });
                         if (!res.ok) throw new Error("PDF generation failed");
-                        const hdr = res.headers.get("X-PakkaScan-Pdf-Hash") || res.headers.get("x-pakkascan-pdf-hash");
+                        let hdr = res.headers.get("X-PakkaScan-Pdf-Hash") || res.headers.get("x-pakkascan-pdf-hash") || res.headers.get("ETag") || res.headers.get("etag"); if (hdr) hdr = hdr.replace(/"/g, "").trim();
                         if (hdr && /^[a-f0-9]{64}$/i.test(hdr)) setPdfHashForCopy(hdr.toLowerCase());
                         const blob = await res.blob();
                         const url = URL.createObjectURL(blob);
@@ -1392,6 +1392,7 @@ export default function ScanPage() {
     </div>
   );
 }
+
 
 
 
