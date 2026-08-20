@@ -7,6 +7,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { getCnicDistrict } from "@/intelligence/cnic-districts";
 import WhatsAppFAB from "@/components/WhatsAppFAB";
 import WhatsAppShareButton from "@/components/WhatsAppShareButton";
+import OwnershipTimeline from "@/components/OwnershipTimeline";
 
 type SessionUser = { email: string; name: string | null };
 
@@ -139,6 +140,7 @@ type BackendResponse = {
   riskLabel?: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
   riskFactors?: Array<{ label: string; points: number; category: string }>;
   scoreBreakdown?: string;
+  chainOfTitle?: any;
   phase2?: {
     result?: { decision?: string; pakkaScore?: number; findings?: any[]; blockers?: number };
     posture?: string;
@@ -1125,6 +1127,9 @@ export default function ScanPage() {
                 <VerdictHero verdict={verdict} posture={posture} pakkaScore={pakkaScore} urduHeadline={urduTranslations["verdictHeadline"]} />
                 {riskScore !== null && riskLabel && (
                   <RiskScoreCard riskScore={riskScore} riskLabel={riskLabel} riskFactors={riskFactors} scoreBreakdown={scoreBreakdown} />
+                )}
+                {results?.chainOfTitle && (
+                  <OwnershipTimeline result={results.chainOfTitle} tier={results.tier ?? undefined} />
                 )}
                 <NextStepsPanel steps={nextSteps} urduTranslations={urduTranslations} />
                 {results.tier === "rental" && isMultiDoc && (

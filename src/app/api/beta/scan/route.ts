@@ -18,6 +18,8 @@ import { getUnusedEntitlements, consumeEntitlement, recordScanUsage } from "@/co
 import { sendScanReportEmail } from "@/lib/email";
 import type { ReportType } from "@/commercial/billing/reports";
 import { computeRiskFactors } from "@/intelligence/risk-scorer";
+import { buildOwnershipTimeline } from "@/intelligence/chain-of-title";
+import { validateTemporalRules } from "@/intelligence/temporal-validator";
 
 const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
 const ALLOWED_TYPES = new Set([
@@ -592,7 +594,35 @@ export async function POST(request: Request) {
     console.log(`[timing] SCAN_TOTAL: ${Date.now() - _t_scan_total}ms`);
 
     // --- Risk Score computation (Session 4) ---
-    const _findingsStr = stringifyFindings(phase2?.analysis?.findings);
+    // --- Chain of Title (Sessions 3-5) ---
+    let chainOfTitle: ReturnType<typeof buildOwnershipTimeline> | null = null;
+    let chainFindings: string[] = [];
+    try {
+      const chainDocs = perDocument
+        .filter((d: any) => d.status === "ok" && d.smartFields && !d.smartFields.extractionError)
+        .map((d: any) => ({
+          documentId: d.documentId,
+          documentType: d.classification?.documentType || "UNKNOWN",
+          fileName: d.fileName,
+          smartFields: d.smartFields,
+        }));
+      if (chainDocs.length > 0) {
+        chainOfTitle = buildOwnershipTimeline(chainDocs);
+        const temporal = validateTemporalRules(chainOfTitle.timeline, chainDocs);
+        chainFindings = [
+          ...chainOfTitle.findings,
+          ...temporal.map((v) => v.message),
+        ];
+        (chainOfTitle as any).temporalViolations = temporal;
+      }
+    } catch (err: any) {
+      console.warn("[beta/scan] chain of title failed:", err?.message || err);
+    }
+
+    const _findingsStr = [
+      ...stringifyFindings(phase2?.analysis?.findings),
+      ...chainFindings,
+    ];
     const _missingStr  = stringifyMissing(phase2?.missingEvidence);
     const _firstSmartFields = perDocument.find((d: any) => d.status === "ok" && d.smartFields && !d.smartFields.extractionError)?.smartFields ?? null;
     const riskResult = computeRiskFactors({
@@ -616,6 +646,7 @@ export async function POST(request: Request) {
       riskFactors: riskResult.riskFactors,
       riskLabel: riskResult.riskLabel,
       scoreBreakdown: riskResult.scoreBreakdown,
+      chainOfTitle: chainOfTitle,
       phase2: phase2 && {
         classification: phase2.classification,
         observations: phase2.observations,
