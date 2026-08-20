@@ -19,6 +19,13 @@ export type PassportRiskFactor = {
   category: string;
 };
 
+export type PassportValuation = {
+  declaredPricePkr?: number | null;
+  officialValuePkr?: number | null;
+  ratio?: number | null;
+  matchLabel?: string | null;
+};
+
 export type PassportData = {
   referenceCode: string;
   scannedAt: string;
@@ -31,6 +38,7 @@ export type PassportData = {
   pakkaScore: number | null;
   keyFacts?: Array<{ label: string; value: string }>;
   verifyUrl: string;
+  valuation?: PassportValuation | null;
 };
 
 const styles = StyleSheet.create({
@@ -117,7 +125,27 @@ const styles = StyleSheet.create({
     fontSize: 8,
     color: "#94a3b8",
   },
-  disclaimer: { fontSize: 7, color: "#94a3b8", marginTop: 16, lineHeight: 1.4 },
+  valBox: {
+    marginTop: 10,
+    padding: 10,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "#fecaca",
+    backgroundColor: "#fef2f2",
+  },
+  valTitle: {
+    fontSize: 9,
+    fontFamily: "Helvetica-Bold",
+    color: "#7f1d1d",
+    marginBottom: 6,
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
+  },
+  valRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 4 },
+  valLabel: { fontSize: 9, color: "#64748b" },
+  valValue: { fontSize: 10, fontFamily: "Helvetica-Bold", color: "#0f172a" },
+  valRatio: { fontSize: 9, fontFamily: "Helvetica-Bold", marginTop: 4 },
+    disclaimer: { fontSize: 7, color: "#94a3b8", marginTop: 16, lineHeight: 1.4 },
 });
 
 function riskColors(label: string): { bg: string; text: string } {
@@ -231,6 +259,66 @@ function PassportDocument({ data, qrDataUrl }: { data: PassportData; qrDataUrl: 
           ? React.createElement(Text, { style: styles.verdictSub }, `PakkaScore: ${data.pakkaScore}/100`)
           : null
       ),
+
+      // Official valuation (Session 7)
+      data.valuation && data.valuation.officialValuePkr
+        ? React.createElement(
+            View,
+            { style: styles.valBox },
+            React.createElement(Text, { style: styles.valTitle }, "Official Valuation Check (DC / FBR)"),
+            React.createElement(
+              View,
+              { style: styles.valRow },
+              React.createElement(Text, { style: styles.valLabel }, "Declared price"),
+              React.createElement(
+                Text,
+                { style: styles.valValue },
+                `PKR ${Math.round(Number(data.valuation.declaredPricePkr || 0)).toLocaleString("en-PK")}`
+              )
+            ),
+            React.createElement(
+              View,
+              { style: styles.valRow },
+              React.createElement(Text, { style: styles.valLabel }, "Official benchmark"),
+              React.createElement(
+                Text,
+                { style: styles.valValue },
+                `PKR ${Math.round(Number(data.valuation.officialValuePkr)).toLocaleString("en-PK")}`
+              )
+            ),
+            data.valuation.ratio != null
+              ? React.createElement(
+                  Text,
+                  {
+                    style: [
+                      styles.valRatio,
+                      {
+                        color:
+                          Number(data.valuation.ratio) < 0.5
+                            ? "#7f1d1d"
+                            : Number(data.valuation.ratio) < 0.8
+                              ? "#92400e"
+                              : "#065f46",
+                      },
+                    ],
+                  },
+                  `Ratio: ${(Number(data.valuation.ratio) * 100).toFixed(0)}% of benchmark` +
+                    (Number(data.valuation.ratio) < 0.5
+                      ? " — severe Section 111 exposure"
+                      : Number(data.valuation.ratio) < 0.8
+                        ? " — mild under-declaration"
+                        : " — within normal range")
+                )
+              : null,
+            data.valuation.matchLabel
+              ? React.createElement(
+                  Text,
+                  { style: { fontSize: 8, color: "#64748b", marginTop: 4 } },
+                  data.valuation.matchLabel
+                )
+              : null
+          )
+        : null,
 
       // Key Facts
       data.keyFacts && data.keyFacts.length > 0

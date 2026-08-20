@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Fraunces, Noto_Nastaliq_Urdu } from "next/font/google";
@@ -139,6 +139,7 @@ type BackendResponse = {
   riskScore?: number;
   riskLabel?: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
   riskFactors?: Array<{ label: string; points: number; category: string }>;
+  valuationComparison?: any;
   scoreBreakdown?: string;
   chainOfTitle?: any;
   phase2?: {
@@ -152,11 +153,11 @@ type BackendResponse = {
 };
 
 const URDU_VERDICT_LABELS: Record<string, string> = {
-  "PROCEED": "آگے بڑھیں",
-  "PROCEED WITH CAUTION": "احتیاط سے آگے بڑھیں",
-  "DO NOT PROCEED": "آگے نہ بڑھیں",
-  "BLANK OR TEMPLATE": "خالی یا نمونہ",
-  "INCOMPLETE DOCUMENT": "نامکمل دستاویز",
+  "PROCEED": "Ø¢Ú¯Û’ Ø¨Ú‘Ú¾ÛŒÚº",
+  "PROCEED WITH CAUTION": "Ø§Ø­ØªÛŒØ§Ø· Ø³Û’ Ø¢Ú¯Û’ Ø¨Ú‘Ú¾ÛŒÚº",
+  "DO NOT PROCEED": "Ø¢Ú¯Û’ Ù†Û Ø¨Ú‘Ú¾ÛŒÚº",
+  "BLANK OR TEMPLATE": "Ø®Ø§Ù„ÛŒ ÛŒØ§ Ù†Ù…ÙˆÙ†Û",
+  "INCOMPLETE DOCUMENT": "Ù†Ø§Ù…Ú©Ù…Ù„ Ø¯Ø³ØªØ§ÙˆÛŒØ²",
 };
 
 function urduLabelFor(englishLabel: string): string | null {
@@ -1125,6 +1126,7 @@ export default function ScanPage() {
             {/* Always show risk + chain when present (all tiers / multi-doc) */}
             {riskScore !== null && riskLabel && (
               <RiskScoreCard riskScore={riskScore} riskLabel={riskLabel} riskFactors={riskFactors} scoreBreakdown={scoreBreakdown} />
+              <ValuationComparisonCard data={results?.valuationComparison} />
             )}
             {results?.chainOfTitle && (
               <OwnershipTimeline result={results.chainOfTitle} tier={results.tier ?? undefined} />
@@ -1268,6 +1270,7 @@ export default function ScanPage() {
                           verdict: verdict || "REVIEW",
                           pakkaScore: pakkaScore,
                           verifyUrl: `https://www.pakkascan.com/verify/${results.referenceCode}`,
+                          valuationComparison: results.valuationComparison || null,
                           keyFacts: [],
                         };
                         const res = await fetch("/api/beta/report/pdf", {

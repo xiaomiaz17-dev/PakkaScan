@@ -10,6 +10,23 @@ export async function POST(req: NextRequest) {
     if (!body || typeof body !== "object") {
       return NextResponse.json({ error: "invalid_body" }, { status: 400 });
     }
+
+    let valuation: PassportData["valuation"] = null;
+    if (body.valuationComparison?.officialValuePkr || body.valuation?.officialValuePkr) {
+      const v = body.valuationComparison || body.valuation;
+      const match = v.match;
+      const matchLabel = match
+        ? [match.city, match.area, match.phase_or_block].filter(Boolean).join(" / ") +
+          (v.confidence ? ` (${v.confidence})` : "")
+        : v.matchLabel || null;
+      valuation = {
+        declaredPricePkr: v.declaredPricePkr ?? null,
+        officialValuePkr: v.officialValuePkr ?? null,
+        ratio: v.ratio ?? null,
+        matchLabel,
+      };
+    }
+
     const data: PassportData = {
       referenceCode: String(body.referenceCode || "PKS-UNKNOWN"),
       scannedAt: String(body.scannedAt || new Date().toISOString()),
@@ -24,6 +41,7 @@ export async function POST(req: NextRequest) {
       pakkaScore: body.pakkaScore != null ? Number(body.pakkaScore) : null,
       keyFacts: Array.isArray(body.keyFacts) ? body.keyFacts : undefined,
       verifyUrl: String(body.verifyUrl || `https://www.pakkascan.com/verify/${body.referenceCode || ""}`),
+      valuation,
     };
     const pdfBuffer = await renderPassportPdf(data);
     const filename = `PakkaScan-Passport-${data.referenceCode}.pdf`;
@@ -37,6 +55,9 @@ export async function POST(req: NextRequest) {
     });
   } catch (err: any) {
     console.error("[pdf-passport] render failed:", err?.message || err);
-    return NextResponse.json({ error: "pdf_render_failed", detail: err?.message || "unknown" }, { status: 500 });
+    return NextResponse.json(
+      { error: "pdf_render_failed", detail: err?.message || "unknown" },
+      { status: 500 }
+    );
   }
 }
