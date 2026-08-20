@@ -683,7 +683,7 @@ export async function POST(request: Request) {
     
     // Session 9: suspicious clauses from LLM smartFields
     const clauseConcerns = extractClauseConcerns(_firstSmartFields);
-    console.log([beta/scan] clauses: suspicious=${clauseConcerns.flagged.length} missing=${clauseConcerns.missing.length});
+    console.log(`[beta/scan] clauses: suspicious=${clauseConcerns.flagged.length} missing=${clauseConcerns.missing.length}`);
     riskResult = mergeRiskFactors(riskResult, clauseConcernsToRiskFactors(clauseConcerns));
 
     const rawPayload = {
