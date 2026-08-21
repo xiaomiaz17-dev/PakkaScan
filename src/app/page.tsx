@@ -136,6 +136,7 @@ function Footer() {
             <div style={{ fontSize: "12px", fontWeight: 800, color: "#ffffff", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "12px" }}>Legal</div>
             <a href="/terms" style={footerLinkStyle}>Terms of Service</a>
             <a href="/privacy" style={footerLinkStyle}>Privacy Policy</a>
+          <a href="/limitations" style={footerLinkStyle}>Limitations</a>
           </div>
           <div>
             <div style={{ fontSize: "12px", fontWeight: 800, color: "#ffffff", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "12px" }}>Support</div>
