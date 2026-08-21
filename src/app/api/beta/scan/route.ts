@@ -1,3 +1,67 @@
+/** Never return a high PakkaScore next to CRITICAL / DO_NOT_PROCEED. */
+function clampPakkaScoreForRisk(
+  score: number | null | undefined,
+  riskLabel: string | null | undefined,
+  verdict?: string | null
+): number {
+  let s = Number(score ?? 0);
+  if (!Number.isFinite(s)) s = 0;
+  const v = (verdict || "").toUpperCase();
+  const hard =
+    riskLabel === "CRITICAL" ||
+    v === "DO_NOT_PROCEED" ||
+    v === "STOP" ||
+    v === "BLOCKED" ||
+    v === "REJECT";
+  if (hard) return Math.min(s, 35);
+  if (riskLabel === "HIGH") return Math.min(s, 55);
+  return s;
+}
+
+function filterMissingEvidenceAgainstSmartFields(
+  missing: any,
+  smartFields: any
+): any {
+  if (!missing) return missing;
+  const parties = smartFields?.parties || {};
+  const hasCnic =
+    String(parties.landlord?.cnic || parties.tenant?.cnic || parties.seller?.cnic || "")
+      .replace(/[^0-9]/g, "").length >= 13;
+  const hasNames = !!(
+    parties.landlord?.name ||
+    parties.tenant?.name ||
+    parties.seller?.name
+  );
+  const hasTerm = !!(
+    smartFields?.dates?.start_date ||
+    smartFields?.dates?.end_date ||
+    smartFields?.dates?.duration_months
+  );
+
+  const drop = (item: any): boolean => {
+    const text = String(
+      typeof item === "string" ? item : item?.label || item?.code || item?.message || ""
+    ).toLowerCase();
+    if (hasCnic && text.includes("cnic")) return true;
+    if (hasNames && (text.includes("identity") || text.includes("party name") || text.includes("party names")))
+      return true;
+    if (hasTerm && (text.includes("term") || text.includes("duration"))) return true;
+    return false;
+  };
+
+  if (Array.isArray(missing)) {
+    return missing.filter((m) => !drop(m));
+  }
+  if (typeof missing === "object") {
+    const out = { ...missing };
+    if (Array.isArray(out.missing)) out.missing = out.missing.filter((m: any) => !drop(m));
+    if (Array.isArray(out.items)) out.items = out.items.filter((m: any) => !drop(m));
+    if (Array.isArray(out.fields)) out.fields = out.fields.filter((m: any) => !drop(m));
+    return out;
+  }
+  return missing;
+}
+
 import { NextResponse } from "next/server";
 import { runOcr } from "@/intelligence/ocr-router";
 import { classifyFromText } from "@/intelligence/document-classifier";
@@ -685,6 +749,28 @@ export async function POST(request: Request) {
     }
 
     console.log(`[beta/scan] Risk: score=${riskResult.riskScore}/10 (${riskResult.riskLabel}), factors=${riskResult.riskFactors.length}, breakdown=${riskResult.scoreBreakdown}`);
+    // ALIGN: clamp phase2 pakkaScore for API + UI consistency
+    const _alignVerdict =
+      combinedVerdict?.verdict ||
+      phase2?.analysis?.decision ||
+      "";
+    const _rawPakka = phase2?.analysis?.pakkaScore ?? 0;
+    const alignedPakkaScore = clampPakkaScoreForRisk(
+      _rawPakka,
+      riskResult.riskLabel,
+      _alignVerdict
+    );
+    if (phase2?.analysis) (phase2.analysis as any).pakkaScore = alignedPakkaScore;
+    // ALIGN: drop missingEvidence that contradicts smartFields
+    const _sfAlign =
+      _firstSmartFields ||
+      perDocument?.find((d: any) => d.status === "ok" && d.smartFields)?.smartFields;
+    if (phase2?.missingEvidence) {
+      phase2.missingEvidence = filterMissingEvidenceAgainstSmartFields(
+        phase2.missingEvidence,
+        _sfAlign
+      );
+    }
 
 
     
@@ -781,7 +867,7 @@ export async function POST(request: Request) {
           riskLabel: riskResult.riskLabel,
           scoreBreakdown: riskResult.scoreBreakdown,
           verdict: (combinedVerdict?.verdict || phase2?.analysis?.decision || null) as string | null,
-          pakkaScore: phase2?.analysis?.pakkaScore ?? null,
+          pakkaScore: typeof alignedPakkaScore === "number" ? alignedPakkaScore : (phase2?.analysis?.pakkaScore ?? null),
           chainOfTitle: chainOfTitle,
       publicSummary: {
         riskFactors: (riskResult.riskFactors || []).slice(0, 8).map((f: any) => ({
