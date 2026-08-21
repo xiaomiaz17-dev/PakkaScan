@@ -13,16 +13,29 @@ import {
 
 export const runtime = "nodejs";
 
-/**
- * POST /api/admin/grant-entitlement
- * Header: x-admin-grant-secret: <ADMIN_GRANT_SECRET>
- * Body: { "email": "user@...", "reportType": "bayana"|"rental"|"full_dd", "note": "txn id" }
- *
- * Customer must Sign in once first (users row required).
- */
+function extractSecret(req: NextRequest): string | null {
+  const header = req.headers.get("x-admin-grant-secret");
+  if (header && header.trim()) return header.trim();
+  const auth = req.headers.get("authorization");
+  if (auth && auth.toLowerCase().startsWith("bearer ")) {
+    return auth.slice(7).trim();
+  }
+  return null;
+}
+
 export async function POST(req: NextRequest) {
-  const secret = process.env.ADMIN_GRANT_SECRET;
-  if (!secret || req.headers.get("x-admin-grant-secret") !== secret) {
+  const expected = (process.env.ADMIN_GRANT_SECRET || "").trim();
+  const provided = extractSecret(req);
+
+  if (!expected) {
+    console.error("[admin/grant-entitlement] ADMIN_GRANT_SECRET is not set on this deployment");
+    return NextResponse.json(
+      { error: "server_misconfigured", message: "ADMIN_GRANT_SECRET missing" },
+      { status: 500 }
+    );
+  }
+
+  if (!provided || provided !== expected) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
