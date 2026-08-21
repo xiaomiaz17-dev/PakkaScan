@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useMemo, Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -80,7 +80,7 @@ function RaastInner() {
         ← Back to pricing
       </Link>
       <h1 style={{ fontSize: 24, fontWeight: 800, margin: "16px 0 8px" }}>
-        Pay with Raast / bank transfer
+        Pay with Raast / JazzCash
       </h1>
       <p style={{ color: "#64748b", margin: "0 0 16px", lineHeight: 1.5 }}>
         Pay the exact amount below, then WhatsApp proof with your <strong>login email</strong>.
@@ -116,7 +116,7 @@ function RaastInner() {
         <div style={{ textAlign: "center", marginTop: 16 }}>
           <img src={qrUrl} alt="Payment QR" width={200} height={200}
             style={{ maxWidth: "100%", border: "1px solid #e2e8f0", borderRadius: 8 }} />
-          <div style={{ fontSize: 12, color: "#64748b", marginTop: 8 }}>QR opens this payment page</div>
+          <div style={{ fontSize: 12, color: "#64748b", marginTop: 8 }}>Scan to open this page, or pay via JazzCash / any Raast bank app</div>
         </div>
       </div>
 
