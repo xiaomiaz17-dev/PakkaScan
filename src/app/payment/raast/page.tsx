@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useMemo, Suspense } from "react";
+import { useMemo, Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
@@ -9,6 +9,49 @@ const TIERS: Record<string, { label: string; pricePkr: number; reportType: strin
   bayana: { label: "Bayana Safety Check", pricePkr: 1499, reportType: "bayana" },
   full_dd: { label: "Full Property Due Diligence", pricePkr: 2999, reportType: "full_dd" },
 };
+
+function CopyBtn({ text }: { text: string }) {
+  const [done, setDone] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText(text);
+          setDone(true);
+          setTimeout(() => setDone(false), 2000);
+        } catch { /* ignore */ }
+      }}
+      style={{
+        marginLeft: 8,
+        padding: "4px 10px",
+        fontSize: 12,
+        fontWeight: 700,
+        borderRadius: 6,
+        border: "1px solid #cbd5e1",
+        background: done ? "#dcfce7" : "#f8fafc",
+        color: done ? "#166534" : "#334155",
+        cursor: "pointer",
+      }}
+    >
+      {done ? "Copied" : "Copy"}
+    </button>
+  );
+}
+
+function Row({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>{label}</div>
+      <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 4, marginTop: 2 }}>
+        <span style={{ fontSize: 14, fontWeight: 600, fontFamily: mono ? "ui-monospace, monospace" : "inherit", wordBreak: "break-all" }}>
+          {value}
+        </span>
+        <CopyBtn text={value} />
+      </div>
+    </div>
+  );
+}
 
 function RaastInner() {
   const params = useSearchParams();
@@ -39,9 +82,15 @@ function RaastInner() {
       <h1 style={{ fontSize: 24, fontWeight: 800, margin: "16px 0 8px" }}>
         Pay with Raast / bank transfer
       </h1>
-      <p style={{ color: "#64748b", margin: "0 0 24px", lineHeight: 1.5 }}>
-        Pay the amount below, then send proof on WhatsApp with your login email. We unlock your scan after confirmation.
+      <p style={{ color: "#64748b", margin: "0 0 16px", lineHeight: 1.5 }}>
+        Pay the exact amount below, then WhatsApp proof with your <strong>login email</strong>.
+        We unlock your scan after we confirm the transfer.
       </p>
+
+      <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 10, padding: "12px 14px", marginBottom: 20, fontSize: 13, lineHeight: 1.5, color: "#1e3a8a" }}>
+        <strong>Unlock timing:</strong> During business hours we usually unlock within a few hours of a clear WhatsApp proof.
+        Outside those hours it may be next morning. You must be signed in with the same email before we can grant the scan.
+      </div>
 
       <div style={{ border: "1px solid #e2e8f0", borderRadius: 12, padding: 20, marginBottom: 20, background: "#f8fafc" }}>
         <div style={{ fontSize: 13, color: "#64748b", fontWeight: 600 }}>You are buying</div>
@@ -49,71 +98,42 @@ function RaastInner() {
         <div style={{ fontSize: 28, fontWeight: 900, color: "#16a34a", marginTop: 8 }}>
           Rs {tier.pricePkr.toLocaleString("en-PK")}
         </div>
-        <div style={{ fontSize: 12, color: "#64748b", marginTop: 8 }}>
-          Reference (optional note on transfer): <code style={{ fontWeight: 700 }}>{payRef}</code>
+        <div style={{ fontSize: 12, color: "#64748b", marginTop: 8, display: "flex", alignItems: "center", flexWrap: "wrap" }}>
+          Reference (optional on transfer):{" "}
+          <code style={{ fontWeight: 700, marginLeft: 4 }}>{payRef}</code>
+          <CopyBtn text={payRef} />
         </div>
       </div>
 
       <div style={{ border: "1px solid #e2e8f0", borderRadius: 12, padding: 20, marginBottom: 20 }}>
         <div style={{ fontWeight: 800, marginBottom: 12 }}>Payment details</div>
-        {accountTitle ? (
-          <div style={{ marginBottom: 10 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b" }}>ACCOUNT TITLE</div>
-            <div style={{ fontSize: 14, fontWeight: 600 }}>{accountTitle}</div>
-          </div>
-        ) : null}
-        <div style={{ marginBottom: 10 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b" }}>BANK</div>
-          <div style={{ fontSize: 14, fontWeight: 600 }}>{bankName}</div>
-        </div>
-        {iban ? (
-          <div style={{ marginBottom: 10 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b" }}>IBAN</div>
-            <div style={{ fontSize: 14, fontWeight: 600, fontFamily: "monospace", wordBreak: "break-all" }}>{iban}</div>
-          </div>
-        ) : (
-          <p style={{ fontSize: 13, color: "#b45309" }}>IBAN will appear here after env is configured on Vercel.</p>
+        {accountTitle ? <Row label="Account title" value={accountTitle} /> : null}
+        <Row label="Bank" value={bankName} />
+        {iban ? <Row label="IBAN" value={iban} mono /> : (
+          <p style={{ fontSize: 13, color: "#b45309" }}>IBAN missing — check Vercel env.</p>
         )}
-        {raastId ? (
-          <div style={{ marginBottom: 10 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b" }}>RAAST ID</div>
-            <div style={{ fontSize: 14, fontWeight: 600, fontFamily: "monospace" }}>{raastId}</div>
-          </div>
-        ) : null}
+        {raastId ? <Row label="Raast ID" value={raastId} mono /> : null}
         <div style={{ textAlign: "center", marginTop: 16 }}>
-          <img
-            src={qrUrl}
-            alt="Payment page QR"
-            width={200}
-            height={200}
-            style={{ maxWidth: "100%", border: "1px solid #e2e8f0", borderRadius: 8 }}
-          />
+          <img src={qrUrl} alt="Payment QR" width={200} height={200}
+            style={{ maxWidth: "100%", border: "1px solid #e2e8f0", borderRadius: 8 }} />
+          <div style={{ fontSize: 12, color: "#64748b", marginTop: 8 }}>QR opens this payment page</div>
         </div>
       </div>
 
-      <ol style={{ margin: "0 0 24px", paddingLeft: 20, color: "#334155", lineHeight: 1.6, fontSize: 14 }}>
-        <li>Pay exactly <strong>Rs {tier.pricePkr.toLocaleString("en-PK")}</strong> via Raast / JazzCash / bank.</li>
-        <li>WhatsApp your <strong>login email</strong>, amount, and screenshot.</li>
-        <li>After we confirm, open <Link href="/scan">/scan</Link>.</li>
+      <ol style={{ margin: "0 0 24px", paddingLeft: 20, color: "#334155", lineHeight: 1.65, fontSize: 14 }}>
+        <li>Pay exactly <strong>Rs {tier.pricePkr.toLocaleString("en-PK")}</strong>.</li>
+        <li>WhatsApp your <strong>login email</strong>, amount, and screenshot / Txn ID.</li>
+        <li>After we confirm, open <Link href="/scan">/scan</Link> (same email).</li>
       </ol>
 
-      <a
-        href={`https://wa.me/${wa}?text=${waText}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{
-          display: "block",
-          textAlign: "center",
-          padding: "14px 20px",
-          background: "#25D366",
-          color: "#fff",
-          fontWeight: 800,
-          borderRadius: 10,
-          textDecoration: "none",
-        }}
-      >
+      <a href={`https://wa.me/${wa}?text=${waText}`} target="_blank" rel="noopener noreferrer"
+        style={{ display: "block", textAlign: "center", padding: "14px 20px", background: "#25D366", color: "#fff", fontWeight: 800, borderRadius: 10, textDecoration: "none", marginBottom: 12 }}>
         Send payment proof on WhatsApp
       </a>
+      <p style={{ fontSize: 12, color: "#94a3b8", lineHeight: 1.5 }}>
+        Overseas customers: use Pay with Card on pricing. Reports are advisory due diligence — not legal advice.{" "}
+        <Link href="/limitations">Limitations</Link>.
+      </p>
     </main>
   );
 }
