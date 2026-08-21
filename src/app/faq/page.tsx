@@ -72,6 +72,10 @@ const FAQ_SECTIONS = [
     title: "Privacy & Security",
     items: [
       {
+        q: "How does PakkaScan protect my sensitive personal data (CNIC, land details)?",
+        a: "Original PDF and image files are processed in memory only and are not written to disk. We do not keep your uploaded files. Extracted text may be cached briefly (up to 24 hours) to speed up re-scans, then wiped. Your account email, scan dates, structured findings, and report summary are stored securely so you can return to your results. We do not sell personal data or use it for advertising. See the Privacy Policy for full details.",
+      },
+      {
         q: "What happens to my documents after scanning?",
         a: "Documents you upload are processed in memory only. Nothing is written to disk on our servers. Extracted text is cached in server memory for 24 hours to speed up re-scans of the same document, then automatically wiped. We never store your original PDF or image files.",
       },

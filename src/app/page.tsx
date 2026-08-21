@@ -187,6 +187,7 @@ function PricingCta({
   highlight,
   paymentsMode,
   sessionUser,
+  market,
 }: {
   reportType: ReportType;
   pricePkr: string;
@@ -194,6 +195,7 @@ function PricingCta({
   highlight: boolean;
   paymentsMode: PaymentsMode;
   sessionUser: SessionUser | null;
+  market: "PKR" | "USD";
 }) {
   const [loading, setLoading] = useState(false);
 
@@ -300,9 +302,8 @@ function PricingCta({
     }
   }
 
-  return (
-    <div>
-      {/* Raast / bank transfer — Pakistan */}
+if (market === "PKR") {
+    return (
       <a
         href={`/payment/raast?tier=${reportType}`}
         style={{
@@ -323,24 +324,24 @@ function PricingCta({
           width: "100%",
           boxSizing: "border-box",
           fontFamily: "inherit",
-          marginBottom: "8px",
           textDecoration: "none",
         }}
       >
         Pay with Raast / JazzCash — Rs {pricePkr}
       </a>
-      {/* Card button - active Stripe checkout */}
-      <button onClick={handleCardClick} disabled={loading} style={cardOutlineStyle}>
-        {loading ? "Loading..." : `Pay with Card \u2014 $${priceUsd}`}
-      </button>
-    </div>
+    );
+  }
+  return (
+    <button onClick={handleCardClick} disabled={loading} style={cardBtnStyle}>
+      {loading ? "Loading..." : `Pay with Card — $${priceUsd}`}
+    </button>
   );
 }
-
 export default function LandingPage() {
   const [sessionUser, setSessionUser] = useState<SessionUser | null>(null);
   const [sessionLoaded, setSessionLoaded] = useState(false);
   const [paymentsMode, setPaymentsMode] = useState<PaymentsMode>("beta");
+  const [market, setMarket] = useState<"PKR" | "USD">("PKR");
 
   useEffect(() => {
     let cancelled = false;
@@ -391,17 +392,20 @@ export default function LandingPage() {
           <h1 className="pks-hero-h1" style={{ fontSize: "40px", fontWeight: 800, lineHeight: 1.2, margin: "0 0 20px 0", letterSpacing: "-0.02em" }}>
             Don&apos;t hand over your <span style={{ color: "#d4af37" }}>deposit</span> until PakkaScan has read the fine print you didn&apos;t.
           </h1>
-          <p className="pks-hero-tagline" style={{ fontSize: "17px", color: "#cbd5e1", lineHeight: 1.6, maxWidth: "580px", margin: "0 auto 36px auto" }}>
+          <p className="pks-hero-tagline" style={{ fontSize: "17px", color: "#e2e8f0", lineHeight: 1.6, maxWidth: "580px", margin: "0 auto 36px auto" }}>
             AI-powered document verification for Pakistani property transactions. Upload your Bayana, Fard, or Sale Deed. Get a bilingual verdict, typically within a few minutes.
           </p>
-          <div className="pks-hero-ctas" style={{ display: "flex", gap: "14px", justifyContent: "center", flexWrap: "wrap" }}>
+          <div className="pks-hero-ctas" style={{ display: "flex", gap: "14px", justifyContent: "center", flexWrap: "wrap", marginBottom: "28px" }}>
             <a href="/scan" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "16px 32px", backgroundColor: "#16a34a", color: "#ffffff", fontWeight: 700, fontSize: "15px", borderRadius: "12px", textDecoration: "none", boxShadow: "0 4px 16px rgba(22,163,74,0.35)" }}>
               Scan a Document
             </a>
-            <a href="/sample-report" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "16px 32px", backgroundColor: "rgba(255,255,255,0.1)", color: "#ffffff", fontWeight: 700, fontSize: "15px", borderRadius: "12px", textDecoration: "none", border: "1px solid rgba(255,255,255,0.2)" }}>
+            <a href="/sample-report" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "16px 32px", backgroundColor: "rgba(255,255,255,0.12)", color: "#ffffff", fontWeight: 700, fontSize: "15px", borderRadius: "12px", textDecoration: "none", border: "1px solid rgba(255,255,255,0.35)" }}>
               See a Sample Report
             </a>
           </div>
+          <p style={{ fontSize: "13px", color: "#e2e8f0", lineHeight: 1.5, maxWidth: "640px", margin: "0 auto", opacity: 0.95 }}>
+            Hash-verifiable PDF Passports · Bilingual English + Nastaliq Urdu · Built for buyers in Pakistan, UK, UAE &amp; US
+          </p>
         </div>
       </section>
 
@@ -461,7 +465,11 @@ export default function LandingPage() {
           <div style={{ textAlign: "center", marginBottom: "48px" }}>
             <h2 style={{ fontSize: "32px", fontWeight: 800, color: "#0f172a", margin: "0 0 12px 0", letterSpacing: "-0.02em" }}>Pricing</h2>
             <p style={{ fontSize: "16px", color: "#64748b", margin: 0 }}>Pay per report. No subscription. No hidden fees.</p>
-            <p style={{ fontSize: "13px", color: "#94a3b8", margin: "8px 0 0 0" }}>Pakistan: Pay with Raast / JazzCash (bank transfer). International: Pay with Card (USD).</p>
+            <p style={{ fontSize: "13px", color: "#94a3b8", margin: "8px 0 16px 0" }}>Choose local or international payment. One button per plan — no clutter.</p>
+            <div style={{ display: "inline-flex", borderRadius: 10, border: "1px solid #e2e8f0", overflow: "hidden", background: "#fff" }}>
+              <button type="button" onClick={() => setMarket("PKR")} style={{ padding: "10px 18px", border: "none", cursor: "pointer", fontWeight: 700, fontSize: 13, background: market === "PKR" ? "#0f766e" : "transparent", color: market === "PKR" ? "#fff" : "#64748b" }}>Local (PKR)</button>
+              <button type="button" onClick={() => setMarket("USD")} style={{ padding: "10px 18px", border: "none", cursor: "pointer", fontWeight: 700, fontSize: 13, background: market === "USD" ? "#0b132b" : "transparent", color: market === "USD" ? "#fff" : "#64748b" }}>International (USD)</button>
+            </div>
           </div>
           <div className="pks-price-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px" }}>
             {([
@@ -474,8 +482,12 @@ export default function LandingPage() {
                   <div style={{ position: "absolute", top: "-12px", left: "50%", transform: "translateX(-50%)", backgroundColor: "#16a34a", color: "#ffffff", fontSize: "11px", fontWeight: 800, padding: "4px 12px", borderRadius: "20px", letterSpacing: "0.05em" }}>MOST POPULAR</div>
                 )}
                 <div style={{ fontSize: "13px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "12px" }}>{tier.name}</div>
-                <div style={{ fontSize: "30px", fontWeight: 900, color: "#0f172a", marginBottom: "4px", letterSpacing: "-0.02em" }}>Rs {tier.pricePkr}</div>
-                <div style={{ fontSize: "13px", color: "#64748b", marginBottom: "4px" }}>or ${tier.priceUsd} USD (international)</div>
+                <div style={{ fontSize: "30px", fontWeight: 900, color: "#0f172a", marginBottom: "4px", letterSpacing: "-0.02em" }}>
+                  {market === "PKR" ? `Rs ${tier.pricePkr}` : `$${tier.priceUsd}`}
+                </div>
+                <div style={{ fontSize: "13px", color: "#64748b", marginBottom: "4px" }}>
+                  {market === "PKR" ? `or $${tier.priceUsd} USD` : `or Rs ${tier.pricePkr} PKR`}
+                </div>
                 <div style={{ fontSize: "13px", color: "#64748b", marginBottom: "20px" }}>{tier.desc}</div>
                 <ul style={{ listStyle: "none", padding: 0, margin: "0 0 24px 0" }}>
                   {tier.includes.map((item, j) => (
@@ -492,6 +504,7 @@ export default function LandingPage() {
                   highlight={tier.highlight}
                   paymentsMode={paymentsMode}
                   sessionUser={sessionUser}
+                  market={market}
                 />
               </div>
             ))}
