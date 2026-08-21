@@ -14,7 +14,6 @@
  */
 
 import { getCnicDistrict } from "./cnic-districts";
-import { assessTenancyCompleteness } from "./tenancy-completeness";
 
 export type RiskFactor = {
   label: string;
@@ -180,28 +179,6 @@ function extractIsoDates(text: string): string[] {
   return out;
 }
 
-function factorsFromTenancyText(text: string | null | undefined, docType?: string | null): RiskFactor[] {
-  if (!text || text.length < 80) return [];
-  const dt = (docType || "").toUpperCase();
-  const looksTenancy =
-    dt.includes("TENANCY") ||
-    dt.includes("RENTAL") ||
-    /tenancy|landlord|tenant|monthly\s+rent|lessor|lessee/i.test(text.slice(0, 2000));
-  if (!looksTenancy) return [];
-  const { findings } = assessTenancyCompleteness(text);
-  const sevPoints: Record<string, number> = {
-    CRITICAL: -3,
-    HIGH: -2,
-    MEDIUM: -2,
-    LOW: -1,
-  };
-  return findings.slice(0, 6).map((f) => ({
-    label: `${f.title}: ${f.message}`.slice(0, 180),
-    points: sevPoints[f.severity] ?? -1,
-    category: "completeness" as const,
-  }));
-}
-
 function factorsFromDateAnomalies(smartFields: any): RiskFactor[] {
   const anomalies = smartFields?.date_anomalies;
   if (!Array.isArray(anomalies) || anomalies.length === 0) return [];
@@ -365,8 +342,6 @@ export function computeRiskFactors(input: {
   findings: string[];
   missing: string[];
   smartFields: any;
-  /** OCR / full extract text for tenancy rule pack */
-  rawText?: string | null;
   /** Session 7: official DC/FBR benchmark PKR from dc-rate-lookup (optional) */
   officialValuationPkr?: number | null;
   declaredPricePkr?: number | null;
@@ -384,20 +359,6 @@ export function computeRiskFactors(input: {
   const cnicLocationFactor = checkCnicLocationMismatch(input.smartFields);
   if (cnicLocationFactor) factors.push(cnicLocationFactor);
   factors.push(...factorsFromDateAnomalies(input.smartFields));
-  const tenancyText =
-    (typeof (input as any).rawText === "string" && (input as any).rawText) ||
-    (typeof input.smartFields?.raw_text === "string" && input.smartFields.raw_text) ||
-    (typeof input.smartFields?.ocr_text === "string" && input.smartFields.ocr_text) ||
-    [input.smartFields?.summary, Array.isArray(input.findings) ? input.findings.join(" ") : ""]
-      .filter(Boolean)
-      .join("\n") ||
-    "";
-  factors.push(
-    ...factorsFromTenancyText(
-      tenancyText,
-      input.smartFields?.document_type || input.smartFields?.docType || (input as any).documentType
-    )
-  );
   factors.push(...factorsFromPoaRisk(input.smartFields));
   factors.push(...factorsFromFindings(input.findings).slice(0, 6));
   factors.push(...factorsFromMissing(input.missing).slice(0, 4));

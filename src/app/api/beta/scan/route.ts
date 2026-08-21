@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { runOcr } from "@/intelligence/ocr-router";
 import { classifyFromText } from "@/intelligence/document-classifier";
 import { classifyDocument } from "@/ingestion/classifier";
@@ -564,6 +564,7 @@ export async function POST(request: Request) {
         findings: stringifyFindings(phase2?.analysis?.findings),
         missing: stringifyMissing(phase2?.missingEvidence),
         smartFields: perDocument.find((d: any) => d.status === "ok" && d.smartFields && !d.smartFields.extractionError)?.smartFields ?? null,
+        rawText: (perDocument || []).map((d: any) => d?.ocr?.text || d?.ocrText || d?.text || "").filter(Boolean).join("\n"),
       });
 
       // Send scan report email - awaited but never fails the scan response
@@ -660,11 +661,16 @@ export async function POST(request: Request) {
       console.warn("[beta/scan] DC valuation lookup failed:", err?.message || err);
     }
 
+    const ocrBlobForRisk = (perDocument || [])
+      .map((d: any) => d?.ocr?.text || d?.ocrText || d?.text || "")
+      .filter(Boolean)
+      .join("\n");
     let riskResult = computeRiskFactors({
       pakkaScore: phase2?.analysis?.pakkaScore ?? 0,
       findings: _findingsStr,
       missing: _missingStr,
       smartFields: _firstSmartFields,
+      rawText: ocrBlobForRisk,
       officialValuationPkr,
       declaredPricePkr,
     });

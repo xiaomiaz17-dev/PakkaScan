@@ -1,6 +1,8 @@
 ﻿# Golden set
 
-Files (PII offline): C:\Temp\PakkaScan-Golden\
+PII offline: C:\Temp\PakkaScan-Golden\
+
+See CHECKLIST.md for the manual runner.
 
 | ID | Type | File | Expect |
 |----|------|------|--------|

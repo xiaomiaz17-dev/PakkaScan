@@ -101,30 +101,6 @@ function jurisdictionHints(text: string): string[] {
   return hints;
 }
 
-function hasSecurityDeposit(text: string): boolean {
-  return (
-    /(?:security\s*deposit|security\s*money|advance\s*rent|refundable\s*deposit|Ø§Ù…Ø§Ù†Øª|Ø±ÛÙ†|ÚˆÙ¾Ø§Ø²Ù¹)/i.test(text) &&
-    (/(?:\d{3,}|rs\.?|pkr|Ø±ÙˆÙ¾)/i.test(text) || /deposit/i.test(text))
-  );
-}
-function hasNoticePeriod(text: string): boolean {
-  return (
-    /(?:\d+\s*(?:days?|months?)\s*(?:prior\s*)?notice|notice\s*(?:period|of)|written\s*notice|Ø§Ø·Ù„Ø§Ø¹)/i.test(text)
-  );
-}
-function hasLandlordCnicCue(text: string): boolean {
-  return (
-    /(?:landlord|lessor|first\s*party)[\s\S]{0,120}(?:CNIC|NICOP|Ø´Ù†Ø§Ø®ØªÛŒ)/i.test(text) ||
-    /(?:CNIC|NICOP)[\s\S]{0,80}(?:landlord|lessor)/i.test(text) ||
-    (/\d{5}-\d{7}-\d/.test(text) && /(?:landlord|lessor|Ù…Ø§Ù„Ú©)/i.test(text))
-  );
-}
-function hasOneSidedEviction(text: string): boolean {
-  return (
-    /(?:landlord\s*may\s*(?:evict|eject|terminate)|evict\s*without\s*notice|at\s*any\s*time\s*without\s*cause|Ø¨Ø¯Ø±\s*Ø¨Ø¯Ø±)/i.test(text)
-  );
-}
-
 export function assessTenancyCompleteness(
   text: string,
   selectedJurisdiction?: string | null,
@@ -224,50 +200,6 @@ export function assessTenancyCompleteness(
     }
   }
 
-if (!hasSecurityDeposit(text) && text.length > 400) {
-    findings.push({
-      code: "TENANCY_DEPOSIT_MISSING",
-      title: "Security deposit / advance not clearly stated",
-      message:
-        "No clear security deposit or advance-rent amount found. Confirm deposit amount and return conditions in writing before paying.",
-      effect: "DEDUCTION",
-      severity: "MEDIUM",
-      scoreImpact: -10,
-    });
-  }
-  if (!hasNoticePeriod(text) && text.length > 400) {
-    findings.push({
-      code: "TENANCY_NOTICE_MISSING",
-      title: "Termination notice period not detected",
-      message:
-        "No clear notice period for termination found. One-sided or silent notice terms are a common tenant risk.",
-      effect: "DEDUCTION",
-      severity: "MEDIUM",
-      scoreImpact: -10,
-    });
-  }
-  if (!hasLandlordCnicCue(text) && text.length > 300) {
-    findings.push({
-      code: "TENANCY_LANDLORD_CNIC_WEAK",
-      title: "Landlord CNIC / ID not clearly linked",
-      message:
-        "Landlord identity document (CNIC/NICOP) is not clearly present near landlord language. Verify identity against title documents.",
-      effect: "DEDUCTION",
-      severity: "HIGH",
-      scoreImpact: -12,
-    });
-  }
-  if (hasOneSidedEviction(text)) {
-    findings.push({
-      code: "TENANCY_EVICTION_ONE_SIDED",
-      title: "Possible one-sided eviction / ejectment language",
-      message:
-        "Text suggests the landlord may terminate or evict with little process. Have this clause reviewed before signing; do not rely on oral assurances.",
-      effect: "DEDUCTION",
-      severity: "HIGH",
-      scoreImpact: -15,
-    });
-  }
   const scoreAdjustment = findings.reduce((s, f) => s + f.scoreImpact, 0);
   return { findings, scoreAdjustment };
 }
