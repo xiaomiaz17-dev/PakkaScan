@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Fraunces } from "next/font/google";
 import WhatsAppFAB from "@/components/WhatsAppFAB";
+import ReportDemoSlider from "@/components/ReportDemoSlider";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -40,6 +41,10 @@ const FAQ_ITEMS = [
   {
     q: "What about my privacy?",
     a: "Documents you upload are processed in memory only. Nothing is written to disk. Extracted text is cached in server memory for 24 hours to speed up re-scans, then automatically wiped. We never store your original PDF or image files. Your account email and scan history are stored in a secure Postgres database.",
+  },
+  {
+    q: "How does PakkaScan protect my CNIC and land details?",
+    a: "Original files are processed in memory only and not written to disk. We do not store your uploaded PDFs or images. Extracted text may be cached briefly (up to 24 hours), then wiped. Account email, scan dates, and report findings are stored so you can return to results. We do not sell personal data.",
   },
   {
     q: "How accurate is the AI?",
@@ -392,18 +397,18 @@ export default function LandingPage() {
           <h1 className="pks-hero-h1" style={{ fontSize: "40px", fontWeight: 800, lineHeight: 1.2, margin: "0 0 20px 0", letterSpacing: "-0.02em" }}>
             Don&apos;t hand over your <span style={{ color: "#d4af37" }}>deposit</span> until PakkaScan has read the fine print you didn&apos;t.
           </h1>
-          <p className="pks-hero-tagline" style={{ fontSize: "17px", color: "#e2e8f0", lineHeight: 1.6, maxWidth: "580px", margin: "0 auto 36px auto" }}>
+          <p className="pks-hero-tagline" style={{ fontSize: "17px", color: "#f1f5f9", lineHeight: 1.65, maxWidth: "580px", margin: "0 auto 36px auto", fontWeight: 500 }}>
             AI-powered document verification for Pakistani property transactions. Upload your Bayana, Fard, or Sale Deed. Get a bilingual verdict, typically within a few minutes.
           </p>
           <div className="pks-hero-ctas" style={{ display: "flex", gap: "14px", justifyContent: "center", flexWrap: "wrap", marginBottom: "28px" }}>
             <a href="/scan" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "16px 32px", backgroundColor: "#16a34a", color: "#ffffff", fontWeight: 700, fontSize: "15px", borderRadius: "12px", textDecoration: "none", boxShadow: "0 4px 16px rgba(22,163,74,0.35)" }}>
               Scan a Document
             </a>
-            <a href="/sample-report" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "16px 32px", backgroundColor: "rgba(255,255,255,0.12)", color: "#ffffff", fontWeight: 700, fontSize: "15px", borderRadius: "12px", textDecoration: "none", border: "1px solid rgba(255,255,255,0.35)" }}>
+            <a href="/sample-report" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "16px 32px", backgroundColor: "rgba(255,255,255,0.18)", color: "#ffffff", fontWeight: 700, fontSize: "15px", borderRadius: "12px", textDecoration: "none", border: "2px solid rgba(255,255,255,0.55)", boxShadow: "0 0 0 1px rgba(255,255,255,0.1)" }}>
               See a Sample Report
             </a>
           </div>
-          <p style={{ fontSize: "13px", color: "#e2e8f0", lineHeight: 1.5, maxWidth: "640px", margin: "0 auto", opacity: 0.95 }}>
+          <p style={{ fontSize: "14px", color: "#f8fafc", lineHeight: 1.5, maxWidth: "640px", margin: "0 auto", fontWeight: 600 }}>
             Hash-verifiable PDF Passports · Bilingual English + Nastaliq Urdu · Built for buyers in Pakistan, UK, UAE &amp; US
           </p>
         </div>
@@ -543,7 +548,7 @@ export default function LandingPage() {
         <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: "40px" }}>
             <h2 style={{ fontSize: "32px", fontWeight: 800, color: "#0f172a", margin: "0 0 12px 0", letterSpacing: "-0.02em" }}>Why not just hire a lawyer?</h2>
-            <p style={{ fontSize: "15px", color: "#64748b", margin: 0, maxWidth: "600px", marginLeft: "auto", marginRight: "auto" }}>You should â€” for the big stuff. But most property checks don&rsquo;t need a Rs 50,000 retainer.</p>
+            <p style={{ fontSize: "15px", color: "#64748b", margin: 0, maxWidth: "600px", marginLeft: "auto", marginRight: "auto" }}>You should â€” for the big stuff. But most property checks don&rsquo;t need a Rs 50,000 retainer. Lawyers send formal memos; PakkaScan gives bilingual flags you can paste straight into WhatsApp with an agent.</p>
           </div>
 
           <div style={{ overflowX: "auto", border: "1px solid #e2e8f0", borderRadius: "12px" }}>
@@ -617,6 +622,7 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <ReportDemoSlider />
       {/* PASSPORT PREVIEW */}
       <section style={{ padding: "56px 24px", backgroundColor: "#f8fafc", borderTop: "1px solid #e2e8f0" }}>
         <div style={{ maxWidth: 900, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 28, alignItems: "center" }} className="pks-passport-preview">
