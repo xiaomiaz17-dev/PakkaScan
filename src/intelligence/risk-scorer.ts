@@ -180,22 +180,86 @@ function extractIsoDates(text: string): string[] {
   return out;
 }
 
-function factorsFromTenancyText(text: string | null | undefined, docType?: string | null): RiskFactor[] {
+function partyHasIdentity(p: any): boolean {
+  if (!p || typeof p !== "object") return false;
+  const name = String(p.name || p.full_name || p.fullName || "").trim();
+  const cnic = String(p.cnic || p.cnic_number || p.nic || "").replace(/[^0-9]/g, "");
+  return name.length >= 3 || cnic.length >= 13;
+}
+function smartFieldsHasTerm(sf: any): boolean {
+  if (!sf) return false;
+  const d = sf.dates || {};
+  if (d.start_date || d.end_date || d.execution_date) return true;
+  if (d.duration_months && Number(d.duration_months) > 0) return true;
+  if (sf.financials?.term_months) return true;
+  return false;
+}
+function smartFieldsHasDeposit(sf: any): boolean {
+  const f = sf?.financials || {};
+  const keys = ["security_deposit", "deposit", "advance_rent", "advance"];
+  for (const k of keys) {
+    const v = f[k];
+    if (v == null) continue;
+    if (typeof v === "object" && (v.amount || v.value)) return true;
+    if (typeof v === "number" && v > 0) return true;
+    if (typeof v === "string" && /\d/.test(v)) return true;
+  }
+  return false;
+}
+function smartFieldsHasRent(sf: any): boolean {
+  const v = sf?.financials?.monthly_rent ?? sf?.financials?.rent;
+  if (v == null) return false;
+  if (typeof v === "object" && (v.amount || v.value)) return true;
+  if (typeof v === "number" && v > 0) return true;
+  if (typeof v === "string" && /\d/.test(v)) return true;
+  return false;
+}
+
+/** Prefer structured extract over OCR-regex false blanks (Urdu deeds). */
+function factorsFromTenancyText(
+  text: string | null | undefined,
+  docType?: string | null,
+  smartFields?: any
+): RiskFactor[] {
   if (!text || text.length < 80) return [];
   const dt = (docType || "").toUpperCase();
   const looksTenancy =
     dt.includes("TENANCY") ||
     dt.includes("RENTAL") ||
-    /tenancy|landlord|tenant|monthly\s+rent|lessor|lessee/i.test(text.slice(0, 2000));
-  if (!looksTenancy) return [];
+    /tenancy|landlord|tenant|monthly\s+rent|lessor|lessee|کرایہ|مستاجر|مالک/i.test(
+      text.slice(0, 2500)
+    );
+  if (!looksTenancy && !dt.includes("TENANCY")) return [];
+
   const { findings } = assessTenancyCompleteness(text);
+  const sf = smartFields || {};
+  const parties = sf.parties || {};
+  const hasLandlord = partyHasIdentity(parties.landlord || parties.lessor || parties.owner);
+  const hasTenant = partyHasIdentity(parties.tenant || parties.lessee);
+  const hasAnyCnic =
+    partyHasIdentity(parties.landlord) ||
+    partyHasIdentity(parties.tenant) ||
+    /\d{5}-?\d{7}-?\d/.test(
+      String(parties.landlord?.cnic || "") + String(parties.tenant?.cnic || "")
+    );
+
+  const filtered = findings.filter((f) => {
+    if (f.code === "TENANCY_PARTY_IDENTITY_WEAK" && (hasLandlord || hasTenant)) return false;
+    if (f.code === "TENANCY_LANDLORD_CNIC_WEAK" && hasLandlord) return false;
+    if (f.code === "TENANCY_RENT_MISSING" && smartFieldsHasRent(sf)) return false;
+    if (f.code === "TENANCY_TERM_MISSING" && smartFieldsHasTerm(sf)) return false;
+    if (f.code === "TENANCY_DEPOSIT_MISSING" && smartFieldsHasDeposit(sf)) return false;
+    return true;
+  });
+
+  // Drop generic "missing CNIC" noise when extract already has them
   const sevPoints: Record<string, number> = {
     CRITICAL: -3,
     HIGH: -2,
     MEDIUM: -2,
     LOW: -1,
   };
-  return findings.slice(0, 6).map((f) => ({
+  return filtered.slice(0, 6).map((f) => ({
     label: `${f.title}: ${f.message}`.slice(0, 180),
     points: sevPoints[f.severity] ?? -1,
     category: "completeness" as const,
@@ -317,9 +381,22 @@ function factorsFromFindings(findings: string[]): RiskFactor[] {
   return factors;
 }
 
-function factorsFromMissing(missing: string[]): RiskFactor[] {
+function factorsFromMissing(missing: string[], smartFields?: any): RiskFactor[] {
+  const parties = smartFields?.parties || {};
+  const hasCnic =
+    String(parties.landlord?.cnic || parties.tenant?.cnic || "").replace(/[^0-9]/g, "").length >= 13;
+  const hasNames = !!(parties.landlord?.name || parties.tenant?.name);
+  const hasTerm = !!(
+    smartFields?.dates?.start_date ||
+    smartFields?.dates?.end_date ||
+    smartFields?.dates?.duration_months
+  );
   const factors: RiskFactor[] = [];
   for (const m of missing) {
+    const lower0 = (m || "").toLowerCase();
+    if (hasCnic && lower0.includes("cnic")) continue;
+    if (hasNames && (lower0.includes("identity") || lower0.includes("party"))) continue;
+    if (hasTerm && (lower0.includes("term") || lower0.includes("duration"))) continue;
     const lower = m.toLowerCase();
     if (lower.includes("cnic") || lower.includes("identity")) {
       factors.push({ label: `Missing: ${m}`, points: -1, category: "identity" });
@@ -395,12 +472,13 @@ export function computeRiskFactors(input: {
   factors.push(
     ...factorsFromTenancyText(
       tenancyText,
-      input.smartFields?.document_type || input.smartFields?.docType || (input as any).documentType
+      input.smartFields?.document_type || input.smartFields?.docType || (input as any).documentType,
+      input.smartFields
     )
   );
   factors.push(...factorsFromPoaRisk(input.smartFields));
   factors.push(...factorsFromFindings(input.findings).slice(0, 6));
-  factors.push(...factorsFromMissing(input.missing).slice(0, 4));
+  factors.push(...factorsFromMissing(input.missing, input.smartFields).slice(0, 4));
   const deduped = dedupe(factors).slice(0, 8);
   const { score, breakdown } = computeWeightedScore(deduped);
   return {

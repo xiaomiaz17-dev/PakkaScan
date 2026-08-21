@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 
 
@@ -852,11 +852,23 @@ export default function ScanPage() {
 
   let verdict = results?.phase2?.result?.decision || "REVIEW";
   let posture = results?.phase2?.posture || "CAUTIOUS";
-  const pakkaScore = results?.phase2?.result?.pakkaScore ?? 0;
+  let pakkaScore = results?.phase2?.result?.pakkaScore ?? 0;
   // F5: CRITICAL risk must never show a soft PROCEED WITH CAUTION hero
   if ((results?.riskLabel === "CRITICAL") && verdict !== "DO_NOT_PROCEED" && verdict !== "STOP" && verdict !== "BLOCKED" && verdict !== "REJECT") {
     verdict = "DO_NOT_PROCEED";
     posture = "DO_NOT_PROCEED";
+  }
+  // ALIGN: clamp PakkaScore when risk/verdict is severe (never show 100 + DO NOT PROCEED)
+  const _riskLabelAlign = results?.riskLabel;
+  if (
+    _riskLabelAlign === "CRITICAL" ||
+    verdict === "DO_NOT_PROCEED" ||
+    verdict === "STOP" ||
+    verdict === "BLOCKED"
+  ) {
+    pakkaScore = Math.min(Number(pakkaScore) || 0, 35);
+  } else if (_riskLabelAlign === "HIGH") {
+    pakkaScore = Math.min(Number(pakkaScore) || 0, 55);
   }
   const missing = results?.phase2?.missingEvidence?.missing ?? [];
   const findings = results?.phase2?.result?.findings ?? [];
