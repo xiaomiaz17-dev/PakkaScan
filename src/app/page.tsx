@@ -426,6 +426,17 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* FOUNDER STORY */}
+      <section style={{ backgroundColor: "#0b132b", color: "#fff", padding: "40px 24px" }}>
+        <div style={{ maxWidth: 800, margin: "0 auto", textAlign: "center" }}>
+          <p style={{ fontSize: 15, lineHeight: 1.65, color: "#e2e8f0", margin: "0 0 12px", fontStyle: "italic" }}>
+            &ldquo;The documents looked official. Everyone assumed they were fine. It took a lawyer three days and Rs 30,000 to confirm they weren&apos;t. We built PakkaScan so the next buyer doesn&apos;t learn that lesson the hard way.&rdquo;
+          </p>
+          <p style={{ fontSize: 13, color: "#94a3b8", margin: 0 }}>
+            — Founder · <a href="/about" style={{ color: "#86efac", fontWeight: 700 }}>Full story on About</a>
+          </p>
+        </div>
+      </section>
       {/* HOW IT WORKS */}
       <section id="how-it-works" style={{ padding: "72px 24px", backgroundColor: "#ffffff" }}>
         <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
@@ -606,6 +617,45 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* PASSPORT PREVIEW */}
+      <section style={{ padding: "56px 24px", backgroundColor: "#f8fafc", borderTop: "1px solid #e2e8f0" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 28, alignItems: "center" }} className="pks-passport-preview">
+          <div>
+            <h2 style={{ fontSize: 26, fontWeight: 800, color: "#0f172a", margin: "0 0 12px" }}>What you walk away with</h2>
+            <p style={{ fontSize: 15, color: "#475569", lineHeight: 1.6, margin: "0 0 16px" }}>
+              A hash-verifiable PDF Property Passport: risk score, bilingual verdict, flagged clauses, and a QR code anyone can check — without seeing your full documents.
+            </p>
+            <ul style={{ margin: "0 0 20px", paddingLeft: 18, color: "#334155", fontSize: 14, lineHeight: 1.7 }}>
+              <li>Red-flag clauses ready to paste into WhatsApp with an agent</li>
+              <li>Reference code + QR for authenticity</li>
+              <li>SHA-256 hash so the PDF can&apos;t be quietly altered</li>
+            </ul>
+            <a href="/sample-report" style={{ fontWeight: 800, color: "#0f766e", textDecoration: "none" }}>Open the full sample report →</a>
+          </div>
+          <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 16, padding: 20, boxShadow: "0 12px 40px rgba(15,23,42,0.08)" }}>
+            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.08em", color: "#64748b", marginBottom: 8 }}>SAMPLE PASSPORT</div>
+            <div style={{ fontSize: 18, fontWeight: 900, color: "#0f172a", marginBottom: 4 }}>Bayana Safety Check</div>
+            <div style={{ fontSize: 13, color: "#64748b", marginBottom: 12 }}>Ref: PKS-SAMPLE-2026-DEMO</div>
+            <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
+              <div style={{ flex: 1, background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 10, padding: 12 }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: "#991b1b" }}>RISK</div>
+                <div style={{ fontSize: 22, fontWeight: 900, color: "#991b1b" }}>8 / 10</div>
+              </div>
+              <div style={{ flex: 1, background: "#fff7ed", border: "1px solid #fed7aa", borderRadius: 10, padding: 12 }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: "#9a3412" }}>VERDICT</div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: "#9a3412" }}>DO NOT PROCEED</div>
+              </div>
+            </div>
+            <div style={{ fontSize: 12, color: "#b91c1c", background: "#fef2f2", borderRadius: 8, padding: "8px 10px", marginBottom: 12, borderLeft: "3px solid #dc2626" }}>
+              Flagged: price under-declaration · weak PoA — paste into WhatsApp with your agent.
+            </div>
+            <div style={{ fontSize: 11, color: "#64748b", fontFamily: "ui-monospace, monospace" }}>
+              QR → pakkascan.com/verify/PKS-SAMPLE-2026-DEMO
+            </div>
+          </div>
+        </div>
+        <style>{`@media (max-width: 768px) { .pks-passport-preview { grid-template-columns: 1fr !important; } }`}</style>
+      </section>
       {/* TESTIMONIALS - pulled-headline design, on-brand light aesthetic */}
       <section style={{ padding: "72px 24px", backgroundColor: "#f8fafc" }}>
         <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
