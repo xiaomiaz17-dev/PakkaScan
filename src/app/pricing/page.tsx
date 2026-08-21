@@ -87,7 +87,7 @@ const FAQ_MINI = [
   },
   {
     q: "What payment methods will you accept?",
-    a: "Card payments are available now. Easypaisa, JazzCash, and direct bank transfer are planned next. Private beta users can use PakkaScan free right now.",
+    a: "Pakistan: Pay with Raast / JazzCash (bank transfer) on the pricing page, then WhatsApp proof — we unlock your scan after confirmation. International: Pay with Card (USD) via Stripe.",
   },
   {
     q: "What if the report is wrong?",
