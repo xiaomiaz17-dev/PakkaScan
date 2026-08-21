@@ -283,11 +283,33 @@ function PricingCta({
 
   return (
     <div>
-      {/* Raast button - disabled with Coming Soon badge */}
-      <button disabled style={raastBtnStyle}>
-        <span>Pay with Raast &mdash; Rs {pricePkr}</span>
-        <span style={comingSoonBadge}>Soon</span>
-      </button>
+      {/* Raast / bank transfer — Pakistan */}
+      <a
+        href={`/payment/raast?tier=${reportType}`}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "8px",
+          padding: "12px 20px",
+          backgroundColor: "#0f766e",
+          color: "#ffffff",
+          fontWeight: 700,
+          fontSize: "14px",
+          lineHeight: 1.4,
+          borderRadius: "10px",
+          textAlign: "center",
+          border: "none",
+          cursor: "pointer",
+          width: "100%",
+          boxSizing: "border-box",
+          fontFamily: "inherit",
+          marginBottom: "8px",
+          textDecoration: "none",
+        }}
+      >
+        Pay with Raast — Rs {pricePkr}
+      </a>
       {/* Card button - active Stripe checkout */}
       <button onClick={handleCardClick} disabled={loading} style={cardBtnStyle}>
         {loading ? "Loading..." : `Pay with Card \u2014 $${priceUsd}`}
@@ -420,7 +442,7 @@ export default function LandingPage() {
           <div style={{ textAlign: "center", marginBottom: "48px" }}>
             <h2 style={{ fontSize: "32px", fontWeight: 800, color: "#0f172a", margin: "0 0 12px 0", letterSpacing: "-0.02em" }}>Pricing</h2>
             <p style={{ fontSize: "16px", color: "#64748b", margin: 0 }}>Pay per report. No subscription. No hidden fees.</p>
-            <p style={{ fontSize: "13px", color: "#94a3b8", margin: "8px 0 0 0" }}>Local payment via Raast for Pakistan customers (coming soon). International customers pay in USD via card.</p>
+            <p style={{ fontSize: "13px", color: "#94a3b8", margin: "8px 0 0 0" }}>Pakistan: Pay with Raast / JazzCash / bank transfer. International: Pay with Card (USD).</p>
           </div>
           <div className="pks-price-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px" }}>
             {([
@@ -463,7 +485,7 @@ export default function LandingPage() {
                 </>
               ) : (
                 <>
-                  All reports are paid per scan. International customers pay via card. Local Raast payment for Pakistan customers coming soon.
+                  All reports are paid per scan. Pakistan: Raast / bank transfer. International: card (USD).
                 </>
               )}
             </p>
