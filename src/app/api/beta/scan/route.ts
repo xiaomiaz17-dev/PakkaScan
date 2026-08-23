@@ -414,7 +414,10 @@ export async function POST(request: Request) {
       );
 
       const _t_smart = Date.now();
-      const smartFields = await extractSmartFields(classification.documentType, ocr.text);
+      const smartFields = backfillTenancySmartFields(
+          await extractSmartFields(classification.documentType, ocr.text),
+          ocr.text || ""
+        );
       console.log(`[timing] SmartFields LLM (${file.name}): ${Date.now() - _t_smart}ms`);
 
       // Detect if this is a complete/partial/template document
