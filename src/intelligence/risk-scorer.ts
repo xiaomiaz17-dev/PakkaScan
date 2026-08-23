@@ -269,7 +269,7 @@ function factorsFromTenancyText(
 function factorsFromDateAnomalies(smartFields: any): RiskFactor[] {
   const anomalies = smartFields?.date_anomalies;
   if (!Array.isArray(anomalies) || anomalies.length === 0) return [];
-  const factors: RiskFactor[] = [];
+  let factors: RiskFactor[] = [];
   const todayPk = pakistanTodayIso();
   for (const item of anomalies) {
     if (!item || typeof item !== "object") continue;
@@ -298,7 +298,7 @@ function factorsFromDateAnomalies(smartFields: any): RiskFactor[] {
 function factorsFromPoaRisk(smartFields: any): RiskFactor[] {
   if (!smartFields) return [];
   const clauses = smartFields.clauses ?? {};
-  const factors: RiskFactor[] = [];
+  let factors: RiskFactor[] = [];
   const flags = clauses.poa_risk_flags;
   if (Array.isArray(flags)) {
     for (const flag of flags) {
@@ -350,7 +350,7 @@ function factorsFromPoaRisk(smartFields: any): RiskFactor[] {
 }
 
 function factorsFromFindings(findings: string[]): RiskFactor[] {
-  const factors: RiskFactor[] = [];
+  let factors: RiskFactor[] = [];
   for (const f of findings) {
     const lower = f.toLowerCase();
     if (lower.includes("stamp duty") || lower.includes("stamp paper")) {
@@ -391,7 +391,10 @@ function factorsFromMissing(missing: string[], smartFields?: any): RiskFactor[] 
     smartFields?.dates?.end_date ||
     smartFields?.dates?.duration_months
   );
-  const factors: RiskFactor[] = [];
+  let factors: RiskFactor[] = [];
+  const _dtM = String(smartFields?.document_type || smartFields?.docType || "").toUpperCase();
+  const _tenancyM =
+    _dtM.includes("TENANCY") || _dtM.includes("RENTAL") || _dtM.includes("LEASE");
   for (const m of missing) {
     const lower0 = (m || "").toLowerCase();
     if (hasCnic && lower0.includes("cnic")) continue;
@@ -454,7 +457,7 @@ export function computeRiskFactors(input: {
   officialValuationPkr?: number | null;
   declaredPricePkr?: number | null;
 }): RiskScoreResult {
-  const factors: RiskFactor[] = [];
+  let factors: RiskFactor[] = [];
   const fbrFactor = checkFbrRatio(input.smartFields?.financials ?? null);
   if (fbrFactor) factors.push(fbrFactor);
 
@@ -496,8 +499,9 @@ export function computeRiskFactors(input: {
     _dt.includes("RENTAL") ||
     (input as any).tier === "rental";
   // P0: skip sale-pack ownership / Fard penalties on pure tenancy
+  let factorsForScore = factors;
   if (_isTenancy) {
-    factors = factors.filter((f) => {
+    factorsForScore = factors.filter((f) => {
       const L = (f.label || "").toLowerCase();
       if (L.includes("ownership") && (L.includes("fard") || L.includes("registry") || L.includes("utility") || L.includes("title")))
         return false;
@@ -506,7 +510,7 @@ export function computeRiskFactors(input: {
       return true;
     });
   }
-  const deduped = dedupe(factors).slice(0, 8);
+  const deduped = dedupe(factorsForScore).slice(0, 8);
   const { score, breakdown } = computeWeightedScore(deduped);
   return {
     riskScore: score,
