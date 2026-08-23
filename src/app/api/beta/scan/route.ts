@@ -82,6 +82,7 @@ import { getUnusedEntitlements, consumeEntitlement, recordScanUsage, updateScanS
 import { sendScanReportEmail } from "@/lib/email";
 import type { ReportType } from "@/commercial/billing/reports";
 import { computeRiskFactors, mergeRiskFactors } from "@/intelligence/risk-scorer";
+import { backfillTenancySmartFields } from "@/intelligence/tenancy-completeness";
 import { getOfficialValuation, getDeclaredPrice } from "@/intelligence/dc-rate-lookup";
 import { extractClauseConcerns, clauseConcernsToRiskFactors } from "@/intelligence/clause-concerns";
 import { detectSuspiciousClauses, suspiciousClausesToRiskFactors } from "@/intelligence/suspicious-clauses";

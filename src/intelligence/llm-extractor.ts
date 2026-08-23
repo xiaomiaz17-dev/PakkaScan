@@ -91,7 +91,7 @@ RULES:
 
 const SCHEMAS: Record<string, string> = {
 
-  TENANCY_AGREEMENT: `This is a TENANCY AGREEMENT (rental contract). Extract:
+  TENANCY_AGREEMENT: `This is a TENANCY AGREEMENT (rental contract). Always extract monthly_rent and security_deposit when any amount appears near rent/deposit words (including Urdu). Underscores do not mean skip numbers. Eastern digits count. Extract:
 {
   "parties": {
     "landlord": { "name": "...", "cnic": "XXXXX-XXXXXXX-X", "phone": "...", "address": "..." },

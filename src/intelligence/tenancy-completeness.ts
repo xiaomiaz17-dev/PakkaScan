@@ -311,3 +311,72 @@ export function decisionFromScore(score: number, blockers: number): string {
   if (score < 80) return "PROCEED_WITH_CAUTION";
   return "PROCEED";
 }
+
+/** Parse rent/deposit/term from OCR (EN + Urdu + Eastern digits). */
+export function extractTenancyMoneyHints(text: string): {
+  monthlyRent: number | null;
+  deposit: number | null;
+  durationMonths: number | null;
+} {
+  if (!text) return { monthlyRent: null, deposit: null, durationMonths: null };
+  const eastern = (s: string) =>
+    s.replace(/[\u06F0-\u06F9]/g, (ch) => String(ch.charCodeAt(0) - 0x06f0));
+  const parseNum = (raw: string): number | null => {
+    const n = parseInt(eastern(raw).replace(/[^\d]/g, ""), 10);
+    return Number.isFinite(n) && n >= 100 ? n : null;
+  };
+  const first = (res: RegExp[]): number | null => {
+    for (const re of res) {
+      const m = text.match(re);
+      if (m) {
+        const n = parseNum(m[1] || "");
+        if (n) return n;
+      }
+    }
+    return null;
+  };
+  // \u06A9\u0631\u0627\u06CC\u06C1 = kiraya; \u0645\u0627\u06C1\u0627\u0646\u06C1 = mahana
+  const kiraya = "\u06A9\u0631\u0627\u06CC\u06C1";
+  const mahana = "\u0645\u0627\u06C1\u0627\u0646\u06C1";
+  const rupay = "\u0631\u0648\u067E\u06D2";
+  const security = "\u0633\u06CC\u06A9\u06CC\u0648\u0631\u0679\u06CC";
+  const amanat = "\u0627\u0645\u0627\u0646\u062A";
+  const peshgi = "\u067E\u06CC\u0634\u06AF\u06CC";
+  const muddat = "\u0645\u062F\u062A";
+  const mahine = "\u0645\u06C1\u06CC\u0646\u06D2";
+  const monthlyRent = first([
+    /(?:monthly\s+)?rent[^0-9\u06F0-\u06F9]{0,24}(?:rs\.?|pkr)?\s*([\d,\u06F0-\u06F9]+)/i,
+    new RegExp(kiraya + "[^0-9\\u06F0-\\u06F9]{0,30}([\\d,\\u06F0-\\u06F9]+)"),
+    new RegExp(mahana + "[^0-9\\u06F0-\\u06F9]{0,30}([\\d,\\u06F0-\\u06F9]+)"),
+  ]);
+  const deposit = first([
+    /(?:security\s*)?deposit[^0-9\u06F0-\u06F9]{0,24}(?:rs\.?|pkr)?\s*([\d,\u06F0-\u06F9]+)/i,
+    /(?:advance\s*rent)[^0-9\u06F0-\u06F9]{0,24}([\d,\u06F0-\u06F9]+)/i,
+    new RegExp("(?:" + security + "|" + amanat + "|" + peshgi + ")[^0-9\\u06F0-\\u06F9]{0,30}([\\d,\\u06F0-\\u06F9]+)"),
+  ]);
+  const durationMonths = first([
+    /(\d{1,2})\s*(?:months?)/i,
+    new RegExp("([\\d\\u06F0-\\u06F9]{1,2})\\s*(?:" + mahine + "|" + mahana + ")"),
+    new RegExp(muddat + "[^0-9\\u06F0-\\u06F9]{0,16}([\\d\\u06F0-\\u06F9]{1,2})"),
+  ]);
+  return { monthlyRent, deposit, durationMonths };
+}
+
+export function backfillTenancySmartFields(smartFields: any, ocrText: string): any {
+  if (!smartFields || typeof smartFields !== "object") return smartFields;
+  const hints = extractTenancyMoneyHints(ocrText || "");
+  const fin = smartFields.financials || (smartFields.financials = {});
+  const getAmt = (v: any) =>
+    typeof v === "number" ? v : typeof v?.amount === "number" ? v.amount : null;
+  if (!getAmt(fin.monthly_rent) && hints.monthlyRent) {
+    fin.monthly_rent = { amount: hints.monthlyRent, currency: "PKR" };
+  }
+  if (!getAmt(fin.security_deposit) && hints.deposit) {
+    fin.security_deposit = { amount: hints.deposit, currency: "PKR" };
+  }
+  const dates = smartFields.dates || (smartFields.dates = {});
+  if (!dates.duration_months && hints.durationMonths) {
+    dates.duration_months = hints.durationMonths;
+  }
+  return smartFields;
+}
