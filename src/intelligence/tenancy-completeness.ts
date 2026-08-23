@@ -120,9 +120,33 @@ function hasLandlordCnicCue(text: string): boolean {
   );
 }
 function hasOneSidedEviction(text: string): boolean {
-  return (
-    /(?:landlord\s*may\s*(?:evict|eject|terminate)|evict\s*without\s*notice|at\s*any\s*time\s*without\s*cause|Ø¨Ø¯Ø±\s*Ø¨Ø¯Ø±)/i.test(text)
-  );
+  if (!text || text.length < 40) return false;
+  // Normal PK practice: terminate for unpaid rent — do not flag
+  const nonPayment =
+    /(?:non[-\s]?payment|default\s+in\s+(?:the\s+)?rent|unpaid\s+rent|rent\s+in\s+arrears|fails?\s+to\s+pay|does\s+not\s+pay\s+(?:the\s+)?rent|کرایہ\s*ادا\s*نہ)/i.test(
+      text
+    );
+  const noNotice =
+    /(?:without\s+(?:any\s+)?(?:prior\s+)?notice|no\s+prior\s+notice|evict(?:s|ion)?\s+without\s+notice)/i.test(
+      text
+    );
+  const vagueBreach =
+    /(?:prohibited\s+(?:item|use)|unauthori[sz]ed\s+use|any\s+breach|violation\s+of\s+any\s+condition)/i.test(
+      text
+    );
+  const lockBreak =
+    /(?:break(?:ing)?\s+(?:the\s+)?lock|force\s+open|remove\s+(?:the\s+)?tenant'?s?\s+belongings)/i.test(
+      text
+    );
+  const stayBan =
+    /(?:stay\s+order|injunction).{0,50}(?:not\s+obtain|shall\s+not|cannot|barred)/i.test(text) ||
+    /(?:shall\s+not|cannot|barred).{0,50}(?:stay\s+order|injunction)/i.test(text);
+  if (lockBreak || stayBan) return true;
+  if (noNotice && vagueBreach) return true;
+  // "evict without notice" only if NOT clearly about unpaid rent
+  if (noNotice && !nonPayment) return true;
+  // Old broad "landlord may terminate" alone is NOT enough (normal for rent default)
+  return false;
 }
 
 export function assessTenancyCompleteness(
@@ -260,9 +284,9 @@ if (!hasSecurityDeposit(text) && text.length > 400) {
   if (hasOneSidedEviction(text)) {
     findings.push({
       code: "TENANCY_EVICTION_ONE_SIDED",
-      title: "Possible one-sided eviction / ejectment language",
+      title: "Possible abusive eviction / ejectment language",
       message:
-        "Text suggests the landlord may terminate or evict with little process. Have this clause reviewed before signing; do not rely on oral assurances.",
+        "Abusive termination language (e.g. eviction without notice for vague breach, lock-breaking, or stay-order bans). Normal non-payment remedies are not flagged. Have this clause reviewed before signing.",
       effect: "DEDUCTION",
       severity: "HIGH",
       scoreImpact: -15,

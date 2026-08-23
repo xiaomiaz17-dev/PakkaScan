@@ -403,6 +403,12 @@ function factorsFromMissing(missing: string[], smartFields?: any): RiskFactor[] 
     } else if (lower.includes("witness")) {
       factors.push({ label: `Missing: ${m}`, points: -1, category: "document" });
     } else if (lower.includes("registr") || lower.includes("fard") || lower.includes("mutation") || lower.includes("nec")) {
+      if (
+        _tenancyM ||
+        String(smartFields?.document_type || "").toUpperCase().includes("TENANCY")
+      ) {
+        continue; // P0: no Fard/ownership penalty on tenancy
+      }
       factors.push({ label: `Missing key document: ${m}`, points: -2, category: "completeness" });
     } else {
       factors.push({ label: `Missing: ${m}`, points: -1, category: "completeness" });
@@ -479,6 +485,27 @@ export function computeRiskFactors(input: {
   factors.push(...factorsFromPoaRisk(input.smartFields));
   factors.push(...factorsFromFindings(input.findings).slice(0, 6));
   factors.push(...factorsFromMissing(input.missing, input.smartFields).slice(0, 4));
+  const _dt = String(
+    input.smartFields?.document_type ||
+      input.smartFields?.docType ||
+      (input as any).documentType ||
+      ""
+  ).toUpperCase();
+  const _isTenancy =
+    _dt.includes("TENANCY") ||
+    _dt.includes("RENTAL") ||
+    (input as any).tier === "rental";
+  // P0: skip sale-pack ownership / Fard penalties on pure tenancy
+  if (_isTenancy) {
+    factors = factors.filter((f) => {
+      const L = (f.label || "").toLowerCase();
+      if (L.includes("ownership") && (L.includes("fard") || L.includes("registry") || L.includes("utility") || L.includes("title")))
+        return false;
+      if (L.includes("missing key document") && (L.includes("fard") || L.includes("mutation") || L.includes("ownership")))
+        return false;
+      return true;
+    });
+  }
   const deduped = dedupe(factors).slice(0, 8);
   const { score, breakdown } = computeWeightedScore(deduped);
   return {

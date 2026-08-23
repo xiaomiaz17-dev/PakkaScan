@@ -215,6 +215,11 @@ export function detectCompleteness(
   } else if (presentRatio >= 0.4) {
     status = "partial";
     message = "Document is partially complete. Some critical fields are missing.";
+  } else if (clausesPresent && presentRatio >= 0.2) {
+    // P0: fill-in-the-blank tenancies still have clauses — not a blank template
+    status = "partial";
+    message =
+      "Document has legal clauses but some critical fields were not extracted. Check Key Facts and the original PDF for rent, deposit, and parties.";
   } else {
     status = "template";
     if (clausesPresent && propertyPresent) {
