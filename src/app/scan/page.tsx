@@ -527,7 +527,7 @@ function RiskScoreCard({ riskScore, riskLabel, riskFactors, scoreBreakdown }: {
     <div style={{ backgroundColor: c.bg, border: "1px solid " + c.border, borderRadius: "12px", padding: "20px", marginBottom: "20px" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: riskFactors.length > 0 ? "14px" : "0", flexWrap: "wrap", gap: "8px" }}>
         <div>
-          <div style={{ fontSize: "11px", fontWeight: 800, color: c.text, letterSpacing: "0.1em", marginBottom: "4px", opacity: 0.75, textTransform: "uppercase" as const }}>Transaction Risk Score</div>
+          <div style={{ fontSize: "11px", fontWeight: 800, color: c.text, letterSpacing: "0.1em", marginBottom: "4px", opacity: 0.75, textTransform: "uppercase" as const }}>Risk level</div>
           <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
             <span style={{ fontSize: "36px", fontWeight: 900, color: c.text, lineHeight: 1 }}>{riskScore}<span style={{ fontSize: "16px", opacity: 0.7 }}>/10</span></span>
             <span style={{ fontSize: "13px", fontWeight: 800, color: c.badge, backgroundColor: c.badge + "18", padding: "2px 10px", borderRadius: "6px", letterSpacing: "0.05em" }}>{riskLabel} RISK</span>
@@ -566,10 +566,11 @@ function RiskScoreCard({ riskScore, riskLabel, riskFactors, scoreBreakdown }: {
 function reportTitleFor(reportType?: string | null, docLabel?: string | null): string {
   const t = (reportType || "").toLowerCase();
   if (t === "rental" || t === "rental_safety" || t.includes("rental")) return "Rental Safety Check";
-  if (t === "bayana" || t.includes("bayana")) return "Bayana Safety Check";
+  if (t === "bayana" || t.includes("bayana") || t.includes("agreement_to_sell")) return "Bayana Safety Check";
   if (t === "full_dd" || t === "full" || t.includes("due")) return "Full Property Due Diligence";
-  if (docLabel && /tenancy|rental|lease/i.test(docLabel)) return "Rental Safety Check";
-  if (docLabel && /bayana|token/i.test(docLabel)) return "Bayana Safety Check";
+  if (docLabel && /tenancy|rental|lease|TENANCY_AGREEMENT|LEASE_DEED/i.test(docLabel)) return "Rental Safety Check";
+  if (docLabel && /bayana|token|agreement to sell|AGREEMENT_TO_SELL/i.test(docLabel)) return "Bayana Safety Check";
+  if (docLabel && /sale deed|mutation|fard/i.test(docLabel)) return "Full Property Due Diligence";
   return docLabel || "PakkaScan Report";
 }
 function VerdictHero({ verdict, posture, pakkaScore, urduHeadline }: { verdict: string; posture: string; pakkaScore: number; urduHeadline?: string | null }) {
@@ -624,7 +625,7 @@ function VerdictHero({ verdict, posture, pakkaScore, urduHeadline }: { verdict: 
         )}
       </div>
       <div style={{ textAlign: "right", flexShrink: 0 }}>
-        <div style={{ fontSize: "11px", fontWeight: 800, color: style.color, letterSpacing: "0.1em", marginBottom: "2px", opacity: 0.75 }}>PAKKASCORE</div>
+        <div style={{ fontSize: "11px", fontWeight: 800, color: style.color, letterSpacing: "0.1em", marginBottom: "2px", opacity: 0.75 }}>CONFIDENCE (0–100)</div>
         <div style={{ fontSize: "36px", fontWeight: 900, color: style.color, lineHeight: 1 }}>{Math.round(pakkaScore)}<span style={{ fontSize: "16px", opacity: 0.7 }}>/100</span></div>
       </div>
     </div>
