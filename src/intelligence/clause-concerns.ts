@@ -1,23 +1,13 @@
-/**
- * Session 9 â€” normalise LLM-extracted suspicious / missing clauses
- * into UI rows + risk factors.
- *
- * Expected shapes (flexible):
- *   smartFields.suspicious_clauses: Array<
- *     string | { quote?: string; text?: string; concern?: string; reason?: string;
- *                why?: string; severity?: string; title?: string }
- *   >
- *   smartFields.clauses.missing_standard_clauses: string[]
- *   smartFields.missing_standard_clauses: string[]
+﻿/**
+ * Normalise LLM suspicious / missing clauses into UI rows + risk factors.
+ * Missing protections are evidence-gated when OCR text is provided.
  */
-
 export type FlaggedClause = {
   quote: string;
   concern: string;
   severity: "critical" | "high" | "medium";
   title?: string;
 };
-
 export type ClauseConcerns = {
   flagged: FlaggedClause[];
   missing: string[];
@@ -27,7 +17,6 @@ function severityOf(raw: unknown, concern: string): FlaggedClause["severity"] {
   const s = String(raw || "").toLowerCase();
   if (s.includes("critical") || s.includes("severe")) return "critical";
   if (s.includes("high")) return "high";
-  // heuristic from concern text
   const c = concern.toLowerCase();
   if (/forfeit|unregistered|blank|fraud|irrevocable/.test(c)) return "critical";
   if (/poa|power of attorney|termination|possession|warranty/.test(c)) return "high";
@@ -40,17 +29,86 @@ function pointsFor(sev: FlaggedClause["severity"]): number {
   return -1;
 }
 
-export function extractClauseConcerns(smartFields: any): ClauseConcerns {
+/** Human label for snake_case / LLM codes */
+export function humanizeMissingProtection(raw: string): string {
+  const k = raw.trim().toLowerCase().replace(/[_\s]+/g, "_");
+  const map: Record<string, string> = {
+    rent_escalation: "rent escalation",
+    renewal: "renewal terms",
+    renewal_terms: "renewal terms",
+    notice_period: "notice period",
+    notice_period_days: "notice period",
+    termination_penalties: "termination penalties",
+    property_inspection_rights: "property inspection rights",
+    inspection: "property inspection rights",
+    deposit_refund: "security deposit refund terms",
+    deposit_refund_terms: "security deposit refund terms",
+    security_deposit_refund: "security deposit refund terms",
+    dispute_resolution: "dispute resolution",
+    lock_in: "lock-in period",
+    lock_in_period: "lock-in period",
+    "lock-in-period": "lock-in period",
+    subletting: "subletting restriction",
+    maintenance: "maintenance responsibility",
+  };
+  if (map[k]) return map[k];
+  return raw.replace(/_/g, " ").trim();
+}
+
+/**
+ * If OCR/extracted text already contains strong keywords for a "missing" item, drop it.
+ * Silent when we cannot search (no text) — still allow LLM list but prefer fewer false positives when text exists.
+ */
+const EVIDENCE_PATTERNS: Array<{ keys: RegExp; patterns: RegExp }> = [
+  { keys: /rent.?escalat|rent.?increase|annual.?increase/i, patterns: /escalat|increase\s+(of\s+)?\d+\s*%|per\s+annum|yearly\s+increase|rent\s+shall\s+be\s+increased/i },
+  { keys: /renewal/i, patterns: /renew|extend(ed|able)?\s+(for|by)|further\s+period|mutual\s+agreement/i },
+  { keys: /notice.?period/i, patterns: /notice\s+(of\s+)?\d+\s*(days|months)|days['']?\s+notice|one\s+month['']?s?\s+notice|\d+\s*days['']?\s+prior/i },
+  { keys: /termination|penalt/i, patterns: /terminat|forfeit|penalty|breach|vacate/i },
+  { keys: /inspection/i, patterns: /inspect(ion|ed|ing)?|landlord\s+may\s+enter|visit\s+the\s+(premises|property)/i },
+  { keys: /deposit|refund/i, patterns: /security\s+deposit|refundable|deposit\s+shall\s+be\s+(refunded|returned)/i },
+  { keys: /dispute|arbitration|mediation/i, patterns: /dispute|arbitr|mediation|court\s+of\s+competent/i },
+  { keys: /lock.?in/i, patterns: /lock[\s-]?in|minimum\s+stay|cannot\s+vacate\s+before/i },
+  { keys: /sublet/i, patterns: /sub-?let|sub-?lease|assign(ment)?/i },
+  { keys: /maintenance/i, patterns: /maint(enance|ain)|repair|landlord\s+shall\s+be\s+responsible/i },
+];
+
+export function filterMissingAgainstText(missing: string[], ocrText?: string | null): string[] {
+  if (!missing.length) return [];
+  const text = (ocrText || "").toString();
+  if (text.replace(/\s/g, "").length < 40) {
+    // Too little text to falsify — keep list but humanize only
+    return missing.map(humanizeMissingProtection);
+  }
+  const lower = text.toLowerCase();
+  const kept: string[] = [];
+  for (const raw of missing) {
+    const label = humanizeMissingProtection(raw);
+    const keyHay = `${raw} ${label}`.toLowerCase();
+    let evidenced = false;
+    for (const row of EVIDENCE_PATTERNS) {
+      if (!row.keys.test(keyHay)) continue;
+      if (row.patterns.test(lower)) {
+        evidenced = true;
+        break;
+      }
+    }
+    if (!evidenced) kept.push(label);
+  }
+  return kept;
+}
+
+export function extractClauseConcerns(
+  smartFields: any,
+  ocrText?: string | null
+): ClauseConcerns {
   if (!smartFields || typeof smartFields !== "object") {
     return { flagged: [], missing: [] };
   }
-
   const rawList =
     smartFields.suspicious_clauses ??
     smartFields.clauses?.suspicious_clauses ??
     smartFields.legal?.suspicious_clauses ??
     [];
-
   const flagged: FlaggedClause[] = [];
   if (Array.isArray(rawList)) {
     for (const item of rawList) {
@@ -58,7 +116,7 @@ export function extractClauseConcerns(smartFields: any): ClauseConcerns {
       if (typeof item === "string" && item.trim()) {
         flagged.push({
           quote: item.trim().slice(0, 280),
-          concern: "This wording may put the buyer at a disadvantage. Have a lawyer review before paying.",
+          concern: "This wording may put you at a disadvantage. Have a lawyer review before paying.",
           severity: severityOf(null, item),
         });
         continue;
@@ -82,7 +140,6 @@ export function extractClauseConcerns(smartFields: any): ClauseConcerns {
       }
     }
   }
-
   const missingRaw =
     smartFields.clauses?.missing_standard_clauses ??
     smartFields.missing_standard_clauses ??
@@ -97,8 +154,6 @@ export function extractClauseConcerns(smartFields: any): ClauseConcerns {
       }
     }
   }
-
-  // de-dupe flagged by quote
   const seen = new Set<string>();
   const uniqueFlagged = flagged.filter((f) => {
     const k = f.quote.toLowerCase();
@@ -106,29 +161,25 @@ export function extractClauseConcerns(smartFields: any): ClauseConcerns {
     seen.add(k);
     return true;
   });
-
-  return { flagged: uniqueFlagged, missing };
+  return {
+    flagged: uniqueFlagged,
+    missing: filterMissingAgainstText(missing, ocrText),
+  };
 }
 
-/**
- * Risk factors from suspicious clauses.
- * Cap total clause deductions at -3.0 (as absolute points contributed).
- */
 export function clauseConcernsToRiskFactors(
   concerns: ClauseConcerns
 ): Array<{ label: string; points: number; category: "legal" }> {
   if (!concerns.flagged.length && !concerns.missing.length) return [];
-
   const factors: Array<{ label: string; points: number; category: "legal" }> = [];
-  let budget = 3.0; // max absolute deduction from clauses
-
+  let budget = 3.0;
   for (const f of concerns.flagged) {
     if (budget <= 0) break;
     let pts = Math.abs(pointsFor(f.severity));
     pts = Math.min(pts, budget);
     budget -= pts;
     const label = f.title
-      ? `Suspicious clause â€” ${f.title}: ${f.concern}`
+      ? `Suspicious clause — ${f.title}: ${f.concern}`
       : `Suspicious clause: ${f.concern}`;
     factors.push({
       label: label.slice(0, 200),
@@ -136,19 +187,16 @@ export function clauseConcernsToRiskFactors(
       category: "legal",
     });
   }
-
-  // Missing standard protections: mild, still under remaining budget
   if (concerns.missing.length > 0 && budget > 0) {
     const pts = Math.min(1.0, budget);
     factors.push({
-      label: `Common safeguards not found in the text: ${concerns.missing.slice(0, 3).join("; ")} — ask why they are missing${
-        concerns.missing.length > 3 ? "â€¦" : ""
+      label: `Common safeguards not clearly found in the extract: ${concerns.missing.slice(0, 3).join("; ")} — confirm on the paper${
+        concerns.missing.length > 3 ? "…" : ""
       }`,
       points: -pts,
       category: "legal",
     });
   }
-
   return factors;
 }
 
@@ -167,4 +215,3 @@ export function formatClauseWhatsAppText(clause: FlaggedClause, referenceCode?: 
   ];
   return lines.filter((l) => l != null && String(l).length > 0).join("\n");
 }
-

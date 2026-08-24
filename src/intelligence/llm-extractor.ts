@@ -129,7 +129,7 @@ const SCHEMAS: Record<string, string> = {
     "termination_penalties": "e.g. one month rent forfeit",
     "subletting_allowed": "yes/no/not mentioned",
     "maintenance_responsibility": "landlord/tenant/shared/not mentioned",
-    "missing_standard_clauses": ["List any standard tenancy clauses that are ABSENT from this document. Common ones to check: security deposit refund terms, rent escalation, notice period, maintenance responsibility, subletting restriction, dispute resolution, property inspection rights. Only list genuinely missing ones."]
+    "missing_standard_clauses": ["List any standard tenancy clauses that are ABSENT from this document. Common ones to check: security deposit refund terms, rent escalation, notice period, maintenance responsibility, subletting restriction, dispute resolution, property inspection rights. Only list genuinely missing ones. If the text mentions notice period, renewal, inspection, rent increase, deposit refund, or dispute resolution even briefly, do NOT list that item as missing."]
   },
   "legal": {
     "applicable_law": "e.g. Sindh Rented Premises Ordinance 1979",

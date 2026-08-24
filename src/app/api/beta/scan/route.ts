@@ -780,7 +780,11 @@ export async function POST(request: Request) {
     
     // Session 9: suspicious clauses from LLM smartFields
     // Session 9 hybrid: LLM smartFields + rule-based OCR scan
-    const clauseConcerns = extractClauseConcerns(_firstSmartFields);
+    const _clauseOcrBlob = (perDocument || [])
+      .map((d: any) => d?.ocr?.text || d?.ocrText || d?.text || d?.extractedText || "")
+      .filter(Boolean)
+      .join("\n\n");
+    const clauseConcerns = extractClauseConcerns(_firstSmartFields, _clauseOcrBlob);
     const ocrBlob = (perDocument || [])
       .map((d: any) => d?.ocr?.text || d?.ocrText || d?.text || "")
       .filter(Boolean)
