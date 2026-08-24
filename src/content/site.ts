@@ -31,7 +31,7 @@ export const FOOTER_COLUMNS = [
       { href: "/features", label: "Features" },
       { href: "/property-passport", label: "Property Passport" },
       { href: "/pricing", label: "Pricing" },
-      { href: "/sample-report", label: "Sample report" },
+      { href: "/sample-report", label: "Sample report" }, { href: "/sample-report-clear", label: "Sample (clean)" },
       { href: "/verify", label: "Verify hash" },
     ],
   },
