@@ -114,7 +114,7 @@ export function validateCnics(
           status: "unverified_altered",
           role,
           originalMatch: closest.match,
-          note: `LLM returned '${value}' but source text has '${closest.match}' (${closest.diffs} digit(s) different)`,
+          note: `CRITICAL WARNING: CNIC transposition/typo likely — document shows '${closest.match}' but extraction returned '${value}' (${closest.diffs} digit difference). Verify on signature page.`,
         });
       } else {
         hallucinated.push({

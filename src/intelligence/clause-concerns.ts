@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Session 9 â€” normalise LLM-extracted suspicious / missing clauses
  * into UI rows + risk factors.
  *
@@ -153,18 +153,18 @@ export function clauseConcernsToRiskFactors(
 }
 
 export function formatClauseWhatsAppText(clause: FlaggedClause, referenceCode?: string): string {
+  const title = clause.title || "Flagged clause";
   const lines = [
-    "PakkaScan â€” Contract concern",
+    "PAKKASCAN LEGAL RISK ALERT",
     referenceCode ? `Ref: ${referenceCode}` : null,
     "",
-    clause.title ? `*${clause.title}*` : "*Flagged clause*",
+    `Issue: ${title}`,
+    clause.quote ? `Quote: "${clause.quote}"` : null,
+    `Risk: ${clause.concern}`,
     "",
-    `Quote: "${clause.quote}"`,
-    "",
-    `Why it matters: ${clause.concern}`,
-    "",
-    "This is an AI assistive flag â€” confirm with a property lawyer before paying or signing.",
+    "AI assistive flag only — confirm with a property lawyer before paying or signing.",
+    "Verified via pakkascan.com",
   ];
-  return lines.filter((l) => l != null).join("\n");
+  return lines.filter((l) => l != null && String(l).length > 0).join("\n");
 }
 

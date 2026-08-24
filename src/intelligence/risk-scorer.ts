@@ -494,19 +494,24 @@ export function computeRiskFactors(input: {
       (input as any).documentType ||
       ""
   ).toUpperCase();
+  const _textHint = (tenancyText || "").toLowerCase();
   const _isTenancy =
     _dt.includes("TENANCY") ||
     _dt.includes("RENTAL") ||
-    (input as any).tier === "rental";
-  // P0: skip sale-pack ownership / Fard penalties on pure tenancy
+    _dt.includes("LEASE") ||
+    (input as any).tier === "rental" ||
+    /\b(tenancy|landlord|tenant|monthly\s+rent|kiraaya|kiraya)\b/i.test(_textHint);
+  // Hard gate: never score land-title / Fard / mutation gaps on tenancy-like packs
   let factorsForScore = factors;
   if (_isTenancy) {
     factorsForScore = factors.filter((f) => {
       const L = (f.label || "").toLowerCase();
-      if (L.includes("ownership") && (L.includes("fard") || L.includes("registry") || L.includes("utility") || L.includes("title")))
+      if (/\b(fard|mutation|inteqal|intiqal|registry search|non-encumbrance|\bnec\b|ownership record|chain of title|sale deed present but no mutation)\b/i.test(L))
         return false;
-      if (L.includes("missing key document") && (L.includes("fard") || L.includes("mutation") || L.includes("ownership")))
+      if (L.includes("missing key document") && /fard|mutation|ownership|registry|encumbrance/i.test(L))
         return false;
+      if (L.includes("section 111") || L.includes("dc/fbr") || L.includes("under-declaration"))
+        return false; // valuation pack is for purchases, not rent
       return true;
     });
   }

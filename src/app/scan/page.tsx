@@ -529,8 +529,8 @@ function RiskScoreCard({ riskScore, riskLabel, riskFactors, scoreBreakdown }: {
         <div>
           <div style={{ fontSize: "11px", fontWeight: 800, color: c.text, letterSpacing: "0.1em", marginBottom: "4px", opacity: 0.75, textTransform: "uppercase" as const }}>Risk level</div>
           <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
-            <span style={{ fontSize: "36px", fontWeight: 900, color: c.text, lineHeight: 1 }}>{riskScore}<span style={{ fontSize: "16px", opacity: 0.7 }}>/10</span></span>
-            <span style={{ fontSize: "13px", fontWeight: 800, color: c.badge, backgroundColor: c.badge + "18", padding: "2px 10px", borderRadius: "6px", letterSpacing: "0.05em" }}>{riskLabel} RISK</span>
+            <span style={{ fontSize: "22px", fontWeight: 900, color: c.badge, backgroundColor: c.badge + "18", padding: "6px 12px", borderRadius: "8px", letterSpacing: "0.04em" }}>{riskLabel}</span>
+            <span style={{ fontSize: "14px", fontWeight: 600, color: c.text, opacity: 0.85 }}>Severity {riskScore}/10 <span style={{ fontSize: "12px", fontWeight: 500, opacity: 0.75 }}>(higher = more concern)</span></span>
           </div>
         </div>
       </div>
@@ -892,6 +892,15 @@ export default function ScanPage() {
     : combinedVerdictRaw;
   const crossDoc = results?.crossDoc ?? null;
   const isMultiDoc = (results?.documents?.length ?? 0) >= 2;
+  const ocrConf = (() => {
+    const docs = results?.documents || [];
+    const vals = docs.map((d) => d.ocr?.confidence).filter((c): c is number => typeof c === "number");
+    if (!vals.length && typeof (results as { ocr?: { confidence?: number } })?.ocr?.confidence === "number") {
+      return (results as { ocr?: { confidence?: number } }).ocr!.confidence!;
+    }
+    if (!vals.length) return null;
+    return Math.min(...vals);
+  })();
   const urduTranslations = results?.urduTranslations ?? {};
   const riskScore = results?.riskScore ?? null;
   const riskLabel = results?.riskLabel ?? null;
@@ -1169,9 +1178,30 @@ export default function ScanPage() {
             )}
 
             {/* Always show risk + chain when present (all tiers / multi-doc) */}
+            {ocrConf != null && ocrConf < 70 && (
+              <div
+                role="status"
+                style={{
+                  marginBottom: 16,
+                  padding: "12px 14px",
+                  borderRadius: 10,
+                  border: "1px solid #fcd34d",
+                  background: "#fffbeb",
+                  color: "#78350f",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  lineHeight: 1.45,
+                }}
+              >
+                Complex or low-confidence scan detected (OCR {Math.round(ocrConf)}%).
+                Fields may be incomplete — do not treat blank amounts as confirmed zeros.
+                Prefer a clearer photo or PDF if the verdict looks empty.
+              </div>
+            )}
             {riskScore !== null && riskLabel && (
               <RiskScoreCard riskScore={riskScore} riskLabel={riskLabel} riskFactors={riskFactors} scoreBreakdown={scoreBreakdown} />
             )}
+
             {riskScore !== null && riskLabel && (
               <RiskMeaningStrip riskScore={riskScore} riskLabel={riskLabel} riskFactors={riskFactors} />
             )}
