@@ -61,9 +61,7 @@ export default function SampleReportPage() {
         <div style={{ fontSize: 13, color: "#9a3412", marginTop: 6 }}>
           Material gaps and possible under-declaration. Resolve before paying the balance.
         </div>
-        <div dir="rtl" style={{ fontSize: 14, color: "#9a3412", marginTop: 8, lineHeight: 1.8 }}>
-          اہم خلا اور ممکنہ کم اعلان شدہ قیمت۔ بقیہ رقم ادا کرنے سے پہلے تصفیہ کریں۔
-        </div>
+        <div dir="rtl" style={{ fontSize: 14, color: "#9a3412", marginTop: 8, lineHeight: 1.8 }}>احتیاط سے آگے بڑھیں</div>
       </div>
 
       <div
@@ -76,12 +74,12 @@ export default function SampleReportPage() {
         }}
       >
         <div style={{ fontSize: 11, fontWeight: 800, color: "#9a3412", letterSpacing: "0.08em" }}>
-          TRANSACTION RISK SCORE
+          RISK LEVEL
         </div>
         <div style={{ fontSize: 32, fontWeight: 900, color: "#9a3412" }}>
           {riskScore}
           <span style={{ fontSize: 14 }}>/10</span>{" "}
-          <span style={{ fontSize: 14, fontWeight: 800 }}>{riskLabel} RISK</span>
+          <span style={{ fontSize: 14, fontWeight: 800 }}>Risk level: {riskLabel}</span>
         </div>
         <ul style={{ margin: "10px 0 0", paddingLeft: 18, fontSize: 13, color: "#7c2d12", lineHeight: 1.55 }}>
           {factors.map((f, i) => (
@@ -93,6 +91,26 @@ export default function SampleReportPage() {
       </div>
 
       <RiskMeaningStrip riskScore={riskScore} riskLabel={riskLabel} riskFactors={factors} />
+      <div
+        style={{
+          padding: 14,
+          borderRadius: 12,
+          background: "#f8fafc",
+          border: "1px solid #e2e8f0",
+          marginBottom: 16,
+          marginTop: 8,
+        }}
+      >
+        <div style={{ fontSize: 11, fontWeight: 800, color: "#64748b", letterSpacing: "0.08em" }}>
+          CONFIDENCE
+        </div>
+        <div style={{ fontSize: 15, fontWeight: 700, color: "#0f172a", marginTop: 4 }}>
+          Medium — illustrative sample (not a live scan)
+        </div>
+        <div style={{ fontSize: 12, color: "#64748b", marginTop: 4, lineHeight: 1.45 }}>
+          Confidence is about extraction quality. Risk level is about deal severity. They are not the same.
+        </div>
+      </div>
 
       <div
         style={{
