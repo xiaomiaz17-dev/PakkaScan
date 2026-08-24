@@ -40,6 +40,7 @@ export function findCnicsInText(text: string): string[] {
   const seen = new Set<string>();
   const result: string[] = [];
   for (const m of matches) {
+    if (/^0{5}-0{7}-0$/.test(m)) continue; // placeholder
     if (!seen.has(m)) {
       seen.add(m);
       result.push(m);
@@ -210,11 +211,12 @@ export function applyCnicValidation(smartFields: any, ocrText: string): any {
     }
     const altered = alteredMap.get(party.cnic);
     if (altered && altered.originalMatch) {
+      // OCR is source of truth — show corrected value as verified
       return {
         ...party,
         cnic: altered.originalMatch,
-        cnic_unverified: true,
-        cnic_note: altered.note,
+        cnic_unverified: false,
+        cnic_note: undefined,
       };
     }
     return party;
@@ -235,6 +237,61 @@ export function applyCnicValidation(smartFields: any, ocrText: string): any {
   }
 
   // If OCR found CNICs the LLM entirely missed, surface them
+  // Assign OCR CNICs the LLM dropped to parties missing a CNIC (tenancy: landlord first)
+  const isZeroCnic = (c: string) => !c || /^0{5}-0{7}-0$/.test(c);
+  const needLandlord =
+    !rewrittenParties.landlord?.cnic || isZeroCnic(String(rewrittenParties.landlord.cnic));
+  const needTenant =
+    !rewrittenParties.tenant?.cnic || isZeroCnic(String(rewrittenParties.tenant.cnic));
+  const pool = [
+    ...report.droppedByLlm,
+    ...report.verified.map((x) => x.value),
+    ...report.altered.map((x) => x.originalMatch || x.value),
+  ].filter((c, i, a) => c && !isZeroCnic(c) && a.indexOf(c) === i);
+
+  if (needLandlord && pool.length > 0) {
+    // Prefer CNIC near landlord name in OCR if possible
+    const lName = String(rewrittenParties.landlord?.name || "").trim();
+    let picked = pool[0];
+    if (lName && ocrText) {
+      const idx = ocrText.indexOf(lName);
+      if (idx >= 0) {
+        const window = ocrText.slice(Math.max(0, idx - 80), idx + lName.length + 120);
+        const near = window.match(/\b\d{5}-\d{7}-\d\b/);
+        if (near && pool.includes(near[0])) picked = near[0];
+      }
+    }
+    rewrittenParties.landlord = {
+      ...(rewrittenParties.landlord || {}),
+      cnic: picked,
+      cnic_unverified: false,
+      cnic_note: undefined,
+    };
+    // remove from pool so tenant can take another
+    const pi = pool.indexOf(picked);
+    if (pi >= 0) pool.splice(pi, 1);
+  }
+  if (needTenant && pool.length > 0) {
+    const tName = String(rewrittenParties.tenant?.name || "").trim();
+    let picked = pool[0];
+    if (tName && ocrText) {
+      const idx = ocrText.indexOf(tName);
+      if (idx >= 0) {
+        const window = ocrText.slice(Math.max(0, idx - 80), idx + tName.length + 120);
+        const near = window.match(/\b\d{5}-\d{7}-\d\b/);
+        if (near && pool.includes(near[0])) picked = near[0];
+      }
+    }
+    // Don't assign tenant the same as landlord
+    if (picked !== rewrittenParties.landlord?.cnic) {
+      rewrittenParties.tenant = {
+        ...(rewrittenParties.tenant || {}),
+        cnic: picked,
+        cnic_unverified: false,
+      };
+    }
+  }
+
   if (report.droppedByLlm.length > 0) {
     rewrittenParties.additional_cnics_found_in_document = report.droppedByLlm.map(cnic => ({
       cnic,
