@@ -529,7 +529,7 @@ function RiskScoreCard({ riskScore, riskLabel, riskFactors, scoreBreakdown }: {
         <div>
           <div style={{ fontSize: "11px", fontWeight: 800, color: c.text, letterSpacing: "0.1em", marginBottom: "4px", opacity: 0.75, textTransform: "uppercase" as const }}>Risk level</div>
           <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
-            <span style={{ fontSize: "22px", fontWeight: 900, color: c.badge, backgroundColor: c.badge + "18", padding: "6px 12px", borderRadius: "8px", letterSpacing: "0.04em" }}>{riskLabel}</span>
+            <span style={{ fontSize: "22px", fontWeight: 900, color: c.badge, backgroundColor: c.badge + "18", padding: "6px 12px", borderRadius: "8px", letterSpacing: "0.04em" }}>{riskLabel} RISK</span>
             <span style={{ fontSize: "14px", fontWeight: 600, color: c.text, opacity: 0.85 }}>Severity {riskScore}/10 <span style={{ fontSize: "12px", fontWeight: 500, opacity: 0.75 }}>(higher = more concern)</span></span>
           </div>
         </div>
@@ -537,6 +537,9 @@ function RiskScoreCard({ riskScore, riskLabel, riskFactors, scoreBreakdown }: {
       {riskFactors.length > 0 && (
         <div style={{ borderTop: "1px solid " + c.border, paddingTop: "12px" }}>
           <div style={{ fontSize: "12px", fontWeight: 700, color: c.text, marginBottom: "8px" }}>Contributing Factors:</div>
+          <p style={{ fontSize: "12px", color: c.text, opacity: 0.85, margin: "0 0 8px", lineHeight: 1.45 }}>
+            Verdict is about hard blockers. Risk level is about softer gaps and formalities — they are not the same score.
+          </p>
           <ul style={{ margin: 0, paddingLeft: "0", listStyle: "none" }}>
             {riskFactors.map((f, i) => (
               <li key={i} style={{ fontSize: "13px", color: c.text, lineHeight: 1.6, display: "flex", alignItems: "flex-start", gap: "6px", marginBottom: "4px" }}>
@@ -627,7 +630,11 @@ function VerdictHero({ verdict, posture, pakkaScore, urduHeadline }: { verdict: 
       <div style={{ textAlign: "right", flexShrink: 0 }}>
         <div style={{ fontSize: "11px", fontWeight: 800, color: style.color, letterSpacing: "0.1em", marginBottom: "2px", opacity: 0.75 }}>CONFIDENCE (0–100)</div>
         <div style={{ fontSize: "36px", fontWeight: 900, color: style.color, lineHeight: 1 }}>{Math.round(pakkaScore)}<span style={{ fontSize: "16px", opacity: 0.7 }}>/100</span></div>
-      </div>
+      
+        <div style={{ fontSize: "10px", fontWeight: 600, color: style.color, opacity: 0.75, marginTop: 4, maxWidth: 130, lineHeight: 1.35 }}>
+          Read quality, not deal safety
+        </div>
+</div>
     </div>
   );
 }

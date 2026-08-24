@@ -18,13 +18,13 @@ export function plainEnglishRiskMeaning(
 
   if (score <= 2 || label === "LOW") {
     return (
-      "What this means: No major red flags stood out from the documents you uploaded. Still verify identity and ownership records before paying." +
+      "What this means: No major red flags stood out. Confidence is about how clearly we read the document; risk level is about deal concerns. Still verify identity before paying." +
       topHint
     );
   }
   if (score <= 4 || label === "MEDIUM") {
     return (
-      "What this means: Some issues need attention before you proceed. Review the factors below and close the gaps (IDs, records, or contract terms) with the other party or a lawyer." +
+      "What this means: The verdict can still be PROCEED when there are no hard blockers. Risk level flags softer gaps — review the factors below and close them (IDs, formalities, or contract terms) with the other party or a lawyer before you rely on this paper." +
       topHint
     );
   }

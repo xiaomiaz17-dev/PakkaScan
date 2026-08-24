@@ -192,9 +192,9 @@ export function assessTenancyCompleteness(
   if (!hasWitnessBlock(text)) {
     findings.push({
       code: "TENANCY_WITNESS_MISSING",
-      title: "Witness block not detected",
+      title: "No clear witness details",
       message:
-        "Witness details improve enforceability evidence — none clearly found.",
+        "No clear witness names on the agreement — weaker if a dispute goes to court.",
       effect: "DEDUCTION",
       severity: "LOW",
       scoreImpact: -8,
@@ -208,9 +208,9 @@ export function assessTenancyCompleteness(
   ) {
     findings.push({
       code: "TENANCY_FORMALITIES_THIN",
-      title: "Governing law / formalities thin",
+      title: "Stamp / registration / rent-law formalities unclear",
       message:
-        "Little signal of governing rent law, stamp, or registration in the extract.",
+        "Little sign of stamp paper, registration, or which rent law applies — ask the landlord to confirm.",
       effect: "DEDUCTION",
       severity: "LOW",
       scoreImpact: -6,

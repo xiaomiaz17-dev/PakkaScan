@@ -141,7 +141,7 @@ export function clauseConcernsToRiskFactors(
   if (concerns.missing.length > 0 && budget > 0) {
     const pts = Math.min(1.0, budget);
     factors.push({
-      label: `Missing standard protections: ${concerns.missing.slice(0, 3).join("; ")}${
+      label: `Common safeguards not found in the text: ${concerns.missing.slice(0, 3).join("; ")} — ask why they are missing${
         concerns.missing.length > 3 ? "â€¦" : ""
       }`,
       points: -pts,
