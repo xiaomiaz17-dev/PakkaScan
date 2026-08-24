@@ -18,6 +18,17 @@ type Props = {
   teaserOnly?: boolean;
 };
 
+function formatTimelineDate(raw: string | null | undefined): string {
+  if (!raw) return "Date unknown";
+  const s = String(raw).trim();
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
+    const [y, m, d] = s.slice(0, 10).split("-");
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const mi = parseInt(m, 10) - 1;
+    if (mi >= 0 && mi < 12) return `${parseInt(d, 10)} ${months[mi]} ${y}`;
+  }
+  return s;
+}
 const EVENT_LABELS: Record<string, string> = {
   SALE: "Sale Deed",
   MUTATION: "Mutation",
@@ -152,7 +163,7 @@ export default function OwnershipTimeline({ result, tier, teaserOnly }: Props) {
                   {EVENT_LABELS[event.eventType] || event.eventType}
                 </div>
                 <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 4 }}>
-                  {event.date || "Date unknown"}
+                  {formatTimelineDate(event.date)}
                 </div>
                 <div style={{ fontSize: 11, lineHeight: 1.35 }}>
                   {event.transferee?.canonicalName || event.transferor?.canonicalName || "—"}
@@ -188,7 +199,7 @@ export default function OwnershipTimeline({ result, tier, teaserOnly }: Props) {
           }}
         >
           <div style={{ fontWeight: 800, color: "#0f172a", marginBottom: 8 }}>
-            {EVENT_LABELS[selected.eventType]} · {selected.date || "Undated"}
+            {EVENT_LABELS[selected.eventType]} · {formatTimelineDate(selected.date)}
           </div>
           {selected.fileName && (
             <div style={{ marginBottom: 4 }}>

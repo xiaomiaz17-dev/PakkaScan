@@ -132,6 +132,61 @@ function pickEntityByRoles(
   return null;
 }
 
+/** Normalize common PK/UK date strings to YYYY-MM-DD when possible. */
+export function normalizeToIsoDate(raw: unknown): string | null {
+  if (raw == null) return null;
+  const s = String(raw).trim();
+  if (!s) return null;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  // 10-JUL-2026 / 10-Jul-26
+  const m1 = s.match(/^(\d{1,2})[-.\s]([A-Za-z]{3,9})[-.\s](\d{2,4})$/);
+  if (m1) {
+    const months: Record<string, string> = {
+      jan: "01", january: "01", feb: "02", february: "02", mar: "03", march: "03",
+      apr: "04", april: "04", may: "05", jun: "06", june: "06", jul: "07", july: "07",
+      aug: "08", august: "08", sep: "09", september: "09", oct: "10", october: "10",
+      nov: "11", november: "11", dec: "12", december: "12",
+    };
+    const mon = months[m1[2].toLowerCase()];
+    if (mon) {
+      let y = m1[3];
+      if (y.length === 2) y = (parseInt(y, 10) > 50 ? "19" : "20") + y;
+      const d = m1[1].padStart(2, "0");
+      return `${y}-${mon}-${d}`;
+    }
+  }
+  // 10/07/2026 or 10-07-2026 (assume D/M/Y for PK)
+  const m2 = s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/);
+  if (m2) {
+    let y = m2[3];
+    if (y.length === 2) y = (parseInt(y, 10) > 50 ? "19" : "20") + y;
+    const d = m2[1].padStart(2, "0");
+    const mon = m2[2].padStart(2, "0");
+    if (parseInt(mon, 10) >= 1 && parseInt(mon, 10) <= 12) return `${y}-${mon}-${d}`;
+  }
+  // 12th June 2026
+  const m3 = s.match(/^(\d{1,2})(?:st|nd|rd|th)?\s+([A-Za-z]+)\s+(\d{4})$/);
+  if (m3) {
+    const months: Record<string, string> = {
+      january: "01", february: "02", march: "03", april: "04", may: "05", june: "06",
+      july: "07", august: "08", september: "09", october: "10", november: "11", december: "12",
+      jan: "01", feb: "02", mar: "03", apr: "04", jun: "06", jul: "07", aug: "08",
+      sep: "09", oct: "10", nov: "11", dec: "12",
+    };
+    const mon = months[m3[2].toLowerCase()];
+    if (mon) return `${m3[3]}-${mon}-${m3[1].padStart(2, "0")}`;
+  }
+  const t = Date.parse(s);
+  if (!Number.isNaN(t)) {
+    const dt = new Date(t);
+    const y = dt.getUTCFullYear();
+    const mon = String(dt.getUTCMonth() + 1).padStart(2, "0");
+    const d = String(dt.getUTCDate()).padStart(2, "0");
+    if (y > 1970 && y < 2100) return `${y}-${mon}-${d}`;
+  }
+  return null;
+}
+
 function extractDate(smartFields: any): string | null {
   const dates = smartFields?.dates ?? {};
   const candidates = [
@@ -143,9 +198,8 @@ function extractDate(smartFields: any): string | null {
     dates.signed_on,
   ];
   for (const c of candidates) {
-    if (typeof c === "string" && /^\d{4}-\d{2}-\d{2}/.test(c)) {
-      return c.slice(0, 10);
-    }
+    const iso = normalizeToIsoDate(c);
+    if (iso) return iso;
   }
   return null;
 }
