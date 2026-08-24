@@ -45,13 +45,8 @@ function tenancyRequirements(present: Set<DocumentType>): MissingEvidenceRequire
       critical: true,
     });
   }
-  if (!has(present, OWNERSHIP_TYPES)) {
-    missing.push({
-      code: "LANDLORD_OWNERSHIP_PROOF",
-      label: "Landlord's ownership proof (Fard, registry, or recent utility bill)",
-      critical: false,
-    });
-  }
+  // P0: Landlords do not attach Fard to a tenancy PDF — tip only, not missing evidence
+  // (Optional advisory is handled in next-steps / UI, not as a coverage gap.)
   return missing;
 }
 
@@ -137,7 +132,7 @@ export function assessMissingEvidence(evidence: Evidence[]) {
   switch (scenario) {
     case "TENANCY":
       missing = tenancyRequirements(present);
-      totalChecks = 2;
+      totalChecks = 1; // identity only — ownership proof is not required on the PDF
       break;
     case "PROPERTY_TRANSFER":
       missing = propertyTransferRequirements(present);

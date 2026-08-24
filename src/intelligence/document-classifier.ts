@@ -46,7 +46,7 @@ const CUES: { type: DocumentType; cues: string[]; weight: number }[] = [
       "tenancy",
       "lessor",
       "lessee",
-      "lease",
+      
       // Urdu / roman-Urdu common on stamp paper
       "kiraaya",
       "kiraya",
@@ -84,6 +84,27 @@ const TENANCY_REGEXES: RegExp[] = [
 
 export function classifyFromText(text: string): ClassificationHint {
   const lower = norm(text);
+  // P0: high-signal overrides (stop Bayana→PoA, NEC→Sale, Sub-lease→Tenancy cascades)
+  const overrides: { re: RegExp; type: DocumentType; cue: string; conf: number }[] = [
+    { re: /\b(?:agreement\s+to\s+sell|bayana|earnest\s+money|token\s+money)\b/i, type: "AGREEMENT_TO_SELL", cue: "bayana_override", conf: 0.93 },
+    { re: /\b(?:non[-\s]?encumbrance|no\s+demand\s+certificate|\bNDC\b|\bNEC\b)\b/i, type: "NON_ENCUMBRANCE_CERTIFICATE", cue: "ndc_nec_override", conf: 0.93 },
+    { re: /\b(?:sub[-\s]?lease|registered\s+lease|lease\s+deed)\b/i, type: "LEASE_DEED", cue: "lease_override", conf: 0.92 },
+    { re: /\b(?:power\s+of\s+attorney|general\s+power|mukhtar[-\s]?nama)\b/i, type: "GENERAL_POWER_OF_ATTORNEY", cue: "poa_override", conf: 0.9 },
+  ];
+  for (const o of overrides) {
+    if (o.re.test(text)) {
+      // Don't call PoA if strong bayana signals also present
+      if (o.type === "GENERAL_POWER_OF_ATTORNEY" && /\b(?:agreement\s+to\s+sell|bayana|earnest)\b/i.test(text)) {
+        continue;
+      }
+      return {
+        documentType: o.type,
+        confidence: o.conf,
+        matchedCues: [o.cue],
+      };
+    }
+  }
+
   let best: ClassificationHint = { documentType: "UNKNOWN", confidence: 0.2, matchedCues: [] };
 
   for (const row of CUES) {
