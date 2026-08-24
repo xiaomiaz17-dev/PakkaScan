@@ -38,12 +38,12 @@ export default function AdminUnlockPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-admin-grant-secret": secret.trim(),
         },
         body: JSON.stringify({
           email: email.trim().toLowerCase(),
           reportType,
           note: note.trim() || "ops-unlock-ui",
+          secret: secret.trim(),
         }),
       });
       const data = await res.json().catch(() => ({}));

@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db";
 import {
   grantEntitlement,
@@ -23,24 +23,36 @@ function extractSecret(req: NextRequest): string | null {
   return null;
 }
 
+/**
+ * POST /api/admin/grant-entitlement
+ * Auth: header x-admin-grant-secret OR body.secret / body.opsSecret
+ * Body: { email, reportType, note?, secret? }
+ */
 export async function POST(req: NextRequest) {
   const expected = (process.env.ADMIN_GRANT_SECRET || "").trim();
-  const provided = extractSecret(req);
-
   if (!expected) {
-    console.error("[admin/grant-entitlement] ADMIN_GRANT_SECRET is not set on this deployment");
+    console.error("[admin/grant-entitlement] ADMIN_GRANT_SECRET is not set");
     return NextResponse.json(
       { error: "server_misconfigured", message: "ADMIN_GRANT_SECRET missing" },
       { status: 500 }
     );
   }
 
+  let body: Record<string, unknown> = {};
+  try {
+    body = (await req.json()) as Record<string, unknown>;
+  } catch {
+    body = {};
+  }
+
+  const headerSecret = extractSecret(req) || "";
+  const bodySecret = String(body.secret || body.opsSecret || "").trim();
+  const provided = (headerSecret || bodySecret).trim();
   if (!provided || provided !== expected) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
   try {
-    const body = await req.json();
     const email = String(body.email || "").trim().toLowerCase();
     const reportTypeRaw = String(body.reportType || "").trim();
     const note = String(body.note || "").trim().slice(0, 200);
@@ -51,8 +63,8 @@ export async function POST(req: NextRequest) {
     if (!isValidReportType(reportTypeRaw)) {
       return NextResponse.json({ error: "invalid_report_type" }, { status: 400 });
     }
-    const reportType = reportTypeRaw as ReportType;
 
+    const reportType = reportTypeRaw as ReportType;
     const users = await sql`
       SELECT id, email FROM users WHERE lower(email) = ${email} LIMIT 1
     `;
