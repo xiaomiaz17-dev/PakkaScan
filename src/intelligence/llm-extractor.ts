@@ -178,7 +178,7 @@ const SCHEMAS: Record<string, string> = {
   "summary": "One-sentence summary of the transfer"
 }`,
 
-  AGREEMENT_TO_SELL: `This is a BAYANA / AGREEMENT TO SELL (token/earnest money promise before final Sale Deed). Extract:
+  AGREEMENT_TO_SELL: `This is a BAYANA / AGREEMENT TO SELL (token/earnest money promise before final Sale Deed). Always extract numeric total consideration and token/bayana. Flag one-sided forfeiture (buyer loses 100% token / full earnest with no parallel seller penalty). Extract:
 {
   "parties": {
     "seller": { "name": "...", "father_name": "...", "cnic": "...", "address": "..." },
@@ -206,6 +206,8 @@ const SCHEMAS: Record<string, string> = {
   "clauses": {
     "backing_out_penalty_by_buyer": "e.g. token forfeit",
     "backing_out_penalty_by_seller": "e.g. return double the token",
+    "token_forfeiture_percent": null,
+    "forfeiture_one_sided": false,
     "sale_deed_registration_deadline": "e.g. by 30 September 2026",
     "possession_transfer": "when possession will pass"
   },
