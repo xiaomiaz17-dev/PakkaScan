@@ -568,13 +568,15 @@ function RiskScoreCard({ riskScore, riskLabel, riskFactors, scoreBreakdown }: {
 }
 function reportTitleFor(reportType?: string | null, docLabel?: string | null): string {
   const t = (reportType || "").toLowerCase();
+  const d = (docLabel || "").toString();
+  // Document truth first — never label a tenancy as Full DD
+  if (/tenancy|rental|lease|TENANCY_AGREEMENT|LEASE_DEED/i.test(d)) return "Rental Safety Check";
+  if (/bayana|token|agreement to sell|AGREEMENT_TO_SELL/i.test(d)) return "Bayana Safety Check";
   if (t === "rental" || t === "rental_safety" || t.includes("rental")) return "Rental Safety Check";
   if (t === "bayana" || t.includes("bayana") || t.includes("agreement_to_sell")) return "Bayana Safety Check";
-  if (t === "full_dd" || t === "full" || t.includes("due")) return "Full Property Due Diligence";
-  if (docLabel && /tenancy|rental|lease|TENANCY_AGREEMENT|LEASE_DEED/i.test(docLabel)) return "Rental Safety Check";
-  if (docLabel && /bayana|token|agreement to sell|AGREEMENT_TO_SELL/i.test(docLabel)) return "Bayana Safety Check";
-  if (docLabel && /sale deed|mutation|fard/i.test(docLabel)) return "Full Property Due Diligence";
-  return docLabel || "PakkaScan Report";
+  if (t === "full_dd" || t === "full" || t === "full-dd") return "Full Property Due Diligence";
+  if (/sale deed|mutation|fard|SALE_DEED|MUTATION|FARD/i.test(d)) return "Full Property Due Diligence";
+  return humanDocType(d) || "PakkaScan Report";
 }
 function VerdictHero({ verdict, posture, pakkaScore, urduHeadline }: { verdict: string; posture: string; pakkaScore: number; urduHeadline?: string | null }) {
   const style = (() => {
@@ -1146,7 +1148,7 @@ export default function ScanPage() {
 
             <div style={{ marginBottom: "8px" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
-                <h3 style={{ fontSize: "22px", fontWeight: 800, color: "#0f172a", margin: "0 0 4px 0" }}>{reportTitleFor(results.tier, (results.documents?.[0] as any)?.documentType || (results.documents?.[0] as any)?.type || (results.documents?.[0] as any)?.label)}</h3>
+                <h3 style={{ fontSize: "22px", fontWeight: 800, color: "#0f172a", margin: "0 0 4px 0" }}>{reportTitleFor(results.tier, (results.documents?.[0] as any)?.classification?.documentType || (results.documents?.[0] as any)?.documentType || (results.documents?.[0] as any)?.type || (results.documents?.[0] as any)?.label)}</h3>
                 {results.referenceCode && (
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px" }}>
                     <div style={{ fontSize: "11px", color: "#64748b", fontFamily: "monospace", backgroundColor: "#f1f5f9", padding: "4px 10px", borderRadius: "6px", border: "1px solid #e2e8f0" }}>
