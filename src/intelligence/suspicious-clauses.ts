@@ -46,6 +46,8 @@ const RULES: Rule[] = [
         /bayana.{0,40}(forfeit|confiscat)/i,
       /(?:100\s*%|full|entire|whole)\s+(?:of\s+)?(?:the\s+)?(?:token|bayana|earnest)/i,
       /(?:token|bayana|earnest).{0,40}(?:100\s*%|full|entire|non[-\s]?refundable)/i,
+      /(?:100\s*%|full|entire|whole)\s+(?:of\s+)?(?:the\s+)?(?:token|bayana|earnest)/i,
+      /(?:token|bayana|earnest).{0,40}(?:100\s*%|full|entire|non[-\s]?refundable)/i,
         /(advance|token).{0,30}(non[-\s]?refundable|shall\s+not\s+be\s+refunded)/i,
         /buyer.{0,40}(lose|forfeit).{0,30}(deposit|earnest|bayana|token)/i,
       ];
