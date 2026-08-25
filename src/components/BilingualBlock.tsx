@@ -1,4 +1,5 @@
 "use client";
+import { isolateLtrRuns } from "@/lib/bidi";
 
 /**
  * Desktop: EN | UR side-by-side when urdu present.
@@ -73,7 +74,7 @@ export function BilingualBlock({
               whiteSpace: "pre-wrap",
             }}
           >
-            {urdu}
+            {isolateLtrRuns(urdu)}
           </div>
         </div>
       )}

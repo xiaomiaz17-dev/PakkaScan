@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { isolateLtrRuns } from "@/lib/bidi";
 
 /**
  * Feature 3c — dual-language layout
@@ -89,7 +90,7 @@ export function BilingualGrid({
               wordBreak: "break-word",
             }}
           >
-            {urdu}
+            {typeof urdu === "string" ? isolateLtrRuns(urdu) : urdu}
           </div>
         </div>
       ) : null}
@@ -104,7 +105,7 @@ export function urduFromMap(
   if (!map) return null;
   for (const k of keys) {
     const v = map[k];
-    if (typeof v === "string" && v.trim()) return v.trim();
+    if (typeof v === "string" && v.trim()) return isolateLtrRuns(v.trim());
   }
   return null;
 }

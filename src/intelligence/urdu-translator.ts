@@ -11,6 +11,7 @@
 
 import { GoogleGenAI } from "@google/genai";
 import { cacheGet, cacheSet } from "./llm-cache";
+import { isolateLtrRuns } from "@/lib/bidi";
 
 const apiKey = process.env.GEMINI_API_KEY || "";
 const genAI = apiKey ? new GoogleGenAI({ apiKey }) : null;
@@ -57,7 +58,9 @@ export async function translateToUrdu(
   const cached = cacheGet<Record<string, string>>("urdu", cacheKey);
   if (cached) {
     console.log("[urdu] (cache HIT) " + Object.keys(cached).length + " string(s)");
-    return cached;
+    const isolatedCached: Record<string, string> = {};
+    for (const [ck, cv] of Object.entries(cached)) isolatedCached[ck] = isolateLtrRuns(cv);
+    return isolatedCached;
   }
 
   const prompt = `${RULES}
@@ -96,7 +99,7 @@ RESPONSE FORMAT: Return a JSON object with the same keys, each value being the U
     const result: Record<string, string> = {};
     for (const [k, v] of Object.entries(parsed)) {
       if (typeof v === "string" && v.trim().length > 0) {
-        result[k] = v.trim();
+        result[k] = isolateLtrRuns(v.trim());
       }
     }
 
