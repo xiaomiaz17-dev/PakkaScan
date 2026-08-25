@@ -49,13 +49,6 @@ export function plainEnglishRiskMeaning(
 }
 
 /** Short Urdu companion (static; avoids extra LLM call). */
-function clipWords(s: string, n = 160): string {
-  const t = String(s || "").replace(/\s+/g, " ").trim();
-  if (t.length <= n) return t;
-  const c = t.slice(0, n);
-  const i = Math.max(c.lastIndexOf(" "), c.lastIndexOf(","), c.lastIndexOf(";"));
-  return (i > n * 0.5 ? c.slice(0, i) : c).replace(/[.,;:]+$/, "") + ".";
-}
 
 export function plainEnglishRiskMeaningUrdu(
   riskScore: number | null | undefined,

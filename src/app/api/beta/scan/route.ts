@@ -856,11 +856,11 @@ export async function POST(request: Request) {
       `[beta/scan] clauses: suspicious=${clauseConcerns.flagged.length} missing=${clauseConcerns.missing.length} (llm+rules ruleHits=${ruleHits.clauses.length})`
     );
     riskResult = mergeRiskFactors(riskResult, clauseConcernsToRiskFactors(clauseConcerns));
-    const _hasHighClause = (clauseConcerns?.flagged || []).some((f: any) => {
+    const _hasHighClauseFinal = (clauseConcerns?.flagged || []).some((f: any) => {
       const s = String(f.severity || "").toLowerCase();
       return s === "high" || s === "critical";
     });
-    if (_hasHighClause) {
+    if (_hasHighClauseFinal) {
       if (combinedVerdict && (combinedVerdict.verdict === "PROCEED" || combinedVerdict.verdict === "CLEAR")) {
         combinedVerdict = {
           verdict: "PROCEED WITH CAUTION",
@@ -871,17 +871,6 @@ export async function POST(request: Request) {
       if (phase2?.analysis && (phase2.analysis.decision === "PROCEED" || phase2.analysis.decision === "CLEAR")) {
         phase2.analysis.decision = "PROCEED WITH CAUTION";
       }
-    }
-    const _hasHighClause = (clauseConcerns?.flagged || []).some((f: any) => {
-      const s = String(f.severity || "").toLowerCase();
-      return s === "high" || s === "critical";
-    });
-    if (combinedVerdict && _hasHighClause && (combinedVerdict.verdict === "PROCEED" || combinedVerdict.verdict === "CLEAR")) {
-      combinedVerdict = {
-        verdict: "PROCEED WITH CAUTION",
-        posture: "CAUTIOUS",
-        reasoning: "Pages are consistent, but flagged clauses are one-sided. Do not treat this as a green light until those terms are changed or accepted in writing.",
-      };
     }
     // Feature 3c: translate clause concerns (computed after main Urdu batch)
     try {

@@ -877,7 +877,7 @@ export default function ScanPage() {
     verdict = "DO_NOT_PROCEED";
     posture = "DO_NOT_PROCEED";
   }
-  const _flaggedHi = (results?.clauseConcerns?.flagged || results?.flaggedClauses || []).some((f: any) => {
+  const _flaggedHi = (results?.clauseConcerns?.flagged || []).some((f: any) => {
     const s = String(f.severity || "").toLowerCase();
     return s === "high" || s === "critical";
   });
