@@ -11,8 +11,8 @@ const MAX_CONCURRENCY = 3;
 const MAX_RETRIES_PER_MODEL = 0;           // no same-model retry; fall through to next model
 const MAX_BACKOFF_MS = 3000;               // cap wait between attempts at 3s (was up to 8s)
 const BASE_BACKOFF_MS = 1500;              // starting backoff
-const PER_CALL_TIMEOUT_MS = 22000;
-const PER_PAGE_BUDGET_MS = 60000;          // 60s total budget per page
+const PER_CALL_TIMEOUT_MS = 35000;
+const PER_PAGE_BUDGET_MS = 40000;          // 60s total budget per page
 
 export function geminiConfigured(): boolean {
   return Boolean(apiKey && apiKey.trim().length > 0);
@@ -21,8 +21,8 @@ export function geminiConfigured(): boolean {
 async function compressImageBuffer(buf: Buffer): Promise<{ base64: string; mimeType: string }> {
   try {
     const resizedBuffer = await sharp(buf)
-      .resize({ width: 1600, fit: "inside", withoutEnlargement: true })
-      .jpeg({ quality: 85 })
+      .resize({ width: 1280, fit: "inside", withoutEnlargement: true })
+      .jpeg({ quality: 72 })
       .toBuffer();
     return { base64: resizedBuffer.toString("base64"), mimeType: "image/jpeg" };
   } catch (err) {
