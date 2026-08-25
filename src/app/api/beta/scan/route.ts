@@ -829,7 +829,17 @@ export async function POST(request: Request) {
       .filter(Boolean)
       .join("\n\n");
     const clauseConcerns = extractClauseConcerns(_mergedSmartFields, _clauseOcrBlob);
-    
+    const _hasHighClause = (clauseConcerns?.flagged || []).some((f: any) => {
+      const s = String(f.severity || "").toLowerCase();
+      return s === "high" || s === "critical";
+    });
+    if (combinedVerdict && (_hasHighClause || riskResult?.riskLabel === "HIGH" || riskResult?.riskLabel === "CRITICAL") && combinedVerdict.verdict === "PROCEED") {
+      combinedVerdict = {
+        verdict: "PROCEED WITH CAUTION",
+        posture: "CAUTIOUS",
+        reasoning: "Pages are consistent, but flagged clauses are one-sided. Do not treat this as a green light until those terms are changed or accepted in writing.",
+      };
+    }
     const ocrBlob = (perDocument || [])
       .map((d: any) => d?.ocr?.text || d?.ocrText || d?.text || "")
       .filter(Boolean)
@@ -856,12 +866,12 @@ export async function POST(request: Request) {
       `[beta/scan] clauses: suspicious=${clauseConcerns.flagged.length} missing=${clauseConcerns.missing.length} (llm+rules ruleHits=${ruleHits.clauses.length})`
     );
     riskResult = mergeRiskFactors(riskResult, clauseConcernsToRiskFactors(clauseConcerns));
-    const _hasHighClauseFinal = (clauseConcerns?.flagged || []).some((f: any) => {
+    const highClause = (clauseConcerns?.flagged || []).some((f: any) => {
       const s = String(f.severity || "").toLowerCase();
       return s === "high" || s === "critical";
     });
-    if (_hasHighClauseFinal) {
-      if (combinedVerdict && (combinedVerdict.verdict === "PROCEED" || combinedVerdict.verdict === "CLEAR")) {
+    if (highClause) {
+      if (combinedVerdict && String(combinedVerdict.verdict || "").replace(/_/g, " ") === "PROCEED") {
         combinedVerdict = {
           verdict: "PROCEED WITH CAUTION",
           posture: "CAUTIOUS",
@@ -870,7 +880,10 @@ export async function POST(request: Request) {
       }
       if (phase2?.analysis) {
         const d = String((phase2.analysis as any).decision || "").toUpperCase().replace(/_/g, " ");
-        if (d === "PROCEED" || d === "CLEAR") (phase2.analysis as any).decision = "PROCEED_WITH_CAUTION";
+        if (d === "PROCEED" || d === "CLEAR") {
+          (phase2.analysis as any).decision = "PROCEED_WITH_CAUTION";
+        }
+      }
     }
     // Feature 3c: translate clause concerns (computed after main Urdu batch)
     try {
