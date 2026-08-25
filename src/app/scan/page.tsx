@@ -903,9 +903,15 @@ export default function ScanPage() {
   const missing = results?.phase2?.missingEvidence?.missing ?? [];
   const findings = results?.phase2?.result?.findings ?? [];
   const nextSteps = ((results as any)?.nextSteps?.length ? (results as any).nextSteps : results?.phase2?.nextSteps) ?? [];
-  const firstDoc = results?.documents?.[0];
+  const _docsAll = results?.documents || [];
+  const firstDoc = [..._docsAll].sort((a: any, b: any) => {
+    const av = Number(a?.completeness?.criticalFieldsPresent || 0);
+    const bv = Number(b?.completeness?.criticalFieldsPresent || 0);
+    return bv - av;
+  })[0] || _docsAll[0];
   const completeness = firstDoc?.completeness;
-  const isTemplateOrPartial = completeness && (completeness.status === "template" || completeness.status === "partial");
+  const _anyComplete = _docsAll.some((d: any) => d?.completeness?.status === "complete");
+  const isTemplateOrPartial = !_anyComplete && !!completeness && (completeness.status === "template" || completeness.status === "partial");
   const combinedVerdictRaw = results?.combinedVerdict ?? null;
   const _docsN = results?.documents?.length ?? 0;
   let combinedVerdict = combinedVerdictRaw;
