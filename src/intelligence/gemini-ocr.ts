@@ -4,11 +4,11 @@ import sharp from "sharp";
 const apiKey = process.env.GEMINI_API_KEY || "";
 const genAI = apiKey ? new GoogleGenAI({ apiKey }) : null;
 
-const OCR_MODELS = ["gemini-flash-latest", "gemini-flash-lite-latest", "gemini-pro-latest"];
+const OCR_MODELS = ["gemini-flash-lite-latest", "gemini-flash-latest"];
 const MAX_CONCURRENCY = 3;
 
 // --- Retry / timeout tuning ---
-const MAX_RETRIES_PER_MODEL = 1;           // 2 total attempts per model (was 3)
+const MAX_RETRIES_PER_MODEL = 0;           // no same-model retry; fall through to next model
 const MAX_BACKOFF_MS = 3000;               // cap wait between attempts at 3s (was up to 8s)
 const BASE_BACKOFF_MS = 1500;              // starting backoff
 const PER_CALL_TIMEOUT_MS = 20000;         // 20s max per Gemini call
@@ -121,7 +121,9 @@ async function extractSinglePage(image: any, pageIdx: number): Promise<string> {
       } catch (err: any) {
         lastError = err;
         const status = err?.status || err?.code;
-        const isRetryable = status === 503 || status === 429 || err?.message?.includes("503") || err?.message?.includes("429") || err?.message?.includes("overloaded") || err?.message?.includes("exceeded");
+        const msg = String(err?.message || "");
+        const isTimeout = msg.includes("exceeded") && msg.includes("ms");
+        const isRetryable = !isTimeout && (status === 503 || status === 429 || msg.includes("503") || msg.includes("429") || msg.includes("overloaded"));
 
         if (isRetryable && attempt < MAX_RETRIES_PER_MODEL) {
           const delay = Math.min(BASE_BACKOFF_MS * Math.pow(2, attempt), MAX_BACKOFF_MS);
