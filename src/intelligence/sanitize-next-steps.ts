@@ -1,4 +1,4 @@
-﻿export function sanitizeRentalNextSteps(steps: any[], fields: any, ocr: string): any[] {
+export function sanitizeRentalNextSteps(steps: any[], fields: any, ocr: string): any[] {
   const f = fields || {};
   const text = String(ocr || "");
   const rent = Number(f.financials?.monthlyRentPkr || f.financials?.rentPkr || 0);
@@ -7,7 +7,7 @@
   const cnicL = String(f.parties?.landlord?.cnic || "");
   const cnicT = String(f.parties?.tenant?.cnic || "");
   const cnicInText = (text.match(/\b\d{5}-\d{7}-\d\b/g) || []).length >= 1;
-  const moneyInText = /40\s*,?\s*000|64\s*,?\s*000|Rs\.?\s*\d{2,}/i.test(text);
+  const moneyInText = /40\s*,?\s*000|64\s*,?\s*000|Rs\s*=\s*\d|Rs\.?\s*\d{2,}/i.test(text);
   return (steps || [])
     .map((s) => {
       const title = String(s?.title || "");

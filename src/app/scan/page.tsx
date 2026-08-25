@@ -919,6 +919,23 @@ export default function ScanPage() {
     }
   }
 
+  const _missUi = (results as any)?.clauseConcerns?.missing || [];
+  const _factorsUi = (results as any)?.riskFactors || [];
+  const _hasStampFactor = _factorsUi.some((x: any) => /stamp|formalit/i.test(String(x.label || "")));
+  const _hasDoFirst = (Array.isArray(nextSteps) ? nextSteps : []).some((s: any) => String(s.priority || s.urgency || "").toLowerCase().includes("first") || /missing financial|missing cnic|add missing/i.test(String(s.title || "")));
+  if (_missUi.length || _hasStampFactor || _hasDoFirst || _flaggedHi) {
+    const soft = ["PROCEED", "CLEAR", "OK"];
+    if (soft.includes(String(verdict).toUpperCase().replace(/_/g, " "))) {
+      verdict = "PROCEED WITH CAUTION";
+      posture = "CAUTIOUS";
+    }
+    if (combinedVerdict) {
+      const cv = String(combinedVerdict.verdict || "").toUpperCase().replace(/_/g, " ");
+      if (soft.includes(cv)) {
+        combinedVerdict = { ...combinedVerdict, verdict: "PROCEED WITH CAUTION", posture: "CAUTIOUS" };
+      }
+    }
+  }
   const crossDoc = results?.crossDoc ?? null;
   const isMultiDoc = (results?.documents?.length ?? 0) >= 2;
   const ocrConf = (() => {
