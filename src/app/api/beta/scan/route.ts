@@ -1,3 +1,4 @@
+export const maxDuration = 300;
 /** Never return a high PakkaScore next to CRITICAL / DO_NOT_PROCEED. */
 function clampPakkaScoreForRisk(
   score: number | null | undefined,

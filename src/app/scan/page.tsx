@@ -910,6 +910,7 @@ export default function ScanPage() {
     return bv - av;
   })[0] || _docsAll[0];
   const completeness = firstDoc?.completeness;
+  const _ocrTooShort = (results?.documents || []).every((d: any) => String(d?.ocr?.text || d?.ocrText || "").length < 80);
   const _anyComplete = _docsAll.some((d: any) => d?.completeness?.status === "complete");
   const isTemplateOrPartial = !_anyComplete && !!completeness && (completeness.status === "template" || completeness.status === "partial");
   const combinedVerdictRaw = results?.combinedVerdict ?? null;
