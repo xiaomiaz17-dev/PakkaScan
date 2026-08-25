@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { isolateLtrRuns } from "@/lib/bidi";
+import { UrduText } from "@/components/UrduText";
 
 /**
  * Feature 3c — dual-language layout
@@ -90,7 +91,7 @@ export function BilingualGrid({
               wordBreak: "break-word",
             }}
           >
-            {typeof urdu === "string" ? isolateLtrRuns(urdu) : urdu}
+            {typeof urdu === "string" ? <UrduText text={urdu} /> : urdu}
           </div>
         </div>
       ) : null}

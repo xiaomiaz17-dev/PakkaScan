@@ -1,5 +1,5 @@
 "use client";
-import { isolateLtrRuns } from "@/lib/bidi";
+import { UrduText } from "@/components/UrduText";
 
 /**
  * Desktop: EN | UR side-by-side when urdu present.
@@ -74,7 +74,7 @@ export function BilingualBlock({
               whiteSpace: "pre-wrap",
             }}
           >
-            {isolateLtrRuns(urdu)}
+            {<UrduText text={urdu} />}
           </div>
         </div>
       )}
