@@ -1,4 +1,4 @@
-﻿import { extractWithLocalOcr, type LocalOcrImage, type LocalOcrResult } from "./local-ocr";
+import { extractWithLocalOcr, type LocalOcrImage, type LocalOcrResult } from "./local-ocr";
 import { extractBatchImages, extractPdfWithGemini, geminiConfigured } from "./gemini-ocr";
 import { rasterisePdfToImages } from "./pdf-rasteriser";
 import { cacheGet, cacheSet } from "./llm-cache";
@@ -106,12 +106,27 @@ export async function runOcr(images: LocalOcrImage[]): Promise<OcrOutcome> {
       const pageImages = await toPageImages(images);
       console.log(`[ocr-router] Gemini mode: prepared ${pageImages.length} page image(s)`);
       const result = await extractBatchImages(pageImages as any);
+      let text = result.text || "";
+      let engineUsed: OcrOutcome["engineUsed"] = "gemini";
+      if (text.trim().length < 200) {
+        console.warn("[ocr-router] Gemini OCR thin (" + text.length + " chars) — trying local Tesseract");
+        try {
+          const local = await extractWithLocalOcr(pageImages as any);
+          if ((local.text || "").trim().length > text.trim().length) {
+            text = local.text;
+            engineUsed = "local";
+            console.log("[ocr-router] Tesseract fallback chars=" + text.length);
+          }
+        } catch (te: any) {
+          console.warn("[ocr-router] Tesseract fallback failed:", te?.message || te);
+        }
+      }
       const outcome: OcrOutcome = {
-        text: result.text || "",
-        confidence: 70,
+        text,
+        confidence: engineUsed === "local" ? 60 : 70,
         language: "Unknown",
         pageCount: pageImages.length,
-        engineUsed: "gemini",
+        engineUsed,
       };
       cacheSet("ocr", outcome, mode, fingerprint);
       return outcome;
