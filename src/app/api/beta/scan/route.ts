@@ -868,9 +868,9 @@ export async function POST(request: Request) {
           reasoning: "Pages are consistent, but flagged clauses are one-sided. Do not treat this as a green light until those terms are changed or accepted in writing.",
         };
       }
-      if (phase2?.analysis && (phase2.analysis.decision === "PROCEED" || phase2.analysis.decision === "CLEAR")) {
-        phase2.analysis.decision = "PROCEED WITH CAUTION";
-      }
+      if (phase2?.analysis) {
+        const d = String((phase2.analysis as any).decision || "").toUpperCase().replace(/_/g, " ");
+        if (d === "PROCEED" || d === "CLEAR") (phase2.analysis as any).decision = "PROCEED_WITH_CAUTION";
     }
     // Feature 3c: translate clause concerns (computed after main Urdu batch)
     try {
