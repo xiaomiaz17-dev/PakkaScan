@@ -869,7 +869,7 @@ export default function ScanPage() {
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) processFiles(Array.from(e.dataTransfer.files));
   }, []);
 
-  let verdict = results?.phase2?.result?.decision || "REVIEW";
+  let verdict = String(results?.phase2?.result?.decision || "REVIEW").replace(/_/g, " ");
   let posture = results?.phase2?.posture || "CAUTIOUS";
   let pakkaScore = results?.phase2?.result?.pakkaScore ?? 0;
   // F5: CRITICAL risk must never show a soft PROCEED WITH CAUTION hero
@@ -907,6 +907,7 @@ export default function ScanPage() {
   const completeness = firstDoc?.completeness;
   const isTemplateOrPartial = completeness && (completeness.status === "template" || completeness.status === "partial");
   const combinedVerdictRaw = results?.combinedVerdict ?? null;
+  const _docsN = results?.documents?.length ?? 0;
   const combinedVerdict = (combinedVerdictRaw && results?.riskLabel === "CRITICAL" && combinedVerdictRaw.verdict !== "DO_NOT_PROCEED")
     ? { ...combinedVerdictRaw, verdict: "DO_NOT_PROCEED", posture: "DO_NOT_PROCEED", reasoning: combinedVerdictRaw.reasoning || "Critical risk factors detected — do not proceed until resolved." }
     : combinedVerdictRaw;

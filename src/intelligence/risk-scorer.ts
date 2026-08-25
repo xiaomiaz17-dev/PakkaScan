@@ -516,6 +516,10 @@ export function computeRiskFactors(input: {
       return true;
     });
   }
+  const _txt = String(input.rawText || "") + (input.smartFields?._stampEvidence ? " attested" : "");
+  if (/attested|oath\s*commissioner|hundred\s+rupees/i.test(_txt)) {
+    factorsForScore = factorsForScore.filter((x) => !/stamp \/ registration|formalities unclear/i.test(x.label || ""));
+  }
   const deduped = dedupe(factorsForScore).slice(0, 8);
   const { score, breakdown } = computeWeightedScore(deduped);
   return {

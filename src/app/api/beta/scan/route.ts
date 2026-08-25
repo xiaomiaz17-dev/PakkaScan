@@ -87,6 +87,7 @@ import { getOfficialValuation, getDeclaredPrice } from "@/intelligence/dc-rate-l
 import { extractClauseConcerns, clauseConcernsToRiskFactors } from "@/intelligence/clause-concerns";
 import { detectSuspiciousClauses, suspiciousClausesToRiskFactors } from "@/intelligence/suspicious-clauses";
 import { applyTenancyBackfill } from "@/intelligence/tenancy-backfill";
+import { sanitizeRentalNextSteps } from "@/intelligence/sanitize-next-steps";
 import { buildOwnershipTimeline, chainFindingsToRiskFactors } from "@/intelligence/chain-of-title";
 import { validateTemporalRules, temporalViolationsToRiskFactors } from "@/intelligence/temporal-validator";
 
@@ -963,7 +964,7 @@ export async function POST(request: Request) {
           citations: phase2.assistant.citations,
           declinedReason: phase2.assistant.declinedReason,
         },
-        nextSteps: filterNextStepsAgainstFields(nextSteps, _mergedSmartFields),
+        nextSteps: sanitizeRentalNextSteps(nextSteps, _mergedSmartFields, collectAllText(perDocument)),
       },
     };
 
@@ -1001,6 +1002,7 @@ export async function POST(request: Request) {
       }
     }
 
+    nextSteps = sanitizeRentalNextSteps(nextSteps, _mergedSmartFields, collectAllText(perDocument));
     const filteredPayload = filterResponseByTier(rawPayload, entitlementToUse.report_type);
     console.log(`[beta/scan] Tier-filtered response for tier=${entitlementToUse.report_type}`);
     return NextResponse.json(filteredPayload);
