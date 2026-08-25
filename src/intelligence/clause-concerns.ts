@@ -60,7 +60,7 @@ export function humanizeMissingProtection(raw: string): string {
  * Silent when we cannot search (no text) — still allow LLM list but prefer fewer false positives when text exists.
  */
 const EVIDENCE_PATTERNS: Array<{ keys: RegExp; patterns: RegExp }> = [
-  { keys: /rent.?escalat|rent.?increase|annual.?increase/i, patterns: /escalat|increase\s+(of\s+)?\d+\s*%|\d+\s*%|10\s*%|per\s+annum|yearly\s+increase|\u0633\u0627\u0644\u0627\u0646\u06C1|\u0627\u0636\u0627\u0641\u06C1/i },
+  { keys: /rent.?escalat|rent.?increase|annual.?increase/i, patterns: /escalat|\d+\s*%|10%|10\s*percent|per\s+annum|yearly|\u0633\u0627\u0644\u0627\u0646\u06C1|\u0641\u06CC\u0635\u062F\u06CC|\u0627\u0636\u0627\u0641\u06C1/i },
   { keys: /renewal/i, patterns: /renew|extend(ed|able)?\s+(for|by)|further\s+period|mutual\s+agreement/i },
   { keys: /notice.?period/i, patterns: /notice\s+(of\s+)?\d+\s*(days|months)|days['']?\s+notice|one\s+month['']?s?\s+notice|\d+\s*days['']?\s+prior/i },
   { keys: /termination|penalt/i, patterns: /terminat|forfeit|penalty|breach|vacate/i },

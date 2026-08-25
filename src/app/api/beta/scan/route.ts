@@ -555,6 +555,15 @@ export async function POST(request: Request) {
       for (const d of successfulDocs) {
         if (d.completeness?.status === "template") perDocVerdicts.push("PROCEED_WITH_CAUTION");
       }
+      const _types = successfulDocs.map((d: any) => String(d.classification?.documentType || "").toUpperCase());
+      const _sameTenancyBundle = _types.length >= 2 && _types.every((t: string) => !t || t === "UNKNOWN" || t.includes("TENANCY") || t.includes("RENTAL") || t.includes("LEASE"));
+      if (_sameTenancyBundle && crossDoc.hasCriticalMismatch) {
+        const realClash = (crossDoc.crossChecks || []).some((c: any) => String(c.status).toLowerCase() === "mismatch" && String(c.severity).toLowerCase() === "critical");
+        if (!realClash) {
+          crossDoc.hasCriticalMismatch = false;
+          console.log("[beta/scan] Cross-doc: ignored critical flag on same-tenancy page bundle");
+        }
+      }
       combinedVerdict = computeCombinedVerdict(perDocVerdicts, crossDoc.hasCriticalMismatch);
       console.log(
         `[beta/scan] Combined verdict: ${combinedVerdict.verdict} - ${combinedVerdict.reasoning}`

@@ -64,7 +64,8 @@ STRICT RULES:
    - "critical" = would materially harm the buyer/tenant if ignored (e.g. seller names don't match; property addresses disagree)
    - "warning" = should be verified but not necessarily a deal-breaker (e.g. address is partial match, or one date is missing)
    - "info" = confirms alignment or notes something the user should know
-6. Return ONLY the JSON object.
+6. TWO PAGES OF THE SAME DEED: If both inputs are tenancy/rental pages (or one is the clause page and one is the parties/rent page), treat them as ONE instrument. A field present on page 1 and absent on page 2 is NOT a mismatch. Mark those checks "unverifiable" or "info". Set hasCriticalMismatch=true ONLY when the SAME field is present on two pages with CONTRADICTING values (different CNIC, different rent amount, different landlord name).
+7. Return ONLY the JSON object.
 
 RESPONSE FORMAT:
 {
