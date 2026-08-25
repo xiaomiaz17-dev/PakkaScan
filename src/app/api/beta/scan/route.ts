@@ -775,8 +775,8 @@ export async function POST(request: Request) {
     let officialValuationPkr: number | null = null;
     let declaredPricePkr: number | null = null;
     try {
-      declaredPricePkr = getDeclaredPrice(_firstSmartFields);
-      const valuation = await getOfficialValuation(_firstSmartFields);
+      declaredPricePkr = getDeclaredPrice(_mergedSmartFields || _firstSmartFields);
+      const valuation = await getOfficialValuation(_mergedSmartFields || _firstSmartFields);
       if (valuation.matched) {
         officialValuationPkr = valuation.officialValuePkr;
         valuationComparison = {
