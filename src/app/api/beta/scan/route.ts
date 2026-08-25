@@ -86,6 +86,7 @@ import { backfillTenancySmartFields } from "@/intelligence/tenancy-completeness"
 import { getOfficialValuation, getDeclaredPrice } from "@/intelligence/dc-rate-lookup";
 import { extractClauseConcerns, clauseConcernsToRiskFactors } from "@/intelligence/clause-concerns";
 import { detectSuspiciousClauses, suspiciousClausesToRiskFactors } from "@/intelligence/suspicious-clauses";
+import { applyTenancyBackfill } from "@/intelligence/tenancy-backfill";
 import { buildOwnershipTimeline, chainFindingsToRiskFactors } from "@/intelligence/chain-of-title";
 import { validateTemporalRules, temporalViolationsToRiskFactors } from "@/intelligence/temporal-validator";
 
@@ -798,6 +799,7 @@ export async function POST(request: Request) {
       console.warn("[beta/scan] DC valuation lookup failed:", err?.message || err);
     }
 
+    applyTenancyBackfill(_mergedSmartFields, collectAllText(perDocument));
     const ocrBlobForRisk = (perDocument || [])
       .map((d: any) => d?.ocr?.text || d?.ocrText || d?.text || "")
       .filter(Boolean)
