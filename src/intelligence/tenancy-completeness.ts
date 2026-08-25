@@ -50,13 +50,18 @@ function hasFilledPartyNames(text: string): boolean {
 }
 
 function hasRentAmount(text: string): boolean {
-  return (
-    /(?:monthly\s+rent|rent\s*(?:of|is|:)|rs\.?\s*[\d,]+|pkr\s*[\d,]+|روپے|روپیہ|کرایہ)/i.test(
-      text,
-    ) &&
-    (/(?:\d{3,}|\d,\d{3}|[\u06F0-\u06F9]{3,})/.test(text) ||
-      /کرایہ/.test(text))
-  );
+  if (!text) return false;
+  const money = /(?:monthly\s+rent|rent\s*(?:of|is|:|=)|rs\.?\s*=?\s*[\d,]+|pkr\s*=?\s*[\d,]+|\u0631\u0648\u067E\u06D2|\u0631\u0648\u067E\u06CC\u06C1|\u06A9\u0631\u0627\u06CC\u06C1)/i.test(text);
+  const digits = /(?:\d{3,}|\d,\d{3}|[\u06F0-\u06F9]{3,}|rs\.?\s*=?\s*\d)/i.test(text);
+  return money && digits;
+}
+function smartHasRent(sf: any): boolean {
+  const v = sf?.financials?.monthly_rent ?? sf?.financials?.rent;
+  if (v == null) return false;
+  if (typeof v === "object" && Number(v.amount || v.value) > 0) return true;
+  if (typeof v === "number" && v > 0) return true;
+  if (typeof v === "string" && /\d{3,}/.test(v)) return true;
+  return false;
 }
 
 function hasTerm(text: string): boolean {
@@ -151,7 +156,7 @@ function hasOneSidedEviction(text: string): boolean {
 
 export function assessTenancyCompleteness(
   text: string,
-  selectedJurisdiction?: string | null,
+  selectedJurisdiction?: string | null, smartFields?: any,
 ): { findings: CompletenessFinding[]; scoreAdjustment: number } {
   const findings: CompletenessFinding[] = [];
 
@@ -167,7 +172,7 @@ export function assessTenancyCompleteness(
     });
   }
 
-  if (!hasRentAmount(text)) {
+  if (!hasRentAmount(text) && !smartHasRent(smartFields)) {
     findings.push({
       code: "TENANCY_RENT_MISSING",
       title: "Monthly rent amount not detected",
@@ -345,7 +350,7 @@ export function extractTenancyMoneyHints(text: string): {
   const muddat = "\u0645\u062F\u062A";
   const mahine = "\u0645\u06C1\u06CC\u0646\u06D2";
   const monthlyRent = first([
-    /(?:monthly\s+)?rent[^0-9\u06F0-\u06F9]{0,24}(?:rs\.?|pkr)?\s*([\d,\u06F0-\u06F9]+)/i,
+    /(?:monthly\s+)?rent[^0-9\u06F0-\u06F9]{0,24}(?:rs\.?|pkr)?\s*=?\s*([\d,\u06F0-\u06F9]+)/i, /rs\.?\s*=\s*([\d,\u06F0-\u06F9]+)/i,
     new RegExp(kiraya + "[^0-9\\u06F0-\\u06F9]{0,30}([\\d,\\u06F0-\\u06F9]+)"),
     new RegExp(mahana + "[^0-9\\u06F0-\\u06F9]{0,30}([\\d,\\u06F0-\\u06F9]+)"),
   ]);

@@ -231,7 +231,7 @@ function factorsFromTenancyText(
     );
   if (!looksTenancy && !dt.includes("TENANCY")) return [];
 
-  const { findings } = assessTenancyCompleteness(text);
+  const { findings } = assessTenancyCompleteness(text, null, smartFields);
   const sf = smartFields || {};
   const parties = sf.parties || {};
   const hasLandlord = partyHasIdentity(parties.landlord || parties.lessor || parties.owner);
