@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Normalise LLM suspicious / missing clauses into UI rows + risk factors.
  * Missing protections are evidence-gated when OCR text is provided.
  */
@@ -70,8 +70,35 @@ const EVIDENCE_PATTERNS: Array<{ keys: RegExp; patterns: RegExp }> = [
   { keys: /lock.?in/i, patterns: /lock[\s-]?in|minimum\s+stay|cannot\s+vacate\s+before/i },
   { keys: /sublet/i, patterns: /sub-?let|sub-?lease|assign(ment)?/i },
   { keys: /maintenance/i, patterns: /maint(enance|ain)|repair|landlord\s+shall\s+be\s+responsible/i },
+  { keys: /monthly.?rent|rent.?amount/i, patterns: /monthly\s+rent|rs\.?\s*=?\s*[\d,]+|pkr\s*=?\s*[\d,]+|\u06A9\u0631\u0627\u06CC\u06C1/i },
+  { keys: /security.?deposit.?amount|deposit.?amount/i, patterns: /security\s+deposit|rs\.?\s*=?\s*[\d,]+|\u0633\u06CC\u06A9\u06CC\u0648\u0631|\u0627\u0645\u0627\u0646\u062A|\u067E\u06CC\u0634\u06AF\u06CC/i },
+  { keys: /utility|utilities|bills/i, patterns: /electric|water|gas|sewer|utility|\u0628\u062C\u0644\u06CC|\u06AF\u06CC\u0633|\u067E\u0627\u0646\u06CC/i },
+  { keys: /rent.?payment.?due|due.?date/i, patterns: /1st|first of (each|every) month|\d{1,2}\s+of\s+(each|every)\s+month|\u06C1\u0631 \u0645\u0627\u06C1/i },
 ];
 
+function filterMissingAgainstSmart(missing: string[], sf: any): string[] {
+  if (!missing.length) return [];
+  const fin = sf?.financials || {};
+  const clauses = sf?.clauses || {};
+  const amt = (v: any) => {
+    if (v == null) return false;
+    if (typeof v === "number") return v > 0;
+    if (typeof v === "object") return Number(v.amount || v.value || 0) > 0;
+    return /\d{3,}/.test(String(v));
+  };
+  const hasRent = amt(fin.monthly_rent) || amt(fin.rent);
+  const hasDeposit = amt(fin.security_deposit) || amt(fin.deposit) || amt(fin.advance_rent);
+  const hasUtil = Boolean(fin.utility_charges || clauses.maintenance_responsibility);
+  const hasDue = Boolean(clauses.rent_payment_period);
+  return missing.filter((label) => {
+    const k = label.toLowerCase();
+    if (hasRent && /monthly.?rent|rent amount/.test(k)) return false;
+    if (hasDeposit && /deposit amount|security deposit amount/.test(k)) return false;
+    if (hasUtil && /utility/.test(k)) return false;
+    if (hasDue && /due date|payment due/.test(k)) return false;
+    return true;
+  });
+}
 export function filterMissingAgainstText(missing: string[], ocrText?: string | null): string[] {
   if (!missing.length) return [];
   const text = (ocrText || "").toString();
@@ -163,7 +190,10 @@ export function extractClauseConcerns(
   });
   return {
     flagged: uniqueFlagged,
-    missing: filterMissingAgainstText(missing, ocrText),
+    missing: filterMissingAgainstSmart(
+      filterMissingAgainstText(missing, ocrText),
+      smartFields
+    ),
   };
 }
 

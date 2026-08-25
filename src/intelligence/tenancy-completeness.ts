@@ -93,7 +93,7 @@ function hasGoverningLaw(text: string): boolean {
     ) ||
     /معاہدہ/.test(text) ||
     /کرایہ\s*داری/.test(text) ||
-    /stamp\s*vendor|stamp\s*paper|rupees\s*\d+/i.test(text)
+    /stamp\s*vendor|stamp\s*paper|rupees\s*\d+|attested|oath\s*commissioner|hundred\s+rupees|one\s+hundred/i.test(text)
   );
 }
 
@@ -208,7 +208,7 @@ export function assessTenancyCompleteness(
 
   if (
     !hasGoverningLaw(text) &&
-    !/stamp|registered|sub[- ]?registrar|WASIL|STAMP VENDOR/i.test(text) &&
+    !/stamp|registered|sub[- ]?registrar|WASIL|STAMP VENDOR|attested|oath\s*commissioner|hundred\s+rupees/i.test(text) &&
     text.length < 1200
   ) {
     findings.push({
