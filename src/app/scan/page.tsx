@@ -397,7 +397,7 @@ function ClausesDetectedPanel({ smartFields }: { smartFields: any }) {
 
 function CombinedVerdictHero({ combined, docCount, urduReasoning }: { combined: CombinedVerdict; docCount: number; urduReasoning?: string | null }) {
   const style = (() => {
-    if (combined.verdict === "PROCEED" || combined.posture === "CLEAR") {
+    if (combined.verdict === "PROCEED" && combined.posture === "CLEAR") {
       return {
         bg: "linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)",
         color: "#14532d", border: "#86efac", icon: "OK", iconBg: "#16a34a",
@@ -1218,7 +1218,7 @@ export default function ScanPage() {
             <div style={{ height: "16px" }} />
 
             {isMultiDoc && combinedVerdict ? (
-              <CombinedVerdictHero combined={combinedVerdict} docCount={results?.documents?.length ?? 0} urduReasoning={urduTranslations["combinedReasoning"]} />
+              <CombinedVerdictHero combined={{...combinedVerdict, verdict: (_flaggedHi || _hasStampFactor || results?.riskLabel === "HIGH" || results?.riskLabel === "CRITICAL") && String(combinedVerdict.verdict).includes("PROCEED") && !String(combinedVerdict.verdict).includes("CAUTION") ? "PROCEED WITH CAUTION" : combinedVerdict.verdict, posture: (_flaggedHi || _hasStampFactor || results?.riskLabel === "HIGH") ? "CAUTIOUS" : combinedVerdict.posture}} docCount={results?.documents?.length ?? 0} urduReasoning={urduTranslations["combinedReasoning"]} />
             ) : isTemplateOrPartial && completeness ? (
               <>
                 <TemplateVerdictHero report={completeness} />
