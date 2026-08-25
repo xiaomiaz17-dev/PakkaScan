@@ -106,27 +106,12 @@ export async function runOcr(images: LocalOcrImage[]): Promise<OcrOutcome> {
       const pageImages = await toPageImages(images);
       console.log(`[ocr-router] Gemini mode: prepared ${pageImages.length} page image(s)`);
       const result = await extractBatchImages(pageImages as any);
-      let text = result.text || "";
-      let engineUsed: OcrOutcome["engineUsed"] = "gemini";
-      if (text.trim().length < 200) {
-        console.warn("[ocr-router] Gemini OCR thin (" + text.length + " chars) — trying local Tesseract");
-        try {
-          const local = await extractWithLocalOcr(pageImages as any);
-          if ((local.text || "").trim().length > text.trim().length) {
-            text = local.text;
-            engineUsed = "local";
-            console.log("[ocr-router] Tesseract fallback chars=" + text.length);
-          }
-        } catch (te: any) {
-          console.warn("[ocr-router] Tesseract fallback failed:", te?.message || te);
-        }
-      }
       const outcome: OcrOutcome = {
-        text,
-        confidence: engineUsed === "local" ? 60 : 70,
+        text: result.text || "",
+        confidence: 70,
         language: "Unknown",
         pageCount: pageImages.length,
-        engineUsed,
+        engineUsed: "gemini",
       };
       cacheSet("ocr", outcome, mode, fingerprint);
       return outcome;
@@ -191,13 +176,13 @@ export async function runOcr(images: LocalOcrImage[]): Promise<OcrOutcome> {
   }
 
   if (mode === "local") {
-    const result: LocalOcrResult = await extractWithLocalOcr(images);
+    if (process.env.VERCEL) { throw new Error("skip-tesseract-vercel"); } const result: LocalOcrResult = await extractWithLocalOcr(images);
     const outcome: OcrOutcome = { ...result, engineUsed: "local" };
     cacheSet("ocr", outcome, mode, fingerprint);
     return outcome;
   }
 
-  const local = await extractWithLocalOcr(images);
+  if (process.env.VERCEL) { throw new Error("skip-tesseract-vercel"); } const local = await extractWithLocalOcr(images);
   const looksGood =
     local.confidence >= LOCAL_CONFIDENCE_FALLBACK_THRESHOLD &&
     local.text.trim().length >= LOCAL_TEXT_MIN_CHARS;

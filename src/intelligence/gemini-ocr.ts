@@ -4,14 +4,14 @@ import sharp from "sharp";
 const apiKey = process.env.GEMINI_API_KEY || "";
 const genAI = apiKey ? new GoogleGenAI({ apiKey }) : null;
 
-const OCR_MODELS = ["gemini-flash-lite-latest", "gemini-flash-latest"];
+const OCR_MODELS = ["gemini-flash-latest"];
 const MAX_CONCURRENCY = 3;
 
 // --- Retry / timeout tuning ---
 const MAX_RETRIES_PER_MODEL = 0;           // no same-model retry; fall through to next model
 const MAX_BACKOFF_MS = 3000;               // cap wait between attempts at 3s (was up to 8s)
 const BASE_BACKOFF_MS = 1500;              // starting backoff
-const PER_CALL_TIMEOUT_MS = 55000;         // dense Urdu page needs >20s
+const PER_CALL_TIMEOUT_MS = 22000;
 const PER_PAGE_BUDGET_MS = 60000;          // 60s total budget per page
 
 export function geminiConfigured(): boolean {
