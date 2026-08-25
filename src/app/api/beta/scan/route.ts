@@ -698,6 +698,41 @@ export async function POST(request: Request) {
     ];
     const _missingStr  = stringifyMissing(phase2?.missingEvidence);
     const _firstSmartFields = perDocument.find((d: any) => d.status === "ok" && d.smartFields && !d.smartFields.extractionError)?.smartFields ?? null;
+    const _mergedSmartFields = (() => {
+      const packs = (perDocument || [])
+        .filter((d: any) => d.status === "ok" && d.smartFields && !d.smartFields.extractionError)
+        .map((d: any) => d.smartFields);
+      if (!packs.length) return _firstSmartFields;
+      const base: any = { ...(_firstSmartFields || {}), ...packs[packs.length - 1] };
+      base.financials = {};
+      base.parties = {};
+      base.dates = {};
+      base.property = {};
+      for (const p of packs) {
+        base.financials = { ...base.financials, ...(p.financials || {}) };
+        base.parties = { ...base.parties, ...(p.parties || {}) };
+        base.dates = { ...base.dates, ...(p.dates || {}) };
+        base.property = { ...base.property, ...(p.property || {}) };
+      }
+      const amt = (v: any) => (typeof v === "number" ? v : Number(v?.amount || v?.value || 0));
+      for (const p of packs) {
+        const f = p.financials || {};
+        if (amt(f.monthly_rent) && amt(f.monthly_rent) >= amt(base.financials.monthly_rent)) {
+          base.financials.monthly_rent = f.monthly_rent;
+        }
+        if (amt(f.security_deposit) && amt(f.security_deposit) >= amt(base.financials.security_deposit)) {
+          base.financials.security_deposit = f.security_deposit;
+        }
+        if (amt(f.rent) && !base.financials.monthly_rent) base.financials.monthly_rent = f.rent;
+      }
+      return base;
+    })();
+    console.log(
+      "[beta/scan] smartFields merge financials=",
+      Object.keys(_mergedSmartFields?.financials || {}),
+      "rent=",
+      _mergedSmartFields?.financials?.monthly_rent || _mergedSmartFields?.financials?.rent || null
+    );
     // Session 7: DC rate / official valuation lookup (silent if no match)
     let valuationComparison: any = null;
     let officialValuationPkr: number | null = null;
@@ -737,7 +772,7 @@ export async function POST(request: Request) {
       pakkaScore: phase2?.analysis?.pakkaScore ?? 0,
       findings: _findingsStr,
       missing: _missingStr,
-      smartFields: _firstSmartFields,
+      smartFields: _mergedSmartFields,
       rawText: ocrBlobForRisk,
       officialValuationPkr,
       declaredPricePkr,
@@ -772,7 +807,7 @@ export async function POST(request: Request) {
     if (phase2?.missingEvidence) {
       phase2.missingEvidence = filterMissingEvidenceAgainstSmartFields(
         phase2.missingEvidence,
-        _sfAlign
+        _mergedSmartFields || _sfAlign
       );
     }
 
@@ -784,14 +819,14 @@ export async function POST(request: Request) {
       .map((d: any) => d?.ocr?.text || d?.ocrText || d?.text || d?.extractedText || "")
       .filter(Boolean)
       .join("\n\n");
-    const clauseConcerns = extractClauseConcerns(_firstSmartFields, _clauseOcrBlob);
+    const clauseConcerns = extractClauseConcerns(_mergedSmartFields, _clauseOcrBlob);
     const ocrBlob = (perDocument || [])
       .map((d: any) => d?.ocr?.text || d?.ocrText || d?.text || "")
       .filter(Boolean)
       .join("\n");
     const ruleHits = detectSuspiciousClauses({
       ocrText: ocrBlob,
-      smartFields: _firstSmartFields,
+      smartFields: _mergedSmartFields,
     });
     // Map rule hits into clauseConcerns.flagged shape
     for (const h of ruleHits.clauses) {
