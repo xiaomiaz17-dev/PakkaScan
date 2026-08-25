@@ -197,9 +197,43 @@ const RULES: Rule[] = [
       return null;
     },
   },
+  {
+    id: "TENANCY_STAY_WAIVER",
+    severity: "HIGH",
+    title: "Tenant barred from court stay",
+    message:
+      "Restricts the tenant from seeking a stay order or court protection. Heavily one-sided.",
+    points: 2,
+    test: (t) => {
+      const patterns = [/\bStay\b/i, /stay\s*order/i, /\u0627\u0633\u0679\u06D2/, /\u0639\u062F\u0627\u0644\u062A.{0,40}\u0645\u062C\u0627\u0632/];
+      for (const p of patterns) {
+        const m = t.match(p);
+        if (m) return m[0];
+      }
+      return null;
+    },
+  },
+  {
+    id: "TENANCY_LOCK_BREAK",
+    severity: "HIGH",
+    title: "Landlord may break locks / seize belongings",
+    message:
+      "Allows the landlord to break locks and take the tenant's belongings without a court eviction process.",
+    points: 2,
+    test: (t) => {
+      const patterns = [/break(?:ing)?\s+(?:the\s+)?lock/i, /\u062A\u0627\u0644\u0627/, /\u0642\u0641\u0644/, /\u0633\u0627\u0645\u0627\u0646/];
+      for (const p of patterns) {
+        const m = t.match(p);
+        if (m) return m[0];
+      }
+      return null;
+    },
+  },
+
 ];
 
-export function detectSuspiciousClauses(input: {
+
+  export function detectSuspiciousClauses(input: {
   ocrText?: string | null;
   smartFields?: any;
 }): SuspiciousClausesResult {

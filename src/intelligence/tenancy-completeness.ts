@@ -140,12 +140,12 @@ function hasOneSidedEviction(text: string): boolean {
       text
     );
   const lockBreak =
-    /(?:break(?:ing)?\s+(?:the\s+)?lock|force\s+open|remove\s+(?:the\s+)?tenant'?s?\s+belongings)/i.test(
+    /(?:break(?:ing)?\s+(?:the\s+)?lock|force\s+open|remove\s+(?:the\s+)?tenant'?s?\s+belongings|\u062A\u0627\u0644\u0627|\u0642\u0641\u0644|\u0633\u0627\u0645\u0627\u0646)/i.test(
       text
     );
   const stayBan =
     /(?:stay\s+order|injunction).{0,50}(?:not\s+obtain|shall\s+not|cannot|barred)/i.test(text) ||
-    /(?:shall\s+not|cannot|barred).{0,50}(?:stay\s+order|injunction)/i.test(text);
+    /(?:shall\s+not|cannot|barred).{0,50}(?:stay\s+order|injunction)/i.test(text) || /\bStay\b/i.test(text) || /\u0627\u0633\u0679\u06D2/.test(text) || /\u0639\u062F\u0627\u0644\u062A/.test(text);
   if (lockBreak || stayBan) return true;
   if (noNotice && vagueBreach) return true;
   // "evict without notice" only if NOT clearly about unpaid rent
