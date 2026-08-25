@@ -60,13 +60,13 @@ export function humanizeMissingProtection(raw: string): string {
  * Silent when we cannot search (no text) — still allow LLM list but prefer fewer false positives when text exists.
  */
 const EVIDENCE_PATTERNS: Array<{ keys: RegExp; patterns: RegExp }> = [
-  { keys: /rent.?escalat|rent.?increase|annual.?increase/i, patterns: /escalat|\d+\s*%|10%|10\s*percent|per\s+annum|yearly|\u0633\u0627\u0644\u0627\u0646\u06C1|\u0641\u06CC\u0635\u062F\u06CC|\u0627\u0636\u0627\u0641\u06C1/i },
+  { keys: /rent.?escalat|rent.?increase|annual.?increase/i, patterns: /escalat|\d+\s*%|10%|percent|per\s+annum|yearly|\u0633\u0627\u0644\u0627\u0646\u06C1|\u0641\u06CC\u0635\u062F|\u0627\u0636\u0627\u0641\u06C1|\u062C\u0648/i },
   { keys: /renewal/i, patterns: /renew|extend(ed|able)?\s+(for|by)|further\s+period|mutual\s+agreement/i },
   { keys: /notice.?period/i, patterns: /notice\s+(of\s+)?\d+\s*(days|months)|days['']?\s+notice|one\s+month['']?s?\s+notice|\d+\s*days['']?\s+prior/i },
   { keys: /termination|penalt/i, patterns: /terminat|forfeit|penalty|breach|vacate/i },
   { keys: /inspection/i, patterns: /inspect(ion|ed|ing)?|landlord\s+may\s+enter|visit\s+the\s+(premises|property)/i },
   { keys: /deposit|refund/i, patterns: /security\s+deposit|refundable|deposit\s+shall\s+be\s+(refunded|returned)/i },
-  { keys: /dispute|arbitration|mediation/i, patterns: /dispute|arbitr|mediation|stay\s+order|court\s+of|\u0639\u062F\u0627\u0644\u062A|\u0627\u0633\u0679\u06d2/i },
+  { keys: /dispute|arbitration|mediation/i, patterns: /dispute|arbitr|mediation|stay|court|\u0639\u062F\u0627\u0644\u062A|\u0627\u0633\u0679/i },
   { keys: /lock.?in/i, patterns: /lock[\s-]?in|minimum\s+stay|cannot\s+vacate\s+before/i },
   { keys: /sublet/i, patterns: /sub-?let|sub-?lease|assign(ment)?/i },
   { keys: /maintenance/i, patterns: /maint(enance|ain)|repair|landlord\s+shall\s+be\s+responsible/i },

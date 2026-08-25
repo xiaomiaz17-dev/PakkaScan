@@ -249,7 +249,7 @@ function factorsFromTenancyText(
     if (f.code === "TENANCY_RENT_MISSING" && smartFieldsHasRent(sf)) return false;
     if (f.code === "TENANCY_TERM_MISSING" && smartFieldsHasTerm(sf)) return false;
     if (f.code === "TENANCY_DEPOSIT_MISSING" && smartFieldsHasDeposit(sf)) return false;
-    if (f.code === "TENANCY_FORMALITIES_THIN" && /stamp|attested|oath\s*commissioner|hundred\s+rupees|WASIL|STAMP/i.test(text || "")) return false;
+    if (f.code === "TENANCY_FORMALITIES_THIN" && /stamp|attested|oath|commissioner|hundred\s+rupees|wasil|rs\.?\s*100|100\s*rupees/i.test(text || "")) return false;
     return true;
   });
 

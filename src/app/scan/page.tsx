@@ -877,6 +877,17 @@ export default function ScanPage() {
     verdict = "DO_NOT_PROCEED";
     posture = "DO_NOT_PROCEED";
   }
+  const _flaggedHi = (results?.clauseConcerns?.flagged || results?.flaggedClauses || []).some((f: any) => {
+    const s = String(f.severity || "").toLowerCase();
+    return s === "high" || s === "critical";
+  });
+  if (_flaggedHi || results?.riskLabel === "HIGH") {
+    const soft = ["PROCEED", "CLEAR", "OK", "REVIEW"];
+    if (soft.includes(String(verdict).toUpperCase().replace(/_/g, " ")) || verdict === "PROCEED") {
+      verdict = "PROCEED WITH CAUTION";
+      posture = "CAUTIOUS";
+    }
+  }
   // ALIGN: clamp PakkaScore when risk/verdict is severe (never show 100 + DO NOT PROCEED)
   const _riskLabelAlign = results?.riskLabel;
   if (
