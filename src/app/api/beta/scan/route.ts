@@ -242,6 +242,31 @@ function filterResponseByTier(payload: any, tier: string): any {
   return filtered;
 }
 
+function collectDocText(d: any): string {
+  const o = d?.ocr || {};
+  return [o.text, o.rawText, d?.ocrText, d?.text, d?.rawText, d?.extractedText]
+    .map((x) => String(x || "").trim())
+    .filter((s) => s.length > 0)
+    .join("\n");
+}
+function collectAllText(docs: any[]): string {
+  return (docs || []).map(collectDocText).filter(Boolean).join("\n\n");
+}
+
+function filterNextStepsAgainstFields(steps: any[], fields: any): any[] {
+  const f = fields || {};
+  const rent = f.financials?.monthlyRentPkr || f.financials?.rentPkr;
+  const dep = f.financials?.securityDepositPkr || f.financials?.depositPkr;
+  const addr = f.property?.address || f.property?.location;
+  return (steps || []).filter((s) => {
+    const t = `${s?.title || ""} `.toLowerCase();
+    if (rent && /rent|کرایہ/.test(t) && /missing|add |clarif/.test(t)) return false;
+    if (dep && /deposit|سیکیورٹی/.test(t) && /missing|add |clarif/.test(t)) return false;
+    if (addr && /address|پتہ/.test(t) && /missing|add |include/.test(t)) return false;
+    return true;
+  });
+}
+
 export async function POST(request: Request) {
   const _t_scan_total = Date.now();
 
@@ -936,7 +961,7 @@ export async function POST(request: Request) {
           citations: phase2.assistant.citations,
           declinedReason: phase2.assistant.declinedReason,
         },
-        nextSteps,
+        nextSteps: filterNextStepsAgainstFields(nextSteps, _mergedSmartFields),
       },
     };
 
