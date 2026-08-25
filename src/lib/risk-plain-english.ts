@@ -13,7 +13,7 @@ export function plainEnglishRiskMeaning(
     .sort((a, b) => Math.abs(b.points || 0) - Math.abs(a.points || 0))[0];
 
   const topHint = top?.label
-    ? ` Main driver: ${top.label.replace(/\s+/g, " ").slice(0, 120)}.`
+    ? ` Main driver: ${(function(s){s=s.replace(/\s+/g," ").trim(); if(s.length<=120)return s; const c=s.slice(0,120); const i=c.lastIndexOf(" "); return ((i>80?c.slice(0,i):c).replace(/[.,;:]+$/,""))})(top.label)}.`
     : "";
 
   if (score <= 2 || label === "LOW") {

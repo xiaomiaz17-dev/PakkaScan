@@ -201,7 +201,8 @@ Return ONLY the JSON object. Focus on findings that matter for transaction safet
  */
 export function computeCombinedVerdict(
   perDocumentVerdicts: string[],
-  crossDocHasCriticalMismatch: boolean
+  crossDocHasCriticalMismatch: boolean,
+  opts?: { hasHighClause?: boolean; riskLabel?: string }
 ): { verdict: string; posture: string; reasoning: string } {
   const stopSet = new Set(["DO_NOT_PROCEED", "STOP", "REJECT", "BLOCKED"]);
   const cautionSet = new Set(["PROCEED_WITH_CAUTION", "REVIEW", "NEEDS_REVIEW", "CAUTIOUS"]);
@@ -230,6 +231,13 @@ export function computeCombinedVerdict(
     };
   }
 
+  if (opts?.hasHighClause || opts?.riskLabel === "HIGH" || opts?.riskLabel === "CRITICAL") {
+    return {
+      verdict: "PROCEED WITH CAUTION",
+      posture: "CAUTIOUS",
+      reasoning: "Documents are consistent with each other, but the contract contains one-sided or high-risk clauses. Review those before you sign or pay.",
+    };
+  }
   return {
     verdict: "PROCEED",
     posture: "CLEAR",

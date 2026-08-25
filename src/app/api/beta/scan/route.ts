@@ -820,6 +820,17 @@ export async function POST(request: Request) {
       .filter(Boolean)
       .join("\n\n");
     const clauseConcerns = extractClauseConcerns(_mergedSmartFields, _clauseOcrBlob);
+    const _hasHighClause = (clauseConcerns?.flagged || []).some((f: any) => {
+      const s = String(f.severity || "").toLowerCase();
+      return s === "high" || s === "critical";
+    });
+    if (combinedVerdict && (_hasHighClause || riskResult?.riskLabel === "HIGH" || riskResult?.riskLabel === "CRITICAL") && combinedVerdict.verdict === "PROCEED") {
+      combinedVerdict = {
+        verdict: "PROCEED WITH CAUTION",
+        posture: "CAUTIOUS",
+        reasoning: "Pages are consistent, but flagged clauses are one-sided. Do not treat this as a green light until those terms are changed or accepted in writing.",
+      };
+    }
     const ocrBlob = (perDocument || [])
       .map((d: any) => d?.ocr?.text || d?.ocrText || d?.text || "")
       .filter(Boolean)
