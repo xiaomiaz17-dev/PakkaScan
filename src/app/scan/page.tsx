@@ -902,15 +902,23 @@ export default function ScanPage() {
   }
   const missing = results?.phase2?.missingEvidence?.missing ?? [];
   const findings = results?.phase2?.result?.findings ?? [];
-  const nextSteps = results?.phase2?.nextSteps ?? [];
+  const nextSteps = ((results as any)?.nextSteps?.length ? (results as any).nextSteps : results?.phase2?.nextSteps) ?? [];
   const firstDoc = results?.documents?.[0];
   const completeness = firstDoc?.completeness;
   const isTemplateOrPartial = completeness && (completeness.status === "template" || completeness.status === "partial");
   const combinedVerdictRaw = results?.combinedVerdict ?? null;
   const _docsN = results?.documents?.length ?? 0;
-  const combinedVerdict = (combinedVerdictRaw && results?.riskLabel === "CRITICAL" && combinedVerdictRaw.verdict !== "DO_NOT_PROCEED")
-    ? { ...combinedVerdictRaw, verdict: "DO_NOT_PROCEED", posture: "DO_NOT_PROCEED", reasoning: combinedVerdictRaw.reasoning || "Critical risk factors detected — do not proceed until resolved." }
-    : combinedVerdictRaw;
+  let combinedVerdict = combinedVerdictRaw;
+  if (combinedVerdict && results?.riskLabel === "CRITICAL" && combinedVerdict.verdict !== "DO_NOT_PROCEED") {
+    combinedVerdict = { ...combinedVerdict, verdict: "DO_NOT_PROCEED", posture: "DO_NOT_PROCEED", reasoning: combinedVerdict.reasoning || "Critical risk factors detected." };
+  }
+  if (combinedVerdict && (_flaggedHi || results?.riskLabel === "HIGH" || results?.riskLabel === "CRITICAL")) {
+    const cv = String(combinedVerdict.verdict || "").toUpperCase().replace(/_/g, " ");
+    if (cv === "PROCEED" || cv === "CLEAR" || cv === "OK") {
+      combinedVerdict = { ...combinedVerdict, verdict: "PROCEED WITH CAUTION", posture: "CAUTIOUS" };
+    }
+  }
+
   const crossDoc = results?.crossDoc ?? null;
   const isMultiDoc = (results?.documents?.length ?? 0) >= 2;
   const ocrConf = (() => {

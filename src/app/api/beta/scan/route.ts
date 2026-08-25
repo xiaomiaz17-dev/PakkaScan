@@ -1003,6 +1003,7 @@ export async function POST(request: Request) {
     }
 
     nextSteps = sanitizeRentalNextSteps(nextSteps, _mergedSmartFields, collectAllText(perDocument));
+    if (phase2) (phase2 as any).nextSteps = nextSteps;
     const filteredPayload = filterResponseByTier(rawPayload, entitlementToUse.report_type);
     console.log(`[beta/scan] Tier-filtered response for tier=${entitlementToUse.report_type}`);
     return NextResponse.json(filteredPayload);
