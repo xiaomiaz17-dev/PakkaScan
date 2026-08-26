@@ -271,8 +271,9 @@ function SmartFieldsPanel({ data, urduSummary, packAttorneyName, extraText }: { 
   {
     const blob = [data?.summary, extraText].filter(Boolean).join(" ");
     const isSaleContract = !!(f.total_price || f.token_amount || p.seller || p.buyer);
-    const isClearance = /statement of account|clearance|maintenance|association dues|outstanding dues|sinking fund|noc/i.test(blob)
-      && !isSaleContract;
+    const isLease = !!(p.landlord || p.tenant || p.lessor || p.lessee) || /lease\s+deed|sub-?lease/i.test(blob);
+    const isClearance = /statement of account|clearance certificate|maintenance statement|association dues|outstanding dues|sinking fund/i.test(blob)
+      && !isSaleContract && !isLease;
     if (isClearance) {
       const m = blob.match(/(?:Rs\.?|PKR)\s*([\d,]+)/i);
       if (m) {

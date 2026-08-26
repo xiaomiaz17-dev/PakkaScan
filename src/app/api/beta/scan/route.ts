@@ -1249,7 +1249,7 @@ export async function POST(request: Request) {
           /area|sq\.?\s*y|dimension|size/i.test(detail + cat)
             ? "Re-verify plot size / allotment record before paying balance"
             : (/date|stamp/i.test(detail + cat)
-            ? "Ask the other party to explain the stamp / execution date mismatch in writing"
+            ? "Ask the seller or agent for a written explanation of the stamp vs execution date mismatch"
             : `Resolve critical ${cat} mismatch before proceeding`);
         const step = {
           priority: "high",
