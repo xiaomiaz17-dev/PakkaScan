@@ -1,7 +1,7 @@
 /**
  * One plain-English sentence under the risk score for non-lawyers.
  */
-function clipWords(s: string, n = 160): string {
+function clipWords(s: string, n = 280): string {
   const t = String(s || "").replace(/\s+/g, " ").trim();
   if (t.length <= n) return t;
   const c = t.slice(0, n);
@@ -21,7 +21,7 @@ export function plainEnglishRiskMeaning(
     .sort((a, b) => Math.abs(b.points || 0) - Math.abs(a.points || 0))[0];
 
   const topHint = top?.label
-    ? ` Main driver: ${clipWords(top.label, 160)}.`
+    ? ` Main driver: ${clipWords(top.label, 280)}.`
     : "";
 
   if (score <= 2 || label === "LOW") {

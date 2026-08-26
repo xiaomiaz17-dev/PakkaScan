@@ -938,7 +938,7 @@ export async function POST(request: Request) {
           let pts = -3;
           if (/date|stamp|chronolog|backdat|execut/.test(lower)) pts = -4;
           return {
-            label: ("Critical mismatch (" + String(c.category || "property") + "): " + detail.slice(0, 140)),
+            label: ("Critical mismatch (" + String(c.category || "property") + "): " + detail.slice(0, 220)),
             points: pts,
             category: "legal" as const,
           };
@@ -1181,6 +1181,27 @@ export async function POST(request: Request) {
       }
     }
 
+    // Prioritise top critical cross-doc mismatches in What To Do Next
+    if (crossDoc?.crossChecks?.length) {
+      const topXd = crossDoc.crossChecks
+        .filter((c: any) => String(c.status || "").toLowerCase() === "mismatch" && ["critical", "high"].includes(String(c.severity || "").toLowerCase()))
+        .sort((a: any, b: any) => (String(b.severity).toLowerCase() === "critical" ? 1 : 0) - (String(a.severity).toLowerCase() === "critical" ? 1 : 0))[0];
+      if (topXd) {
+        const detail = String((topXd as any).detail || topXd.finding || (topXd as any).message || "").slice(0, 200);
+        const cat = String(topXd.category || "property");
+        const title =
+          /area|sq\.?\s*y|dimension|size/i.test(detail + cat)
+            ? "Re-verify plot size / allotment record before paying balance"
+            : `Resolve critical ${cat} mismatch before proceeding`;
+        const step = {
+          priority: "do_first",
+          title,
+          detail: detail || "Cross-document critical mismatch must be resolved in writing before transferring funds.",
+        };
+        const already = (nextSteps || []).some((s: any) => /mismatch|plot size|allotment|re-verify plot/i.test(String(s?.title || "")));
+        if (!already) nextSteps = [step, ...(nextSteps || [])];
+      }
+    }
     nextSteps = sanitizeRentalNextSteps(nextSteps, _mergedSmartFields, collectAllText(perDocument));
     if (phase2) (phase2 as any).nextSteps = nextSteps;
     const filteredPayload = filterResponseByTier(rawPayload, entitlementToUse.report_type);

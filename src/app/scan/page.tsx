@@ -211,7 +211,17 @@ function SmartFieldsPanel({ data, urduSummary }: { data: any; urduSummary?: stri
 
   partyRow("Landlord", p.landlord);
   partyRow("Tenant", p.tenant);
-  partyRow("Seller", p.seller);
+  {
+    const seller = p.seller;
+    const atty = p.attorney || p.agent;
+    if (seller && atty && (atty.name || atty.full_name)) {
+      const sName = seller.name || seller.full_name || "Seller";
+      const aName = atty.name || atty.full_name;
+      rows.push({ label: "Seller", value: `${sName} (via Attorney ${aName})` });
+    } else {
+      partyRow("Seller", seller);
+    }
+  }
   partyRow("Buyer", p.buyer);
   partyRow("Card Holder", p.holder);
   partyRow("Principal", p.principal);

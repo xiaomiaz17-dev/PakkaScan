@@ -204,6 +204,7 @@ export function extractClauseConcerns(
 export function clauseConcernsToRiskFactors(
   concerns: ClauseConcerns
 ): Array<{ label: string; points: number; category: "legal" }> {
+  concerns = { ...concerns, flagged: dedupeFlaggedConcerns(concerns.flagged || []) };
   if (!concerns.flagged.length && !concerns.missing.length) return [];
   const factors: Array<{ label: string; points: number; category: "legal" }> = [];
   let budget = 3.0;
@@ -248,4 +249,19 @@ export function formatClauseWhatsAppText(clause: FlaggedClause, referenceCode?: 
     "Verified via pakkascan.com",
   ];
   return lines.filter((l) => l != null && String(l).length > 0).join("\n");
+}
+
+
+function dedupeFlaggedConcerns(flagged: FlaggedClause[]): FlaggedClause[] {
+  if (!flagged?.length) return flagged || [];
+  const seen = new Set<string>();
+  return flagged.filter((f) => {
+    const key = `${String(f.title || "").toLowerCase().slice(0, 40)}|${String(f.concern || "").toLowerCase().slice(0, 60)}`
+      .replace(/\s+/g, " ");
+    // Collapse general PoA / unlimited attorney duplicates
+    const poaKey = /power of attorney|lawful attorney|general\s*\/?\s*unlimited|poa\b/i.test(key) ? "poa_cluster" : key;
+    if (seen.has(poaKey)) return false;
+    seen.add(poaKey);
+    return true;
+  });
 }
