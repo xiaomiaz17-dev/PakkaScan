@@ -83,7 +83,7 @@ export function BilingualGrid({
             style={{
               fontFamily: URDU_FONT,
               fontSize: dense ? 14 : 15,
-              lineHeight: 2.45,
+              lineHeight: 3,
               marginTop: 8,
               paddingTop: 2,
               textAlign: "right",
@@ -94,7 +94,7 @@ export function BilingualGrid({
               display: "block",
             }}
           >
-            {typeof urdu === "string" ? <UrduText text={urdu} style={{ display: "block", lineHeight: 2.45 }} /> : urdu}
+            {typeof urdu === "string" ? <UrduText text={urdu} style={{ display: "block", lineHeight: 3, padding: "6px 0" }} /> : urdu}
           </div>
         </div>
       ) : null}

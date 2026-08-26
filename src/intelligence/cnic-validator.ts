@@ -1,4 +1,4 @@
-﻿/**
+/**
  * CNIC validator.
  *
  * Cross-checks CNICs returned by the LLM against the raw OCR text.
@@ -265,4 +265,52 @@ export function applyCnicValidation(smartFields: any, ocrText: string): any {
     additional_cnics_found_in_document:
       report.droppedByLlm.length > 0 ? report.droppedByLlm : undefined,
   };
+}
+
+/** Adjacent-digit swap / near-duplicate CNICs in the same OCR blob (signature vs body). */
+export function detectCnicTranspositions(text: string): Array<{ a: string; b: string; note: string }> {
+  const found = findCnicsInText(text || "");
+  const uniq = Array.from(new Set(found.map((c) => cnicDigitsOnly(c)).filter((d) => d.length === 13)));
+  const out: Array<{ a: string; b: string; note: string }> = [];
+  for (let i = 0; i < uniq.length; i++) {
+    for (let j = i + 1; j < uniq.length; j++) {
+      const a = uniq[i];
+      const b = uniq[j];
+      if (a === b) continue;
+      let diffs = 0;
+      const pos: number[] = [];
+      for (let k = 0; k < 13; k++) {
+        if (a[k] !== b[k]) {
+          diffs++;
+          pos.push(k);
+        }
+      }
+      const adjSwap =
+        diffs === 2 &&
+        pos.length === 2 &&
+        pos[1] === pos[0] + 1 &&
+        a[pos[0]] === b[pos[1]] &&
+        a[pos[1]] === b[pos[0]];
+      if (adjSwap || diffs === 2) {
+        out.push({
+          a: formatCnic(a),
+          b: formatCnic(b),
+          note: adjSwap
+            ? "Possible CNIC digit transposition (body vs signature block)"
+            : "Two CNICs differ by only 2 digits - verify against original CNIC",
+        });
+      }
+    }
+  }
+  return out;
+}
+
+export function cnicTranspositionsToRiskFactors(
+  hits: Array<{ a: string; b: string; note: string }>
+): Array<{ label: string; points: number; category: "legal" }> {
+  return hits.map((h) => ({
+    label: "CNIC mismatch in same document: " + h.a + " vs " + h.b + " - " + h.note,
+    points: -3,
+    category: "legal" as const,
+  }));
 }

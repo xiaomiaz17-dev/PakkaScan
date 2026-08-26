@@ -90,6 +90,7 @@ import { getUnusedEntitlements, consumeEntitlement, recordScanUsage, updateScanS
 import { sendScanReportEmail } from "@/lib/email";
 import type { ReportType } from "@/commercial/billing/reports";
 import { computeRiskFactors, mergeRiskFactors } from "@/intelligence/risk-scorer";
+import { detectCnicTranspositions, cnicTranspositionsToRiskFactors } from "@/intelligence/cnic-validator";
 import { backfillTenancySmartFields } from "@/intelligence/tenancy-completeness";
 import { getOfficialValuation, getDeclaredPrice } from "@/intelligence/dc-rate-lookup";
 import { extractClauseConcerns, clauseConcernsToRiskFactors, filterMissingAgainstText } from "@/intelligence/clause-concerns";
@@ -972,6 +973,12 @@ export async function POST(request: Request) {
       `[beta/scan] clauses: suspicious=${clauseConcerns.flagged.length} missing=${clauseConcerns.missing.length} (llm+rules ruleHits=${ruleHits.clauses.length})`
     );
     riskResult = mergeRiskFactors(riskResult, clauseConcernsToRiskFactors(clauseConcerns));
+    {
+      const cnicHits = detectCnicTranspositions(ocrBlobForRisk || _clauseOcrBlob || "");
+      if (cnicHits.length) {
+        riskResult = mergeRiskFactors(riskResult, cnicTranspositionsToRiskFactors(cnicHits) as any);
+      }
+    }
     const highClause = (clauseConcerns?.flagged || []).some((f: any) => {
       const s = String(f.severity || "").toLowerCase();
       return s === "high" || s === "critical";

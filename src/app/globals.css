@@ -592,3 +592,13 @@ a.primary {
   }
 }
 
+
+/* Nastaliq needs deep leading — prevent What-To-Do-Next collisions */
+.bilingual-ur,
+.bilingual-ur * {
+  line-height: 3 !important;
+}
+.bilingual-ur {
+  padding-top: 6px;
+  padding-bottom: 10px;
+}

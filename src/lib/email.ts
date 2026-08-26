@@ -1,4 +1,4 @@
-﻿import { buildContractConcernsEmailHtml } from "./email-clause-block";
+import { buildContractConcernsEmailHtml } from "./email-clause-block";
 /**
  * Email sender via Resend.
  *
@@ -136,16 +136,16 @@ export type ScanEmailTier = "rental" | "bayana" | "full_dd";
 type EmailRiskFactor = { label: string; points: number; category: string };
 
 function getRiskLabel(score: number): "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" {
-  if (score <= 3) return "LOW";
-  if (score <= 5) return "MEDIUM";
-  if (score <= 7) return "HIGH";
+  if (score < 4) return "LOW";
+  if (score < 7) return "MEDIUM";
+  if (score < 9) return "HIGH";
   return "CRITICAL";
 }
 
 function getRiskColor(score: number): string {
-  if (score <= 3) return "#16a34a";
-  if (score <= 5) return "#ca8a04";
-  if (score <= 7) return "#ea580c";
+  if (score < 4) return "#16a34a";
+  if (score < 7) return "#ca8a04";
+  if (score < 9) return "#ea580c";
   return "#dc2626";
 }
 

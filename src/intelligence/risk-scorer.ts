@@ -30,9 +30,10 @@ export type RiskScoreResult = {
 };
 
 function riskLabel(score: number): "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" {
-  if (score <= 3) return "LOW";
-  if (score <= 5) return "MEDIUM";
-  if (score <= 7) return "HIGH";
+  // Bands aligned to product copy: 0–3.9 Low, 4–6.9 Medium, 7–8.9 High, 9–10 Critical
+  if (score < 4) return "LOW";
+  if (score < 7) return "MEDIUM";
+  if (score < 9) return "HIGH";
   return "CRITICAL";
 }
 
