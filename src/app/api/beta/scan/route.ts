@@ -1248,13 +1248,15 @@ export async function POST(request: Request) {
         const title =
           /area|sq\.?\s*y|dimension|size/i.test(detail + cat)
             ? "Re-verify plot size / allotment record before paying balance"
-            : `Resolve critical ${cat} mismatch before proceeding`;
+            : (/date|stamp/i.test(detail + cat)
+            ? "Ask the other party to explain the stamp / execution date mismatch in writing"
+            : `Resolve critical ${cat} mismatch before proceeding`);
         const step = {
           priority: "high",
           title,
           detail: detail || "Cross-document critical mismatch must be resolved in writing before transferring funds.",
         };
-        const already = (nextSteps || []).some((s: any) => /mismatch|plot size|allotment|re-verify plot/i.test(String(s?.title || "")));
+        const already = (nextSteps || []).some((s: any) => /mismatch|plot size|allotment|re-verify plot|stamp paper|execution date/i.test(String(s?.title || "")));
         if (!already) nextSteps = [step, ...(nextSteps || [])];
       }
     }
