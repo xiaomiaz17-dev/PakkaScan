@@ -298,7 +298,7 @@ export async function POST(request: Request) {
 
     // Pick cheapest entitlement first (rental < bayana < full_dd)
     const priceOrder: Record<ReportType, number> = { rental: 1, bayana: 2, full_dd: 3 };
-    const entitlementToUse = unused.sort(
+    let entitlementToUse = unused.sort(
       (a, b) => (priceOrder[a.report_type] ?? 99) - (priceOrder[b.report_type] ?? 99)
     )[0];
     console.log(`[beta/scan] Using entitlement id=${entitlementToUse.id} type=${entitlementToUse.report_type} source=${entitlementToUse.source}`);
@@ -316,8 +316,8 @@ export async function POST(request: Request) {
 
     // We need to check the file count AFTER parsing formData, so we defer this check.
     // Store the limit for use after formData parsing.
-    const _tierFileLimit = maxFilesForTier;
-    const _tierName = entitlementToUse.report_type;
+    let _tierFileLimit = maxFilesForTier;
+    let _tierName = entitlementToUse.report_type;
 
     // Rate limit check - runs before any work
     const clientIp = extractClientIp(request);
@@ -361,6 +361,27 @@ export async function POST(request: Request) {
       if (file.size > MAX_UPLOAD_BYTES) {
         return NextResponse.json({ error: "UPLOAD_TOO_LARGE" }, { status: 413 });
       }
+    }
+
+    // Auto-pick cheapest credit that allows this many files (rental 2 / bayana 3 / full_dd 5)
+    {
+      const nFiles = files.length;
+      const eligible = unused
+        .filter((e) => (tierFileLimits[e.report_type] ?? 1) >= nFiles)
+        .sort((a, b) => (priceOrder[a.report_type] ?? 99) - (priceOrder[b.report_type] ?? 99));
+      if (eligible.length === 0) {
+        const bestCap = Math.max(...unused.map((e) => tierFileLimits[e.report_type] ?? 1));
+        return NextResponse.json({
+          error: "TOO_MANY_FILES",
+          message: `You uploaded ${nFiles} file(s). Your available credits allow at most ${bestCap}. Remove files or buy Full Property Due Diligence (5 files).`,
+          tierLimit: bestCap,
+          uploaded: nFiles,
+        }, { status: 400 });
+      }
+      entitlementToUse = eligible[0];
+      _tierFileLimit = tierFileLimits[entitlementToUse.report_type] ?? 1;
+      _tierName = entitlementToUse.report_type;
+      console.log(`[beta/scan] Using entitlement id=${entitlementToUse.id} type=${entitlementToUse.report_type} source=${entitlementToUse.source} for ${nFiles} file(s)`);
     }
 
     // Enforce tier file count limit
