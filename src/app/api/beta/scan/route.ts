@@ -743,6 +743,7 @@ export async function POST(request: Request) {
     });
 
     let urduTranslations: Record<string, string> = {};
+    let urduByNextStepTitle: Record<string, { title?: string; detail?: string }> = {};
     if (Object.keys(translationInputs).length > 0) {
       try {
         const _t_urdu = Date.now();
@@ -751,6 +752,15 @@ export async function POST(request: Request) {
         console.log(
           `[beta/scan] Urdu: translated ${Object.keys(urduTranslations).length}/${Object.keys(translationInputs).length} string(s)`
         );
+        urduByNextStepTitle = {};
+        (nextSteps || []).forEach((step: any, i: number) => {
+          const tt = String(step?.title || "").trim();
+          if (!tt) return;
+          urduByNextStepTitle[tt] = {
+            title: urduTranslations["nextStepTitle_" + i],
+            detail: urduTranslations["nextStepDetail_" + i],
+          };
+        });
       } catch (err: any) {
         console.warn("[beta/scan] Urdu translation threw:", err?.message || err);
       }
@@ -1235,40 +1245,30 @@ export async function POST(request: Request) {
     }
     nextSteps = sanitizeRentalNextSteps(nextSteps, _mergedSmartFields, collectAllText(perDocument));
     if (phase2) (phase2 as any).nextSteps = nextSteps;
-    // Re-index Urdu next-step keys to match final order (inject shifts indices)
-    if (urduTranslations && Object.keys(urduTranslations).length) {
-      const rekeyed: Record<string, string> = {};
-      for (const [k, v] of Object.entries(urduTranslations)) {
-        const m = /^nextStep(Title|Detail)_(\d+)$/.exec(k);
-        if (!m) {
-          rekeyed[k] = v;
-          continue;
-        }
-        // Old list had no injected card; after prepend, old i → i+1 when inject happened
-        // Safer: rebuild from final nextSteps by matching English title in translationInputs is gone.
-        // Shift all nextStep_* up by 1 if first step is our inject (no urdu for index 0).
-        const idx = Number(m[2]);
-        rekeyed[`nextStep${m[1]}_${idx + 1}`] = v;
+    // Realign Urdu next-step keys by English title (handles inject + sanitize reorder)
+    {
+      const kept: Record<string, string> = {};
+      for (const [k, v] of Object.entries(urduTranslations || {})) {
+        if (!/^nextStep(Title|Detail)_\d+$/.test(k)) kept[k] = v;
       }
-      // Only shift if card 0 looks like our inject (plot size / critical mismatch)
-      const firstTitle = String(nextSteps?.[0]?.title || "");
-      if (/plot size|allotment|critical .*mismatch|Re-verify plot/i.test(firstTitle)) {
-        urduTranslations = rekeyed;
+      (nextSteps || []).forEach((step: any, i: number) => {
+        const tt = String(step?.title || "").trim();
+        const hit = tt ? urduByNextStepTitle[tt] : undefined;
+        if (hit?.title) kept["nextStepTitle_" + i] = hit.title;
+        if (hit?.detail) kept["nextStepDetail_" + i] = hit.detail;
+      });
+      // Static Urdu for injected plot-size card if still missing
+      if (/plot size|allotment|Re-verify plot/i.test(String(nextSteps?.[0]?.title || "")) && !kept["nextStepTitle_0"]) {
+        kept["nextStepTitle_0"] = "ادائیگی سے پہلے پلاٹ کا رقبہ / الاٹمنٹ ریکارڈ دوبارہ تصدیق کریں";
+        kept["nextStepDetail_0"] = "فارڈ اور بیعانہ/فروخت معاہدے میں رقبے کا فرق ہے۔ بقیہ رقم ادا کرنے سے پہلے درست فارڈ یا ترمیم شدہ معاہدہ حاصل کریں۔";
       }
+      urduTranslations = kept;
     }
-    // Payload was built before inject — write final nextSteps into response
+    // Payload was built before inject — write final nextSteps + urdu into response
     if ((rawPayload as any).phase2) {
       (rawPayload as any).phase2.nextSteps = nextSteps;
     }
     (rawPayload as any).nextSteps = nextSteps;
-    // Static Urdu for injected plot-size card (no LLM)
-    if (/plot size|allotment|Re-verify plot/i.test(String(nextSteps?.[0]?.title || ""))) {
-      urduTranslations = {
-        ...urduTranslations,
-        nextStepTitle_0: "ادائیگی سے پہلے پلاٹ کا رقبہ / الاٹمنٹ ریکارڈ دوبارہ تصدیق کریں",
-        nextStepDetail_0: "فارڈ اور بیعانہ/فروخت معاہدے میں رقبے کا فرق ہے۔ بقیہ رقم ادا کرنے سے پہلے درست فارڈ یا ترمیم شدہ معاہدہ حاصل کریں۔",
-      };
-    }
     if ((rawPayload as any).urduTranslations) {
       (rawPayload as any).urduTranslations = urduTranslations;
     }
