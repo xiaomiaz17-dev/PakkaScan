@@ -71,11 +71,20 @@ const DOC_TYPE_LABELS: Record<string, string> = {
   UNKNOWN: "Unrecognised Document",
 };
 
-function humanDocType(t?: string): string {
+function humanDocType(t?: string, hintText?: string): string {
   if (!t) return "Unrecognised Document";
+  const blob = String(hintText || "");
+  if (
+    t === "NON_ENCUMBRANCE_CERTIFICATE" &&
+    /statement of account|maintenance|sinking fund|residents?\s+association|clearance|outstanding dues|noc\s*ref|association dues/i.test(blob)
+  ) {
+    return "Clearance Certificate & NOC";
+  }
   if (DOC_TYPE_LABELS[t]) return DOC_TYPE_LABELS[t];
   return t.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 }
+
+
 
 type SmartFields = {
   parties?: any;
@@ -1368,7 +1377,7 @@ export default function ScanPage() {
                   <div style={{ marginBottom: "8px" }}>
                     <div style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a" }}>{doc.fileName}</div>
                     <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}>
-                      Identified as: <strong style={{ color: "#0f172a" }}>{humanDocType(doc.classification?.documentType)}</strong>
+                      Identified as: <strong style={{ color: "#0f172a" }}>{humanDocType(doc.classification?.documentType, [doc.smartFields?.summary, (doc as any).ocr?.text, (doc as any).ocrText].filter(Boolean).join(" ").slice(0, 500))}</strong>
                     </div>
                   </div>
 
