@@ -943,7 +943,12 @@ export async function POST(request: Request) {
       riskResult = mergeRiskFactors({ riskScore: 1, riskLabel: "LOW" as const, riskFactors: [], scoreBreakdown: "Base 1" }, kept);
     }
     if (clauseConcerns?.missing?.length) {
-      clauseConcerns.missing = filterMissingAgainstText(clauseConcerns.missing, _finalOcr);
+      const _summaryBlob = [
+        _finalOcr,
+        ...((perDocument || []).map((d: any) => String(d?.smartFields?.summary || d?.summary || ""))),
+        String((_mergedSmartFields as any)?.summary || ""),
+      ].join("\n");
+      clauseConcerns.missing = filterMissingAgainstText(clauseConcerns.missing, _summaryBlob);
     }
     console.log(`[beta/scan] Risk final: score=${riskResult.riskScore}/10 factors=${(riskResult.riskFactors||[]).length} stampPaper=${_hasStampPaper}`);
 
