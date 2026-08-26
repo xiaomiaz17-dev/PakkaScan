@@ -727,7 +727,7 @@ export async function POST(request: Request) {
     if (Object.keys(translationInputs).length > 0) {
       try {
         const _t_urdu = Date.now();
-        urduTranslations = await translateToUrduTimed(translationInputs, 25000);
+        urduTranslations = await translateToUrduTimed(translationInputs, 12000);
         console.log(`[timing] UrduTranslation LLM: ${Date.now() - _t_urdu}ms`);
         console.log(
           `[beta/scan] Urdu: translated ${Object.keys(urduTranslations).length}/${Object.keys(translationInputs).length} string(s)`
@@ -1029,8 +1029,13 @@ export async function POST(request: Request) {
     );
     riskResult = mergeRiskFactors(riskResult, clauseConcernsToRiskFactors(clauseConcerns));
     {
-      const cnicHits = detectCnicTranspositions(ocrBlobForRisk || "");
+      const _cnicBlob = ocrBlobForRisk || "";
+      if (_cnicBlob.length < 20) {
+        console.warn("[beta/scan] P1-E: ocrBlobForRisk empty/short - CNIC transposition check skipped");
+      }
+      const cnicHits = detectCnicTranspositions(_cnicBlob);
       if (cnicHits.length) {
+        console.log("[beta/scan] P1-E: CNIC transposition hits=" + cnicHits.length);
         riskResult = mergeRiskFactors(riskResult, cnicTranspositionsToRiskFactors(cnicHits) as any);
       }
     }
