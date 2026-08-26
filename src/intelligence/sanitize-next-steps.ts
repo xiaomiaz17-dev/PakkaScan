@@ -67,5 +67,16 @@ export function sanitizeRentalNextSteps(steps: any[], fields: any, ocr: string):
       };
     });
   }
+  // Bump Sub-Registrar / registry checks when general PoA appears in pack text
+  const hasGeneralPoa = /general\s+(power\s+of\s+attorney|poa)|power of attorney[\s\S]{0,80}(all\s+propert|unlimited|any\s+propert)/i.test(text);
+  if (hasGeneralPoa) {
+    out = out.map((s) => {
+      const blob = `${s?.title || ""} ${s?.detail || ""}`;
+      if (/sub-?registrar|registry|registration\s+office|revok/i.test(blob)) {
+        return { ...s, priority: "high" };
+      }
+      return s;
+    });
+  }
   return out.slice(0, 6);
 }

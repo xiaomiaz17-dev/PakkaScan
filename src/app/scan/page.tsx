@@ -173,7 +173,15 @@ function urduLabelFor(englishLabel: string): string | null {
   return URDU_VERDICT_LABELS[englishLabel.toUpperCase()] || null;
 }
 
-function SmartFieldsPanel({ data, urduSummary }: { data: any; urduSummary?: string | null }) {
+function findPackAttorneyName(docs: any[] | undefined | null): string | null {
+  for (const d of docs || []) {
+    const a = d?.smartFields?.parties?.attorney || d?.smartFields?.parties?.agent;
+    const n = a?.name || a?.full_name;
+    if (n) return String(n);
+  }
+  return null;
+}
+function SmartFieldsPanel({ data, urduSummary, packAttorneyName }: { data: any; urduSummary?: string | null; packAttorneyName?: string | null }) {
   const rows: Array<{ label: string; value: string; unverified?: boolean; note?: string }> = [];
   const p = data.parties || {};
   const f = data.financials || {};
@@ -214,9 +222,9 @@ function SmartFieldsPanel({ data, urduSummary }: { data: any; urduSummary?: stri
   {
     const seller = p.seller;
     const atty = p.attorney || p.agent;
-    if (seller && atty && (atty.name || atty.full_name)) {
+    const aName = (atty && (atty.name || atty.full_name)) || packAttorneyName || null;
+    if (seller && aName) {
       const sName = seller.name || seller.full_name || "Seller";
-      const aName = atty.name || atty.full_name;
       rows.push({ label: "Seller", value: `${sName} (via Attorney ${aName})` });
     } else {
       partyRow("Seller", seller);
@@ -1365,7 +1373,7 @@ export default function ScanPage() {
                   </div>
 
                   {doc.smartFields && !doc.smartFields.extractionError ? (
-                    <SmartFieldsPanel data={doc.smartFields} urduSummary={urduTranslations["docSummary_" + i]} />
+                    <SmartFieldsPanel data={doc.smartFields} packAttorneyName={findPackAttorneyName(results.documents)} urduSummary={urduTranslations["docSummary_" + i]} />
                   ) : (
                     <div style={{ fontSize: "12px", color: "#64748b", fontStyle: "italic", marginTop: "8px" }}>
                       {doc.smartFields?.extractionError || "Analysing this document type requires additional support. Structured extraction was not available."}
