@@ -81,7 +81,7 @@ import { runPhase2Analysis } from "@/intelligence/phase2-pipeline";
 import { generateNextSteps, fallbackNextSteps } from "@/intelligence/next-steps-advisor";
 import { detectCompleteness } from "@/intelligence/completeness-detector";
 import { analyzeCrossDocuments, computeCombinedVerdict, type CrossDocResult } from "@/intelligence/cross-doc-analyzer";
-import { translateToUrdu } from "@/intelligence/urdu-translator";
+import { translateToUrdu, translateToUrduTimed } from "@/intelligence/urdu-translator";
 import { checkRateLimit, recordScan, extractClientIp, getGlobalSpendState } from "@/utils/rate-limiter";
 import type { Jurisdiction, DocumentType } from "@/domain/models";
 import { randomUUID } from "node:crypto";
@@ -686,7 +686,7 @@ export async function POST(request: Request) {
     if (Object.keys(translationInputs).length > 0) {
       try {
         const _t_urdu = Date.now();
-        urduTranslations = await translateToUrdu(translationInputs);
+        urduTranslations = await translateToUrduTimed(translationInputs, 25000);
         console.log(`[timing] UrduTranslation LLM: ${Date.now() - _t_urdu}ms`);
         console.log(`[beta/scan] Urdu: translated ${Object.keys(urduTranslations).length}/${Object.keys(translationInputs).length} string(s)`);
       } catch (err: any) {
@@ -1009,7 +1009,7 @@ export async function POST(request: Request) {
         if (m) clauseUrduInputs["missingProtection_" + i] = String(m);
       });
       if (Object.keys(clauseUrduInputs).length > 0) {
-        const more = await translateToUrdu(clauseUrduInputs);
+        const more = await translateToUrduTimed(clauseUrduInputs, 12000);
         urduTranslations = { ...urduTranslations, ...more };
         console.log(`[beta/scan] Urdu clauses: ${Object.keys(more).length} string(s)`);
       }

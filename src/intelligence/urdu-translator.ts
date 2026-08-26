@@ -38,6 +38,18 @@ RULES:
  *                Empty/null values are skipped.
  * @returns Same-shaped object with Urdu translations. Failed keys are omitted.
  */
+async function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
+  let t: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    t = setTimeout(() => reject(new Error(label + " timed out after " + ms + "ms")), ms);
+  });
+  try {
+    return await Promise.race([p, timeout]);
+  } finally {
+    if (t) clearTimeout(t);
+  }
+}
+
 export async function translateToUrdu(
   strings: Record<string, string | null | undefined>
 ): Promise<Record<string, string>> {
@@ -126,4 +138,25 @@ export function urduVerdictLabel(englishLabel: string): string | null {
     "INCOMPLETE DOCUMENT": "?????? ???????",
   };
   return lookup[englishLabel.toUpperCase()] || null;
+}
+/** Cap translation so scan never burns 200s+ on Urdu alone. */
+export async function translateToUrduTimed(
+  inputs: Record<string, string>,
+  ms = 25000
+): Promise<Record<string, string>> {
+  try {
+    const p = translateToUrdu(inputs);
+    let t: ReturnType<typeof setTimeout> | undefined;
+    const result = await Promise.race([
+      p,
+      new Promise<Record<string, string>>((_, reject) => {
+        t = setTimeout(() => reject(new Error("urdu_timeout")), ms);
+      }),
+    ]);
+    if (t) clearTimeout(t);
+    return result;
+  } catch (e) {
+    console.warn("[urdu] timed/fallback:", (e as Error)?.message || e);
+    return {};
+  }
 }
