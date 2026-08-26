@@ -90,12 +90,17 @@ function filterMissingAgainstSmart(missing: string[], sf: any): string[] {
   const hasDeposit = amt(fin.security_deposit) || amt(fin.deposit) || amt(fin.advance_rent);
   const hasUtil = Boolean(fin.utility_charges || clauses.maintenance_responsibility);
   const hasDue = Boolean(clauses.rent_payment_period);
+  const hasSalePrice = amt(fin.total_price) || amt(fin.token_amount) || amt(fin.sale_price) || amt(fin.consideration) || amt(fin.bayana) || amt(fin.token);
+  // P1-D: sale financials present → drop "consideration / payment schedule" noise
   return missing.filter((label) => {
     const k = label.toLowerCase();
     if (hasRent && /monthly.?rent|rent amount/.test(k)) return false;
     if (hasDeposit && /deposit amount|security deposit amount/.test(k)) return false;
     if (hasUtil && /utility/.test(k)) return false;
     if (hasDue && /due date|payment due/.test(k)) return false;
+    if (hasSalePrice && /consideration|payment schedule|total price|token|bayana|sale price/.test(k)) return false;
+    if (hasSalePrice && /consideration|payment schedule|total price|token|bayana|sale price/.test(k))
+      return false;
     return true;
   });
 }

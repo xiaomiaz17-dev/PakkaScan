@@ -70,6 +70,30 @@ if (hasCnic && (text.includes("cnic") || text.includes("nicop") || text.includes
   return missing;
 }
 
+/** P1-D: detect sale semantics from doc types or financials */
+function isSaleBundle(perDocument: any[], mergedSf: any): boolean {
+  const typeHit = (perDocument || []).some((d: any) => {
+    const t = String(d?.classification?.documentType || "").toUpperCase();
+    return /AGREEMENT_TO_SELL|BAYANA|SALE_DEED|REGISTERED_SALE/.test(t);
+  });
+  if (typeHit) return true;
+  const fin = mergedSf?.financials || {};
+  const amt = (v: any) => {
+    if (v == null) return false;
+    if (typeof v === "number") return v > 0;
+    if (typeof v === "object") return Number(v.amount || v.value || 0) > 0;
+    return /\d{3,}/.test(String(v));
+  };
+  return !!(amt(fin.total_price) || amt(fin.token_amount) || amt(fin.sale_price) || amt(fin.consideration) || amt(fin.bayana) || amt(fin.token));
+}
+
+/** P1-D: drop pure tenancy missing items when pack is sale-oriented */
+function filterTenancyOnlyMissing(missing: string[]): string[] {
+  if (!missing?.length) return missing || [];
+  const tenancyOnly = /monthly\s*rent|security\s*deposit|notice\s*period|landlord|tenant|kiraaya|kiraya|rent\s*amount|advance\s*rent|sub-?let/i;
+  return missing.filter((m) => !tenancyOnly.test(String(m)));
+}
+
 import { NextResponse } from "next/server";
 import { runOcr } from "@/intelligence/ocr-router";
 import { classifyFromText } from "@/intelligence/document-classifier";
@@ -953,6 +977,20 @@ export async function POST(request: Request) {
       .filter(Boolean)
       .join("\n\n");
     const clauseConcerns = extractClauseConcerns(_mergedSmartFields, _clauseOcrBlob);
+    // P1-D: server sale-bundle override — strip tenancy-only noise on sale packs
+    const _saleBundle = isSaleBundle(perDocument, _mergedSmartFields);
+    if (_saleBundle && clauseConcerns?.missing?.length) {
+      clauseConcerns.missing = filterTenancyOnlyMissing(clauseConcerns.missing);
+      console.log("[beta/scan] P1-D sale-bundle: filtered clauseConcerns.missing ->", clauseConcerns.missing.length);
+    }
+    if (_saleBundle && phase2?.missingEvidence && Array.isArray((phase2.missingEvidence as any).missing)) {
+      const me = phase2.missingEvidence as { missing: any[] };
+      me.missing = me.missing.filter((item: any) => {
+        const text = String(item?.label || item?.code || item?.message || item || "");
+        return !/monthly\s*rent|security\s*deposit|notice\s*period|landlord|tenant|kiraaya|kiraya|rent\s*amount|advance\s*rent|sub-?let/i.test(text);
+      });
+      console.log("[beta/scan] P1-D sale-bundle: filtered phase2.missingEvidence.missing ->", me.missing.length);
+    }
     const _hasHighClause = (clauseConcerns?.flagged || []).some((f: any) => {
       const s = String(f.severity || "").toLowerCase();
       return s === "high" || s === "critical";
@@ -1147,7 +1185,6 @@ function buildEvidenceFromExtracted(documentId: string, fields: any[], documentT
     warnings: [],
   }) as any;
 }
-
 
 
 
