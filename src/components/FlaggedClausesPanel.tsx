@@ -22,13 +22,21 @@ export function FlaggedClausesPanel({
   flagged,
   missing,
   referenceCode,
+  saleContext,
 }: {
   flagged?: FlaggedClause[] | null;
   missing?: string[] | null;
   referenceCode?: string | null;
+  /** True when pack has bayana/sale price/token — suppress tenancy-only missing items */
+  saleContext?: boolean;
 }) {
+  const RENTAL_ONLY = /consideration amount|payment schedule|security deposit clause|rent (increase|enhancement)|notice period|inventory list/i;
+  const filteredMissing = (Array.isArray(missing) ? missing : []).filter((m) => {
+    if (!saleContext) return true;
+    return !RENTAL_ONLY.test(String(m));
+  });
   const hasFlagged = Array.isArray(flagged) && flagged.length > 0;
-  const hasMissing = Array.isArray(missing) && missing.length > 0;
+  const hasMissing = filteredMissing.length > 0;
   if (!hasFlagged && !hasMissing) return null;
 
   return (
@@ -170,7 +178,7 @@ export function FlaggedClausesPanel({
             always mean danger — but you should ask for them or understand why they are missing.
           </div>
           <ul style={{ margin: 0, paddingLeft: 18, color: "#78350f", fontSize: 13, lineHeight: 1.65 }}>
-            {missing!.map((m, i) => (
+            {filteredMissing.map((m, i) => (
               <li key={i}>{m}</li>
             ))}
           </ul>

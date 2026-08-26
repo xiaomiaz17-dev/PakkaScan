@@ -590,6 +590,16 @@ a.primary {
   .bilingual-grid--dual {
     grid-template-columns: minmax(280px, 1fr) minmax(280px, 1fr);
   }
+  /* Dense cards (What To Do Next): always stack — side-by-side collides with Nastaliq */
+  .bilingual-grid--dense.bilingual-grid--dual {
+    grid-template-columns: 1fr;
+  }
+}
+.bilingual-grid--dense .bilingual-ur {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #e2e8f0;
+  clear: both;
 }
 
 

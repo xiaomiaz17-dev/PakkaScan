@@ -34,7 +34,13 @@ export function BilingualGrid({
 
   return (
     <div
-      className={hasUr ? "bilingual-grid bilingual-grid--dual" : "bilingual-grid"}
+      className={[
+        "bilingual-grid",
+        hasUr ? "bilingual-grid--dual" : "",
+        dense ? "bilingual-grid--dense" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
       style={{ width: "100%" }}
     >
       <div className="bilingual-en">

@@ -1273,7 +1273,22 @@ export default function ScanPage() {
               <RiskMeaningStrip riskScore={riskScore} riskLabel={riskLabel} riskFactors={riskFactors} />
             )}
             <ValuationComparisonCard data={results?.valuationComparison} />
-            <FlaggedClausesPanel flagged={results?.clauseConcerns?.flagged} missing={results?.clauseConcerns?.missing} referenceCode={results?.referenceCode} />
+            <FlaggedClausesPanel
+              flagged={results?.clauseConcerns?.flagged}
+              missing={results?.clauseConcerns?.missing}
+              referenceCode={results?.referenceCode}
+              saleContext={Boolean(
+                (results?.documents || []).some((d: any) => {
+                  const t = String(d?.classification?.documentType || d?.documentType || d?.type || "");
+                  const fin = d?.smartFields?.financials || {};
+                  return (
+                    /AGREEMENT_TO_SELL|SALE_DEED|BAYANA/i.test(t) ||
+                    fin.total_price != null ||
+                    fin.token_amount != null
+                  );
+                })
+              )}
+            />
             <FeedbackButton referenceCode={results?.referenceCode} />
             {results?.chainOfTitle && (
               <OwnershipTimeline result={results.chainOfTitle} tier={results.tier ?? undefined} />
