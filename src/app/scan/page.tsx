@@ -1219,7 +1219,7 @@ export default function ScanPage() {
             <div style={{ height: "16px" }} />
 
             {isMultiDoc && combinedVerdict ? (
-              <CombinedVerdictHero combined={{...combinedVerdict, verdict: (_flaggedHi || _hasStampFactor || results?.riskLabel === "HIGH" || results?.riskLabel === "CRITICAL") && String(combinedVerdict.verdict).includes("PROCEED") && !String(combinedVerdict.verdict).includes("CAUTION") ? "PROCEED WITH CAUTION" : combinedVerdict.verdict, posture: (_flaggedHi || _hasStampFactor || results?.riskLabel === "HIGH") ? "CAUTIOUS" : combinedVerdict.posture}} docCount={results?.documents?.length ?? 0} urduReasoning={urduTranslations["combinedReasoning"]} />
+              <CombinedVerdictHero combined={{...combinedVerdict, verdict: results?.riskLabel === "CRITICAL" ? "DO_NOT_PROCEED" : ((_flaggedHi || _hasStampFactor || results?.riskLabel === "HIGH") && String(combinedVerdict.verdict).includes("PROCEED") && !String(combinedVerdict.verdict).includes("CAUTION") && !String(combinedVerdict.verdict).includes("DO NOT") ? "PROCEED WITH CAUTION" : combinedVerdict.verdict), posture: results?.riskLabel === "CRITICAL" ? "DO_NOT_PROCEED" : ((_flaggedHi || _hasStampFactor || results?.riskLabel === "HIGH") ? "CAUTIOUS" : combinedVerdict.posture)}} docCount={results?.documents?.length ?? 0} urduReasoning={urduTranslations["combinedReasoning"]} />
             ) : isTemplateOrPartial && completeness ? (
               <>
                 <TemplateVerdictHero report={completeness} />

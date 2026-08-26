@@ -50,6 +50,11 @@ const RULES: Rule[] = [
       /(?:token|bayana|earnest).{0,40}(?:100\s*%|full|entire|non[-\s]?refundable)/i,
         /(advance|token).{0,30}(non[-\s]?refundable|shall\s+not\s+be\s+refunded)/i,
         /buyer.{0,40}(lose|forfeit).{0,30}(deposit|earnest|bayana|token)/i,
+        /forfeit.{0,50}(without\s+notice|no\s+notice)/i,
+        /(without\s+notice|no\s+notice).{0,40}forfeit/i,
+        /(15|fifteen)\s*days?.{0,60}forfeit/i,
+        /forfeit.{0,60}(15|fifteen)\s*days?/i,
+        /(?:token|bayana|earnest|deposit).{0,50}(?:shall\s+be\s+)?(?:forfeited|confiscated)/i,
       ];
       for (const p of patterns) {
         const m = t.match(p);

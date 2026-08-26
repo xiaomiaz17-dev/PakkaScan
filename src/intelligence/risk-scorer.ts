@@ -243,7 +243,7 @@ function factorsFromTenancyText(
       String(parties.landlord?.cnic || "") + String(parties.tenant?.cnic || "")
     );
 
-  const filtered = findings.filter((f) => {
+  let filtered = findings.filter((f) => {
     if (f.code === "TENANCY_PARTY_IDENTITY_WEAK" && (hasLandlord || hasTenant)) return false;
     if (f.code === "TENANCY_LANDLORD_CNIC_WEAK" && hasLandlord) return false;
     if (f.code === "TENANCY_RENT_MISSING" && smartFieldsHasRent(sf)) return false;
@@ -254,6 +254,16 @@ function factorsFromTenancyText(
   });
 
   // Drop generic "missing CNIC" noise when extract already has them
+  const cnicInExtract = (() => {
+    try {
+      const blob = JSON.stringify(sf || {});
+      return /\b\d{5}-\d{7}-\d\b/.test(blob);
+    } catch { return false; }
+  })();
+  if (cnicInExtract) {
+    filtered = filtered.filter((f: any) => !/cnic|nicop|IDENTITY_DOCUMENT|identity document/i.test(String(f?.code || "") + " " + String(f?.title || "") + " " + String(f?.message || "") + " " + String(f?.label || "")));
+  }
+
   const sevPoints: Record<string, number> = {
     CRITICAL: -3,
     HIGH: -2,
@@ -384,8 +394,18 @@ function factorsFromFindings(findings: string[]): RiskFactor[] {
 
 function factorsFromMissing(missing: string[], smartFields?: any): RiskFactor[] {
   const parties = smartFields?.parties || {};
-  const hasCnic =
-    String(parties.landlord?.cnic || parties.tenant?.cnic || "").replace(/[^0-9]/g, "").length >= 13;
+  const hasCnic = (() => {
+    const fromParties = [
+      parties.landlord?.cnic, parties.tenant?.cnic,
+      parties.seller?.cnic, parties.buyer?.cnic,
+      parties.principal?.cnic, parties.attorney?.cnic,
+      parties.owner?.cnic,
+    ].map((x) => String(x || "").replace(/[^0-9]/g, "")).some((d) => d.length >= 13);
+    if (fromParties) return true;
+    try {
+      return /\b\d{5}-\d{7}-\d\b/.test(JSON.stringify(smartFields || {}));
+    } catch { return false; }
+  })();
   const hasNames = !!(parties.landlord?.name || parties.tenant?.name);
   const hasTerm = !!(
     smartFields?.dates?.start_date ||
@@ -421,10 +441,17 @@ function factorsFromMissing(missing: string[], smartFields?: any): RiskFactor[] 
   return factors;
 }
 
+function dedupeKey(label: string): string {
+  const s = label.toLowerCase();
+  if (/power of attorney|poa\b|mofa|attorney/.test(s)) return "poa_cluster";
+  if (/missing.*cnic|cnic.*seller|nicop/.test(s)) return "missing_cnic";
+  if (/stamp\s*\/\s*registration|formalities\s*unclear/.test(s)) return "stamp_formalities";
+  return s.slice(0, 48);
+}
 function dedupe(factors: RiskFactor[]): RiskFactor[] {
   const seen = new Set<string>();
   return factors.filter((f) => {
-    const key = f.label.slice(0, 40).toLowerCase();
+    const key = dedupeKey(f.label || "");
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
