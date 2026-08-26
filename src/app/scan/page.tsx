@@ -190,7 +190,7 @@ function findPackAttorneyName(docs: any[] | undefined | null): string | null {
   }
   return null;
 }
-function SmartFieldsPanel({ data, urduSummary, packAttorneyName }: { data: any; urduSummary?: string | null; packAttorneyName?: string | null }) {
+function SmartFieldsPanel({ data, urduSummary, packAttorneyName, extraText }: { data: any; urduSummary?: string | null; packAttorneyName?: string | null; extraText?: string | null }) {
   const rows: Array<{ label: string; value: string; unverified?: boolean; note?: string }> = [];
   const p = data.parties || {};
   const f = data.financials || {};
@@ -269,8 +269,11 @@ function SmartFieldsPanel({ data, urduSummary, packAttorneyName }: { data: any; 
   pushMoney("Stamp Duty", f.stamp_duty);
   pushMoney("Registration Fee", f.registration_fee);
   {
-    const blob = String(data?.summary || "");
-    if (/outstanding|arrears|dues|maintenance/i.test(blob)) {
+    const blob = [data?.summary, extraText].filter(Boolean).join(" ");
+    const isSaleContract = !!(f.total_price || f.token_amount || p.seller || p.buyer);
+    const isClearance = /statement of account|clearance|maintenance|association dues|outstanding dues|sinking fund|noc/i.test(blob)
+      && !isSaleContract;
+    if (isClearance) {
       const m = blob.match(/(?:Rs\.?|PKR)\s*([\d,]+)/i);
       if (m) {
         const amt = Number(String(m[1]).replace(/,/g, ""));
@@ -278,18 +281,18 @@ function SmartFieldsPanel({ data, urduSummary, packAttorneyName }: { data: any; 
           rows.push({ label: "Total Outstanding Dues", value: "PKR " + amt.toLocaleString() });
         }
       }
-    }
-    if (/creek\s+vistas|residents?\s+association|dha\s+karachi/i.test(blob) && !rows.some((r) => /issuing/i.test(r.label))) {
-      rows.push({
-        label: "Issuing Authority",
-        value: /creek\s+vistas/i.test(blob)
-          ? "Creek Vistas Residents Association / DHA Karachi"
-          : "DHA Karachi",
-      });
-    }
-    const nm = blob.match(/\b(DHA\/KHI\/NOC[\w\-\/]+)/i);
-    if (nm && !rows.some((r) => /noc/i.test(r.label))) {
-      rows.push({ label: "NOC / Ref", value: nm[1] });
+      if (/creek\s+vistas|residents?\s+association|dha/i.test(blob) && !rows.some((r) => /issuing/i.test(r.label))) {
+        rows.push({
+          label: "Issuing Authority",
+          value: /creek\s+vistas/i.test(blob)
+            ? "Creek Vistas Residents Association / DHA Karachi"
+            : "DHA Karachi",
+        });
+      }
+      const nm = blob.match(/\b(DHA\/KHI\/NOC[\w\-\/]+)/i);
+      if (nm && !rows.some((r) => /noc/i.test(r.label))) {
+        rows.push({ label: "NOC / Ref", value: nm[1] });
+      }
     }
   }
 
@@ -1406,7 +1409,7 @@ export default function ScanPage() {
                   </div>
 
                   {doc.smartFields && !doc.smartFields.extractionError ? (
-                    <SmartFieldsPanel data={doc.smartFields} packAttorneyName={findPackAttorneyName(results.documents)} urduSummary={urduTranslations["docSummary_" + i]} />
+                    <SmartFieldsPanel data={doc.smartFields} extraText={String((doc as any).ocr?.text || (doc as any).ocrText || "")} packAttorneyName={findPackAttorneyName(results.documents)} urduSummary={urduTranslations["docSummary_" + i]} />
                   ) : (
                     <div style={{ fontSize: "12px", color: "#64748b", fontStyle: "italic", marginTop: "8px" }}>
                       {doc.smartFields?.extractionError || "Analysing this document type requires additional support. Structured extraction was not available."}
