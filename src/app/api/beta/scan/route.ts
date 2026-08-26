@@ -43,7 +43,7 @@ function filterMissingEvidenceAgainstSmartFields(
     const text = String(
       typeof item === "string" ? item : item?.label || item?.code || item?.message || ""
     ).toLowerCase();
-    if (hasCnic && text.includes("cnic")) return true;
+if (hasCnic && (text.includes("cnic") || text.includes("nicop") || text.includes("identity_document") || text.includes("identity document") || text.includes("seller and buyer"))) return true;
     if (hasNames && (text.includes("identity") || text.includes("party name") || text.includes("party names")))
       return true;
     if (hasTerm && (text.includes("term") || text.includes("duration"))) return true;

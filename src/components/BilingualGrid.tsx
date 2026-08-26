@@ -83,7 +83,9 @@ export function BilingualGrid({
             style={{
               fontFamily: URDU_FONT,
               fontSize: dense ? 14 : 15,
-              lineHeight: 1.9,
+              lineHeight: 2.15,
+              marginTop: 6,
+              paddingTop: 2,
               textAlign: "right",
               direction: "rtl",
               color: "#0f172a",

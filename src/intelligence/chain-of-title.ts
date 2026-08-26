@@ -194,13 +194,29 @@ function extractDate(smartFields: any): string | null {
     dates.execution_date,
     dates.mutation_date,
     dates.issue_date,
+    dates.issued_date,
+    dates.date_issued,
+    dates.fard_date,
+    dates.document_date,
     dates.start_date,
     dates.signed_on,
+    smartFields?.issued_on,
+    smartFields?.date_issued,
   ];
   for (const c of candidates) {
     const iso = normalizeToIsoDate(c);
     if (iso) return iso;
   }
+  // Fallback: parse "Date Issued: 10th July 2026" from free text fields
+  try {
+    const blob = JSON.stringify(smartFields || {});
+    const m = blob.match(/Date\s*Issued\s*[:\-]?\s*(\d{1,2}(?:st|nd|rd|th)?\s+[A-Za-z]+\s+\d{4})/i)
+      || blob.match(/Issued\s*[:\-]?\s*(\d{1,2}(?:st|nd|rd|th)?\s+[A-Za-z]+\s+\d{4})/i);
+    if (m) {
+      const iso = normalizeToIsoDate(m[1]);
+      if (iso) return iso;
+    }
+  } catch { /* ignore */ }
   return null;
 }
 
