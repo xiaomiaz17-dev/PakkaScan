@@ -410,109 +410,108 @@ export async function POST(request: Request) {
 
     console.log(`[beta/scan] Received ${files.length} file(s)`);
 
-    const perDocument: any[] = [];
+    const perDocument: any[] = await Promise.all(
+      files.map(async (file, fileIndex) => {
+        const documentId = randomUUID();
+        const buf = Buffer.from(await file.arrayBuffer());
 
-    for (const file of files) {
-      const documentId = randomUUID();
-      const buf = Buffer.from(await file.arrayBuffer());
+        console.log(`[beta/scan] OCR starting: ${file.name} (${file.type}, ${file.size} bytes)`);
 
-      console.log(`[beta/scan] OCR starting: ${file.name} (${file.type}, ${file.size} bytes)`);
+        const _t_ocr = Date.now();
+        const ocr = await runOcr([{ buf, mimeType: file.type }]);
+        console.log(`[timing] OCR (${file.name}): ${Date.now() - _t_ocr}ms`);
 
-      const _t_ocr = Date.now();
-      const ocr = await runOcr([{ buf, mimeType: file.type }]);
-      console.log(`[timing] OCR (${file.name}): ${Date.now() - _t_ocr}ms`);
+        console.log(
+          `[beta/scan] OCR complete: engine=${ocr.engineUsed}, ` +
+          `confidence=${ocr.confidence.toFixed(1)}%, language=${ocr.language}, ` +
+          `pages=${ocr.pageCount}, chars=${ocr.text.length}`
+        );
 
-      console.log(
-        `[beta/scan] OCR complete: engine=${ocr.engineUsed}, ` +
-        `confidence=${ocr.confidence.toFixed(1)}%, language=${ocr.language}, ` +
-        `pages=${ocr.pageCount}, chars=${ocr.text.length}`
-      );
+        if (!ocr.text || ocr.text.trim().length < 20) {
+          return {
+            documentId,
+            fileName: file.name,
+            status: "ocr_failed",
+            ocr,
+            error: "LIVE_OCR_REQUIRED",
+          };
+        }
 
-      if (!ocr.text || ocr.text.trim().length < 20) {
-        perDocument.push({
+        // If user pre-tagged this file with a document type, use it directly.
+        // Otherwise fall back to auto-classification.
+        const userHint = documentTypeHints[fileIndex] || "";
+        let classification;
+        if (userHint) {
+          classification = {
+            documentType: userHint as DocumentType,
+            jurisdiction: "UNKNOWN" as Jurisdiction,
+            confidence: 1.0,
+            reasons: ["User-provided document type"],
+          };
+        } else {
+          classification = bestClassification(ocr.text);
+        }
+        console.log(
+          `[beta/scan] Classified: ${classification.documentType} ` +
+          `(${(classification.confidence * 100).toFixed(0)}%) - ${classification.jurisdiction}`
+        );
+
+        const _t_analyse = Date.now();
+        const analysed = analyseDocument({
           documentId,
-          fileName: file.name,
-          status: "ocr_failed",
-          ocr,
-          error: "LIVE_OCR_REQUIRED",
+          text: ocr.text,
+          jurisdictionHint: classification.jurisdiction,
+          documentTypeHint: classification.documentType,
         });
-        continue;
-      }
+        console.log(`[timing] AnalyseDocument (${file.name}): ${Date.now() - _t_analyse}ms`);
 
-      // If user pre-tagged this file with a document type, use it directly.
-      // Otherwise fall back to auto-classification.
-      const userHint = documentTypeHints[files.indexOf(file)] || "";
-      let classification;
-      if (userHint) {
-        classification = {
-          documentType: userHint as DocumentType,
-          jurisdiction: "UNKNOWN" as Jurisdiction,
-          confidence: 1.0,
-          reasons: ["User-provided document type"],
-        };
-      } else {
-        classification = bestClassification(ocr.text);
-      }
-      console.log(
-        `[beta/scan] Classified: ${classification.documentType} ` +
-        `(${(classification.confidence * 100).toFixed(0)}%) - ${classification.jurisdiction}`
-      );
+        console.log(
+          `[beta/scan] Extracted ${analysed.extracted.fields.length} field(s), ` +
+          `${analysed.evidence.length} evidence, ${analysed.observations.length} observation(s)`
+        );
 
-      const _t_analyse = Date.now();
-      const analysed = analyseDocument({
-        documentId,
-        text: ocr.text,
-        jurisdictionHint: classification.jurisdiction,
-        documentTypeHint: classification.documentType,
-      });
-      console.log(`[timing] AnalyseDocument (${file.name}): ${Date.now() - _t_analyse}ms`);
-
-      console.log(
-        `[beta/scan] Extracted ${analysed.extracted.fields.length} field(s), ` +
-        `${analysed.evidence.length} evidence, ${analysed.observations.length} observation(s)`
-      );
-
-      const _t_smart = Date.now();
-      const smartFields = backfillTenancySmartFields(
+        const _t_smart = Date.now();
+        const smartFields = backfillTenancySmartFields(
           await extractSmartFields(classification.documentType, ocr.text),
           ocr.text || ""
         );
-      console.log(`[timing] SmartFields LLM (${file.name}): ${Date.now() - _t_smart}ms`);
+        console.log(`[timing] SmartFields LLM (${file.name}): ${Date.now() - _t_smart}ms`);
 
-      // Detect if this is a complete/partial/template document
-      const completeness = detectCompleteness(classification.documentType, smartFields);
-      console.log(
-        `[beta/scan] Completeness: ${completeness.status} (` +
-        `${completeness.criticalFieldsPresent}/${completeness.criticalFieldsTotal} critical fields)`
-      );
+        // Detect if this is a complete/partial/template document
+        const completeness = detectCompleteness(classification.documentType, smartFields);
+        console.log(
+          `[beta/scan] Completeness: ${completeness.status} (` +
+          `${completeness.criticalFieldsPresent}/${completeness.criticalFieldsTotal} critical fields)`
+        );
 
-      perDocument.push({
-        documentId,
-        fileName: file.name,
-        status: "ok",
-        smartFields,
-        completeness,
-        ocr: {
-          engineUsed: ocr.engineUsed,
-          confidence: ocr.confidence,
-          language: ocr.language,
-          pageCount: ocr.pageCount,
-          charCount: ocr.text.length,
-        },
-        classification: {
-          documentType: classification.documentType,
-          jurisdiction: classification.jurisdiction,
-          confidence: classification.confidence,
-          reasons: classification.reasons,
-        },
-        extracted: {
-          schemaVersion: analysed.extracted.schemaVersion,
-          fields: analysed.extracted.fields,
-          warnings: analysed.extracted.warnings,
-        },
-        observations: analysed.observations,
-      });
-    }
+        return {
+          documentId,
+          fileName: file.name,
+          status: "ok",
+          smartFields,
+          completeness,
+          ocr: {
+            engineUsed: ocr.engineUsed,
+            confidence: ocr.confidence,
+            language: ocr.language,
+            pageCount: ocr.pageCount,
+            charCount: ocr.text.length,
+          },
+          classification: {
+            documentType: classification.documentType,
+            jurisdiction: classification.jurisdiction,
+            confidence: classification.confidence,
+            reasons: classification.reasons,
+          },
+          extracted: {
+            schemaVersion: analysed.extracted.schemaVersion,
+            fields: analysed.extracted.fields,
+            warnings: analysed.extracted.warnings,
+          },
+          observations: analysed.observations,
+        };
+      })
+    );
 
     const combinedEvidence = perDocument
       .filter((d) => d.status === "ok")
