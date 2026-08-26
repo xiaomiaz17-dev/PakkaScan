@@ -99,7 +99,6 @@ function filterMissingAgainstSmart(missing: string[], sf: any): string[] {
     if (hasUtil && /utility/.test(k)) return false;
     if (hasDue && /due date|payment due/.test(k)) return false;
     if (hasSalePrice && /consideration|payment schedule|total price|token|bayana|sale price/.test(k)) return false;
-    if (hasSalePrice && /consideration|payment schedule|total price|token|bayana|sale price/.test(k))
       return false;
     return true;
   });

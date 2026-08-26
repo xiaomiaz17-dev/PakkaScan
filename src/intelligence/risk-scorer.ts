@@ -309,7 +309,18 @@ function factorsFromDateAnomalies(smartFields: any): RiskFactor[] {
     }
     const label = explanation ? `Date anomaly: ${explanation}` : `Date anomaly: ${anomaly}`;
     let points = -1;
-    if (lower.includes("future") || lower.includes("impossible") || lower.includes("after the sale")) points = -2;
+    // Follow-up: chronological impossibilities (stamp after execution / backdating) are severe in PK practice
+    if (
+      /stamp/.test(lower) && /after/.test(lower) ||
+      /purchase/.test(lower) && /after/.test(lower) && /execut/.test(lower) ||
+      /chronolog/.test(lower) ||
+      /backdat/.test(lower) ||
+      /impossible/.test(lower)
+    ) {
+      points = -3;
+    } else if (lower.includes("future") || lower.includes("after the sale")) {
+      points = -2;
+    }
     factors.push({ label: label.slice(0, 180), points, category: "document" });
   }
   return factors;
@@ -374,7 +385,8 @@ function factorsFromFindings(findings: string[]): RiskFactor[] {
   for (const f of findings) {
     const lower = f.toLowerCase();
     if (lower.includes("stamp duty") || lower.includes("stamp paper")) {
-      factors.push({ label: "Stamp duty anomaly detected", points: -2, category: "financial" });
+      const stampPts = (/after/.test(lower) || /chronolog/.test(lower) || /impossible/.test(lower)) ? -3 : -2;
+      factors.push({ label: "Stamp duty anomaly detected", points: stampPts, category: "financial" });
       continue;
     }
     if (lower.includes("power of attorney") || lower.includes("poa")) {
@@ -393,8 +405,9 @@ function factorsFromFindings(findings: string[]): RiskFactor[] {
       factors.push({ label: "Encumbrance or charge on property detected", points: -3, category: "legal" });
       continue;
     }
-    if (lower.includes("date") && (lower.includes("future") || lower.includes("anomaly") || lower.includes("invalid") || lower.includes("after"))) {
-      factors.push({ label: "Date anomaly in document", points: -1, category: "document" });
+    if (lower.includes("date") && (lower.includes("future") || lower.includes("anomaly") || lower.includes("invalid") || lower.includes("after") || lower.includes("chronolog"))) {
+      const datePts = (/chronolog/.test(lower) || /impossible/.test(lower) || (/stamp/.test(lower) && /after/.test(lower))) ? -3 : -2;
+      factors.push({ label: "Date anomaly in document", points: datePts, category: "document" });
       continue;
     }
   }
