@@ -294,9 +294,17 @@ function factorsFromDateAnomalies(smartFields: any): RiskFactor[] {
       const dates = extractIsoDates(combined);
       const onlyTodayOrPast = dates.length > 0 && dates.every((d) => d <= todayPk);
       if (onlyTodayOrPast) continue;
-      // also skip pure "future" flags with no concrete date beyond today when execution equals today
+      const fieldDates = extractIsoDates(JSON.stringify(smartFields?.dates || {}));
+      if (fieldDates.length > 0 && fieldDates.every((d) => d <= todayPk)) continue;
+      // LLM sometimes flags 2026 as "future" when model training cutoff is older — trust calendar
+      if (dates.length === 0 && fieldDates.length === 0) {
+        // no concrete future date -> ignore vague "future" noise
+        continue;
+      }
       const exec = smartFields?.dates?.execution_date;
-      if (typeof exec === "string" && exec.slice(0, 10) === todayPk) continue;
+      if (typeof exec === "string" && exec.slice(0, 10) <= todayPk) continue;
+      const issue = smartFields?.dates?.issue_date || smartFields?.dates?.issued_date;
+      if (typeof issue === "string" && issue.slice(0, 10) <= todayPk) continue;
     }
     const label = explanation ? `Date anomaly: ${explanation}` : `Date anomaly: ${anomaly}`;
     let points = -1;

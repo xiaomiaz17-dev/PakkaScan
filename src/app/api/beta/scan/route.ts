@@ -25,9 +25,16 @@ function filterMissingEvidenceAgainstSmartFields(
 ): any {
   if (!missing) return missing;
   const parties = smartFields?.parties || {};
-  const hasCnic =
-    String(parties.landlord?.cnic || parties.tenant?.cnic || parties.seller?.cnic || "")
-      .replace(/[^0-9]/g, "").length >= 13;
+  const hasCnic = (() => {
+    const ids = [
+      parties.landlord?.cnic, parties.tenant?.cnic,
+      parties.seller?.cnic, parties.buyer?.cnic,
+      parties.principal?.cnic, parties.attorney?.cnic,
+      parties.owner?.cnic,
+    ];
+    if (ids.some((x: any) => String(x || '').replace(/[^0-9]/g, '').length >= 13)) return true;
+    try { return /\b\d{5}-\d{7}-\d\b/.test(JSON.stringify(smartFields || {})); } catch { return false; }
+  })();
   const hasNames = !!(
     parties.landlord?.name ||
     parties.tenant?.name ||
@@ -838,6 +845,18 @@ export async function POST(request: Request) {
       declaredPricePkr,
     });
 
+        {
+      const failed = (perDocument || []).filter(function(d) {
+        return d && (d.status !== "ok" || (d.smartFields && d.smartFields.extractionError) || d.error);
+      });
+      if (failed.length > 0) {
+        riskResult = mergeRiskFactors(riskResult, failed.map(function(d) {
+          var name = String((d && (d.fileName || d.name)) || "file").slice(0, 60);
+          var reason = String((d && d.smartFields && d.smartFields.extractionError) || (d && d.error) || (d && d.status) || "unreadable").slice(0, 80);
+          return { label: "Document read failure: " + name + " - " + reason, points: -3, category: "document" };
+        }));
+      }
+    }
     // Strongly weight chain-of-title + temporal findings into the risk score
     if (chainOfTitle) {
       const chainFactors = chainFindingsToRiskFactors(chainOfTitle);
@@ -865,9 +884,15 @@ export async function POST(request: Request) {
       _firstSmartFields ||
       perDocument?.find((d: any) => d.status === "ok" && d.smartFields)?.smartFields;
     if (phase2?.missingEvidence) {
+      const allSf = (perDocument || [])
+        .filter((d: any) => d?.status === "ok" && d.smartFields)
+        .map((d: any) => d.smartFields);
+      const pack = allSf.length
+        ? { parties: Object.assign({}, ...allSf.map((s: any) => s.parties || {})), _docs: allSf }
+        : (_mergedSmartFields || _sfAlign);
       phase2.missingEvidence = filterMissingEvidenceAgainstSmartFields(
         phase2.missingEvidence,
-        _mergedSmartFields || _sfAlign
+        pack
       );
     }
 

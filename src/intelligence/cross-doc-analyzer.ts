@@ -61,7 +61,9 @@ STRICT RULES:
    - DATE: Are the document dates internally consistent (e.g. Bayana before Sale Deed)?
 4. Be specific. Bad: "The parties match." Good: "The seller CNIC on the Bayana (35202-1234567-1) matches the CNIC on the uploaded CNIC card."
 5. Severity guide:
-   - "critical" = would materially harm the buyer/tenant if ignored (e.g. seller names don't match; property addresses disagree)
+   - AREA DIFFERENCE: If area/size differs by more than ~10% between documents (e.g. 300 vs 356 Sq Yards), status MUST be "mismatch" and severity "critical" — never "partial_match".
+- FARD RECENCY: A Fard dated within 180 days before the agreement is normal in Pakistan. Do NOT flag as unverifiable/problem solely because Fard is ~1 month older than Bayana.
+- "critical" = would materially harm the buyer/tenant if ignored (e.g. seller names don't match; property addresses disagree)
    - "warning" = should be verified but not necessarily a deal-breaker (e.g. address is partial match, or one date is missing)
    - "info" = confirms alignment or notes something the user should know
 6. TWO PAGES OF THE SAME DEED: If both inputs are tenancy/rental pages (or one is the clause page and one is the parties/rent page), treat them as ONE instrument. A field present on page 1 and absent on page 2 is NOT a mismatch. Mark those checks "unverifiable" or "info". Set hasCriticalMismatch=true ONLY when the SAME field is present on two pages with CONTRADICTING values (different CNIC, different rent amount, different landlord name).
