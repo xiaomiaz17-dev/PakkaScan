@@ -52,7 +52,7 @@ export function backfillTenancyFromOcr(text: string): TenancyBackfill {
     securityDepositPkr,
     address: addr ? addr.replace(/\s+/g, " ").trim().slice(0, 160) : undefined,
     agreementDate: date,
-    hasStampEvidence: /attested|oath\s*commissioner|stamp|hundred\s+rupees|یک\s*سو\s*روپے/i.test(t),
+    hasStampEvidence: /attested|oath\s*commissioner|stamp|hundred\s+rupees|wasil|rs\.?\s*[=:]?\s*100|100\s*rupees|central\s*park|block\s*[a-z]?\s*\(?a\)?|vip\s*central|یک\s*سو\s*روپے/i.test(t),
   };
 }
 
@@ -78,11 +78,9 @@ export function applyTenancyBackfill(fields: any, text: string): any {
   if (!f.financials.securityDepositPkr && b.securityDepositPkr) f.financials.securityDepositPkr = b.securityDepositPkr;
   if (!f.property.address && b.address) f.property.address = b.address;
   if (!f.dates.agreementDate && b.agreementDate) f.dates.agreementDate = b.agreementDate;
-  if (b.hasStampEvidence) f._stampEvidence = true;
+  f._stampEvidence = !!b.hasStampEvidence;
   if (b.address && !f.property.address) f.property.address = b.address;
-  if (b.hasStampEvidence) f._stampEvidence = true;
   if (b.address && !f.property.address) f.property.address = b.address;
-  if (b.hasStampEvidence) f._stampEvidence = true;
   if (b.address && !f.property.address) f.property.address = b.address;
   f._stampEvidence = !!b.hasStampEvidence;
   return f;
