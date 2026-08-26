@@ -316,8 +316,8 @@ export async function POST(request: Request) {
     // Bayana ($9.99): 3 files (Bayana + Fard + CNIC)
     // Full DD ($19.99): 5 files (Sale Deed + Fard + Mutation + CNIC + NEC)
     const tierFileLimits: Record<ReportType, number> = {
-      rental: 2,
-      bayana: 3,
+      rental: 4,
+      bayana: 5,
       full_dd: 5,
     };
     const maxFilesForTier = tierFileLimits[entitlementToUse.report_type] ?? 1;
@@ -371,25 +371,30 @@ export async function POST(request: Request) {
       }
     }
 
-    // Auto-pick cheapest credit that allows this many files (rental 2 / bayana 3 / full_dd 5)
+    // One credit per analysis session. Prefer explicit preferredTier from client if user owns it.
     {
       const nFiles = files.length;
-      const eligible = unused
-        .filter((e) => (tierFileLimits[e.report_type] ?? 1) >= nFiles)
-        .sort((a, b) => (priceOrder[a.report_type] ?? 99) - (priceOrder[b.report_type] ?? 99));
+      const preferredRaw = String(formData.get("preferredTier") || formData.get("reportType") || "").trim().toLowerCase();
+      const preferred = (["rental", "bayana", "full_dd"].includes(preferredRaw) ? preferredRaw : "") as ReportType | "";
+      let eligible = unused.filter((e) => (tierFileLimits[e.report_type] ?? 1) >= nFiles);
       if (eligible.length === 0) {
         const bestCap = Math.max(...unused.map((e) => tierFileLimits[e.report_type] ?? 1));
         return NextResponse.json({
           error: "TOO_MANY_FILES",
-          message: `You uploaded ${nFiles} file(s). Your available credits allow at most ${bestCap}. Remove files or buy Full Property Due Diligence (5 files).`,
+          message: `You uploaded ${nFiles} file(s). Each credit covers one analysis of up to ${bestCap} file(s). Remove files or buy a higher tier.`,
           tierLimit: bestCap,
           uploaded: nFiles,
         }, { status: 400 });
       }
+      if (preferred) {
+        const match = eligible.filter((e) => e.report_type === preferred);
+        if (match.length) eligible = match;
+      }
+      eligible.sort((a, b) => (priceOrder[a.report_type] ?? 99) - (priceOrder[b.report_type] ?? 99));
       entitlementToUse = eligible[0];
       _tierFileLimit = tierFileLimits[entitlementToUse.report_type] ?? 1;
       _tierName = entitlementToUse.report_type;
-      console.log(`[beta/scan] Using entitlement id=${entitlementToUse.id} type=${entitlementToUse.report_type} source=${entitlementToUse.source} for ${nFiles} file(s)`);
+      console.log(`[beta/scan] Session credit id=${entitlementToUse.id} type=${entitlementToUse.report_type} files=${nFiles} preferred=${preferred || "auto"}`);
     }
 
     // Enforce tier file count limit

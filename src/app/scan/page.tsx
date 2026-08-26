@@ -1058,7 +1058,7 @@ export default function ScanPage() {
                     {entitlements.credits.map((c, i) => (
                       <span key={c.type}>
                         {i > 0 && " x "}
-                        {c.count}x {c.type === "rental" ? "Rental Safety Check (2 files max)" : c.type === "bayana" ? "Bayana Safety Check (3 files max)" : "Full Property Due Diligence (5 files max)"}
+                        {c.count}x {c.type === "rental" ? "Rental Safety Check (up to 4 files / 1 credit)" : c.type === "bayana" ? "Bayana Safety Check (up to 5 files / 1 credit)" : "Full Property Due Diligence (up to 5 files / 1 credit)"}
                       </span>
                     ))}
                   </div>
