@@ -974,7 +974,7 @@ export async function POST(request: Request) {
     );
     riskResult = mergeRiskFactors(riskResult, clauseConcernsToRiskFactors(clauseConcerns));
     {
-      const cnicHits = detectCnicTranspositions(ocrBlobForRisk || _clauseOcrBlob || "");
+      const cnicHits = detectCnicTranspositions(ocrBlobForRisk || "");
       if (cnicHits.length) {
         riskResult = mergeRiskFactors(riskResult, cnicTranspositionsToRiskFactors(cnicHits) as any);
       }
