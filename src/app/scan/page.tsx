@@ -580,15 +580,17 @@ function reportTitleFor(
   allDocTypes?: string[] | null
 ): string {
   const t = (reportType || "").toLowerCase();
-  // What they paid labels the product (avoids "Full DD" header on a rental credit)
-  if (t === "rental" || t === "rental_safety") return "Rental Safety Check";
-  if (t === "bayana") return "Bayana Safety Check";
-  if (t === "full_dd" || t === "full" || t === "full-dd") return "Full Property Due Diligence";
   const types = (allDocTypes || []).map((x) => String(x || "").toUpperCase());
   const blob = types.join(" ") + " " + String(docLabel || "");
   const hasSell = /AGREEMENT_TO_SELL|BAYANA|SALE_DEED|TOKEN/.test(blob);
-  if (hasSell && types.length >= 2) return "Full Property Due Diligence";
-  if (hasSell) return "Bayana Safety Check";
+  // Option B: content-aware display title. Billing/entitlement (results.tier) unchanged.
+  if (hasSell) {
+    if (t === "full_dd" || t === "full" || t === "full-dd") return "Full Property Due Diligence";
+    return "Property Sale Safety Check";
+  }
+  if (t === "rental" || t === "rental_safety") return "Rental Safety Check";
+  if (t === "bayana") return "Bayana Safety Check";
+  if (t === "full_dd" || t === "full" || t === "full-dd") return "Full Property Due Diligence";
   if (/TENANCY_AGREEMENT|LEASE_DEED|RENTAL/.test(blob)) return "Rental Safety Check";
   return humanDocType(String(docLabel || "")) || "PakkaScan Report";
 }

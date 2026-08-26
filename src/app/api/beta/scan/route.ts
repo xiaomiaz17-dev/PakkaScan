@@ -921,20 +921,31 @@ export async function POST(request: Request) {
         (chainOfTitle as any).temporalViolations || []
       );
       riskResult = mergeRiskFactors(riskResult, [...chainFactors, ...temporalFactors]);
-      // Cross-doc CRITICAL mismatches must move the dial (area, identity, etc.)
-      if (crossDoc?.crossChecks?.length) {
-        const xdFactors = crossDoc.crossChecks
-          .filter((c: any) => {
-            const st = String(c.status || "").toLowerCase();
-            const sev = String(c.severity || "").toLowerCase();
-            return st === "mismatch" && sev === "critical";
-          })
-          .map((c: any) => ({
-            label: ("Critical mismatch (" + String(c.category || "property") + "): " + String(c.detail || c.finding || c.message || "").slice(0, 140)),
-            points: -3,
+    }
+    // Cross-doc CRITICAL mismatches always affect risk (not only when chainOfTitle exists)
+    if (crossDoc?.crossChecks?.length) {
+      const xdFactors = crossDoc.crossChecks
+        .filter((c: any) => {
+          const st = String(c.status || "").toLowerCase();
+          const sev = String(c.severity || "").toLowerCase();
+          return st === "mismatch" && (sev === "critical" || sev === "high");
+        })
+        .map((c: any) => {
+          const cat = String(c.category || "property").toLowerCase();
+          const detail = String(c.detail || c.finding || c.message || "");
+          const lower = (cat + " " + detail).toLowerCase();
+          // Date / stamp chronology is severe in PK title practice
+          let pts = -3;
+          if (/date|stamp|chronolog|backdat|execut/.test(lower)) pts = -4;
+          return {
+            label: ("Critical mismatch (" + String(c.category || "property") + "): " + detail.slice(0, 140)),
+            points: pts,
             category: "legal" as const,
-          }));
-        if (xdFactors.length) riskResult = mergeRiskFactors(riskResult, xdFactors);
+          };
+        });
+      if (xdFactors.length) {
+        riskResult = mergeRiskFactors(riskResult, xdFactors);
+        console.log("[beta/scan] cross-doc risk factors applied:", xdFactors.length);
       }
     }
 
