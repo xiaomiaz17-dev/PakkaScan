@@ -957,17 +957,30 @@ export async function POST(request: Request) {
         .filter((c: any) => {
           const st = String(c.status || "").toLowerCase();
           const sev = String(c.severity || "").toLowerCase();
-          return st === "mismatch" && (sev === "critical" || sev === "high");
+          const detail = String((c as any).detail || c.finding || (c as any).message || "");
+          const blob = (st + " " + sev + " " + String(c.category || "") + " " + detail).toLowerCase();
+          if (st === "match") return false;
+          if (st === "mismatch") return true;
+          // Material unverifiable: CNIC conflict, arrears, stamp/date
+          if (st === "unverifiable" || st === "partial_match") {
+            return /cnic|transpos|typo|arrears|480|outstanding|stamp|date|backdat/.test(blob);
+          }
+          return sev === "critical" || sev === "high";
         })
         .map((c: any) => {
           const cat = String(c.category || "property").toLowerCase();
-          const detail = String(c.detail || c.finding || c.message || "");
-          const lower = (cat + " " + detail).toLowerCase();
-          // Date / stamp chronology is severe in PK title practice
-          let pts = -3;
+          const st = String(c.status || "").toLowerCase();
+          const sev = String(c.severity || "").toLowerCase();
+          const detail = String((c as any).detail || c.finding || (c as any).message || "");
+          const lower = (cat + " " + st + " " + sev + " " + detail).toLowerCase();
+          let pts = -2;
+          if (st === "mismatch" && (sev === "critical" || sev === "high")) pts = -3;
           if (/date|stamp|chronolog|backdat|execut/.test(lower)) pts = -4;
+          if (/cnic|transpos|typo|identity/.test(lower)) pts = Math.min(pts, -2);
+          if (/arrears|outstanding|480|maintenance/.test(lower)) pts = Math.min(pts, -2);
+          const tag = st === "mismatch" ? "Mismatch" : "Cross-doc";
           return {
-            label: ("Critical mismatch (" + String(c.category || "property") + "): " + detail.slice(0, 220)),
+            label: (tag + " (" + String(c.category || "property") + "): " + detail.slice(0, 220)),
             points: pts,
             category: "legal" as const,
           };
@@ -1135,7 +1148,9 @@ export async function POST(request: Request) {
     const _hasStampPaper = !!((_mergedSmartFields as any)?._stampEvidence) || /attested|oath\s*commissioner|wasil|hundred\s+rupees|rs\.?\s*[=:]?\s*100|central\s*park|stamp\s*paper/i.test(_finalOcr);
     if (_hasStampPaper) {
       const kept = (riskResult.riskFactors || []).filter((x: any) => !/stamp\s*\/\s*registration|formalities\s*unclear|rent-law formalities/i.test(String(x?.label || "")));
-      riskResult = mergeRiskFactors({ riskScore: 1, riskLabel: "LOW" as const, riskFactors: [], scoreBreakdown: "Base 1" }, kept);
+      if (kept.length !== (riskResult.riskFactors || []).length) {
+        riskResult = mergeRiskFactors({ ...riskResult, riskFactors: [] }, kept);
+      }
     }
     if (clauseConcerns?.missing?.length) {
       const _summaryBlob = [
