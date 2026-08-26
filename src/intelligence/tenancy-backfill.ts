@@ -82,6 +82,8 @@ export function applyTenancyBackfill(fields: any, text: string): any {
   if (b.address && !f.property.address) f.property.address = b.address;
   if (b.hasStampEvidence) f._stampEvidence = true;
   if (b.address && !f.property.address) f.property.address = b.address;
+  if (b.hasStampEvidence) f._stampEvidence = true;
+  if (b.address && !f.property.address) f.property.address = b.address;
   f._stampEvidence = !!b.hasStampEvidence;
   return f;
 }
