@@ -82,15 +82,22 @@ async function toPageImages(images: LocalOcrImage[]): Promise<LocalOcrImage[]> {
   return out;
 }
 
+function isUsableOcr(text: string | undefined | null): boolean {
+  return Boolean(text && text.trim().length >= 50);
+}
+
 export async function runOcr(images: LocalOcrImage[]): Promise<OcrOutcome> {
   const mode = currentOcrMode();
 
   // Cache check - key is (mode + fingerprint of input images)
   const fingerprint = computeOcrFingerprint(images);
   const cached = cacheGet<OcrOutcome>("ocr", mode, fingerprint);
-  if (cached) {
+  if (cached && isUsableOcr(cached.text)) {
     console.log("[ocr-router] Cache HIT (mode=" + mode + ", " + cached.text.length + " chars)");
     return cached;
+  }
+  if (cached && !isUsableOcr(cached.text)) {
+    console.warn("[ocr-router] Ignoring short/empty cached OCR (" + (cached.text || "").length + " chars)");
   }
 
   if (mode === "gemini") {
@@ -106,14 +113,24 @@ export async function runOcr(images: LocalOcrImage[]): Promise<OcrOutcome> {
       const pageImages = await toPageImages(images);
       console.log(`[ocr-router] Gemini mode: prepared ${pageImages.length} page image(s)`);
       const result = await extractBatchImages(pageImages as any);
+      let textOut = result.text || "";
+      if (!isUsableOcr(textOut)) {
+        console.warn("[ocr-router] Gemini returned short text (" + textOut.length + " chars) — retrying once");
+        try {
+          const retry = await extractBatchImages(pageImages as any);
+          if (isUsableOcr(retry.text)) textOut = retry.text || textOut;
+        } catch (re: any) {
+          console.warn("[ocr-router] Gemini retry failed:", re?.message || re);
+        }
+      }
       const outcome: OcrOutcome = {
-        text: result.text || "",
-        confidence: 70,
+        text: textOut,
+        confidence: isUsableOcr(textOut) ? 70 : 20,
         language: "Unknown",
         pageCount: pageImages.length,
         engineUsed: "gemini",
       };
-      cacheSet("ocr", outcome, mode, fingerprint);
+      if (isUsableOcr(outcome.text)) cacheSet("ocr", outcome, mode, fingerprint);
       return outcome;
     } catch (rasterErr: any) {
       console.warn("[ocr-router] Rasterization failed:", rasterErr?.message || rasterErr);
@@ -200,14 +217,15 @@ export async function runOcr(images: LocalOcrImage[]): Promise<OcrOutcome> {
   try {
     const pageImages = await toPageImages(images);
     const gemini = await extractBatchImages(pageImages as any);
+    const textOut = isUsableOcr(gemini.text) ? (gemini.text || "") : (gemini.text || local.text);
     const outcome: OcrOutcome = {
-      text: gemini.text || local.text,
-      confidence: Math.max(local.confidence, 70),
+      text: textOut,
+      confidence: Math.max(local.confidence, isUsableOcr(textOut) ? 70 : 20),
       language: local.language,
       pageCount: pageImages.length,
       engineUsed: "auto:gemini-fallback",
     };
-    cacheSet("ocr", outcome, mode, fingerprint);
+    if (isUsableOcr(outcome.text)) cacheSet("ocr", outcome, mode, fingerprint);
     return outcome;
   } catch (err) {
     console.warn("[ocr-router] Gemini fallback failed; returning local result:", err);

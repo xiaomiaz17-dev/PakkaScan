@@ -4,15 +4,15 @@ import sharp from "sharp";
 const apiKey = process.env.GEMINI_API_KEY || "";
 const genAI = apiKey ? new GoogleGenAI({ apiKey }) : null;
 
-const OCR_MODELS = ["gemini-3.6-flash"];
+const OCR_MODELS = ["gemini-3.6-flash", "gemini-2.5-flash", "gemini-flash-lite-latest"];
 const MAX_CONCURRENCY = 3;
 
 // --- Retry / timeout tuning ---
-const MAX_RETRIES_PER_MODEL = 0;           // no same-model retry; fall through to next model
+const MAX_RETRIES_PER_MODEL = 1;           // no same-model retry; fall through to next model
 const MAX_BACKOFF_MS = 3000;               // cap wait between attempts at 3s (was up to 8s)
 const BASE_BACKOFF_MS = 1500;              // starting backoff
 const PER_CALL_TIMEOUT_MS = 90000;
-const PER_PAGE_BUDGET_MS = 40000;          // 60s total budget per page
+const PER_PAGE_BUDGET_MS = 75000;          // 60s total budget per page
 
 export function geminiConfigured(): boolean {
   return Boolean(apiKey && apiKey.trim().length > 0);
@@ -102,7 +102,7 @@ async function extractSinglePage(image: any, pageIdx: number): Promise<string> {
       const elapsed = Date.now() - pageStart;
       if (elapsed >= PER_PAGE_BUDGET_MS) {
         console.warn(`[gemini-ocr] Page ${pageIdx + 1}: exceeded ${PER_PAGE_BUDGET_MS}ms budget, giving up`);
-        return `[Page ${pageIdx + 1}: OCR timeout - AI service was slow]`;
+        return ""; // empty → router can retry / extractor reports clearly
       }
 
       try {
@@ -138,7 +138,7 @@ async function extractSinglePage(image: any, pageIdx: number): Promise<string> {
   }
 
   console.error(`[gemini-ocr] Page ${pageIdx + 1}: all models exhausted after ${Date.now() - pageStart}ms`, lastError?.message || lastError);
-  return `[Page ${pageIdx + 1}: OCR failed - AI service unavailable]`;
+  return ""; // empty → do not cache as valid OCR
 }
 
 async function runWithConcurrencyLimit<T, R>(items: T[], limit: number, worker: (item: T, index: number) => Promise<R>): Promise<R[]> {

@@ -565,7 +565,10 @@ export async function extractSmartFields(
     return { extractionError: "GEMINI_API_KEY not configured" };
   }
   if (!ocrText || ocrText.trim().length < 50) {
-    return { extractionError: "OCR text too short for extraction" };
+    return {
+      extractionError:
+        "OCR text too short for extraction — image may be unreadable, timed out, or OCR engine returned empty. Re-upload a clearer photo or PDF.",
+    };
   }
 
   // Cache check - key is (documentType, ocrText)
