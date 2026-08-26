@@ -207,15 +207,19 @@ function extractDate(smartFields: any): string | null {
     const iso = normalizeToIsoDate(c);
     if (iso) return iso;
   }
-  // Fallback: parse "Date Issued: 10th July 2026" from free text fields
+  // Fallback: Date Issued prose, then any ISO date in the blob (Fard often only in summary)
   try {
     const blob = JSON.stringify(smartFields || {});
     const m = blob.match(/Date\s*Issued\s*[:\-]?\s*(\d{1,2}(?:st|nd|rd|th)?\s+[A-Za-z]+\s+\d{4})/i)
-      || blob.match(/Issued\s*[:\-]?\s*(\d{1,2}(?:st|nd|rd|th)?\s+[A-Za-z]+\s+\d{4})/i);
+      || blob.match(/Issued\s*[:\-]?\s*(\d{1,2}(?:st|nd|rd|th)?\s+[A-Za-z]+\s+\d{4})/i)
+      || blob.match(/(\d{1,2}(?:st|nd|rd|th)?\s+(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4})/i)
+      || blob.match(/(\d{1,2}[-.\s](?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[-.\s]\d{2,4})/i);
     if (m) {
       const iso = normalizeToIsoDate(m[1]);
       if (iso) return iso;
     }
+    const isoHit = blob.match(/20[2-3]\d-\d{2}-\d{2}/);
+    if (isoHit) return isoHit[0];
   } catch { /* ignore */ }
   return null;
 }

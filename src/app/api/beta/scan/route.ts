@@ -620,6 +620,21 @@ export async function POST(request: Request) {
           console.log("[beta/scan] Cross-doc: ignored critical flag on same-tenancy page bundle");
         }
       }
+      // Fard-before-agreement is normal; strip false "future" DATE checks
+      if (crossDoc?.crossChecks?.length) {
+        crossDoc.crossChecks = crossDoc.crossChecks.filter((c: any) => {
+          const cat = String(c.category || "").toLowerCase();
+          const detail = String(c.detail || c.finding || c.message || "").toLowerCase();
+          if (cat === "date" || detail.includes("fard")) {
+            if (detail.includes("future") && detail.includes("precedes")) return false;
+            if (detail.includes("future") && detail.includes("typical document")) return false;
+          }
+          return true;
+        });
+        crossDoc.hasCriticalMismatch = crossDoc.crossChecks.some(
+          (c: any) => String(c.status).toLowerCase() === "mismatch" && String(c.severity).toLowerCase() === "critical"
+        );
+      }
       combinedVerdict = computeCombinedVerdict(perDocVerdicts, crossDoc.hasCriticalMismatch);
       console.log(
         `[beta/scan] Combined verdict: ${combinedVerdict.verdict} - ${combinedVerdict.reasoning}`
@@ -864,6 +879,21 @@ export async function POST(request: Request) {
         (chainOfTitle as any).temporalViolations || []
       );
       riskResult = mergeRiskFactors(riskResult, [...chainFactors, ...temporalFactors]);
+      // Cross-doc CRITICAL mismatches must move the dial (area, identity, etc.)
+      if (crossDoc?.crossChecks?.length) {
+        const xdFactors = crossDoc.crossChecks
+          .filter((c: any) => {
+            const st = String(c.status || "").toLowerCase();
+            const sev = String(c.severity || "").toLowerCase();
+            return st === "mismatch" && sev === "critical";
+          })
+          .map((c: any) => ({
+            label: ("Critical mismatch (" + String(c.category || "property") + "): " + String(c.detail || c.finding || c.message || "").slice(0, 140)),
+            points: -3,
+            category: "legal" as const,
+          }));
+        if (xdFactors.length) riskResult = mergeRiskFactors(riskResult, xdFactors);
+      }
     }
 
     console.log(`[beta/scan] Risk: score=${riskResult.riskScore}/10 (${riskResult.riskLabel}), factors=${riskResult.riskFactors.length}, breakdown=${riskResult.scoreBreakdown}`);
