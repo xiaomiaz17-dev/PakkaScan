@@ -225,7 +225,15 @@ function SmartFieldsPanel({ data, urduSummary }: { data: any; urduSummary?: stri
   partyRow("Mortgagee", p.mortgagee);
 
   pushMoney("Monthly Rent", f.monthly_rent);
-  pushMoney("Security Deposit", f.security_deposit);
+  {
+    const _sec = f.security_deposit;
+    const _tok = f.token_amount;
+    const _same = _sec != null && _tok != null && Number(_sec) === Number(_tok);
+    // Hide rental security_deposit on sale packs or when it duplicates token/bayana
+    if (!_same && (f.monthly_rent != null || f.total_price == null)) {
+      pushMoney("Security Deposit", _sec);
+    }
+  }
   pushMoney("Advance", f.advance_rent);
   pushMoney("Advance", f.advance);
   pushMoney("Total Price", f.total_price);
@@ -566,17 +574,28 @@ function RiskScoreCard({ riskScore, riskLabel, riskFactors, scoreBreakdown }: {
     </div>
   );
 }
-function reportTitleFor(reportType?: string | null, docLabel?: string | null): string {
+function reportTitleFor(
+  reportType?: string | null,
+  docLabel?: string | null,
+  allDocTypes?: string[] | null
+): string {
   const t = (reportType || "").toLowerCase();
-  const d = (docLabel || "").toString();
-  // Document truth first — never label a tenancy as Full DD
-  if (/tenancy|rental|lease|TENANCY_AGREEMENT|LEASE_DEED/i.test(d)) return "Rental Safety Check";
-  if (/bayana|token|agreement to sell|AGREEMENT_TO_SELL/i.test(d)) return "Bayana Safety Check";
-  if (t === "rental" || t === "rental_safety" || t.includes("rental")) return "Rental Safety Check";
-  if (t === "bayana" || t.includes("bayana") || t.includes("agreement_to_sell")) return "Bayana Safety Check";
+  const types = (allDocTypes || []).map((x) => String(x || "").toUpperCase());
+  const blob = types.join(" ") + " " + String(docLabel || "");
+  const hasSell = /AGREEMENT_TO_SELL|BAYANA|SALE_DEED|TOKEN/.test(blob);
+  const hasLeaseOnly =
+    /TENANCY_AGREEMENT|LEASE_DEED|RENTAL/.test(blob) &&
+    !hasSell &&
+    !/FARD|MUTATION|SALE_DEED|POWER_OF_ATTORNEY/.test(blob);
+  // Sale / transfer context wins over a single LEASE_DEED in the pack
+  if (hasSell && (t === "full_dd" || t === "full" || types.length >= 2)) return "Full Property Due Diligence";
+  if (hasSell) return "Bayana Safety Check";
+  if (hasLeaseOnly || t === "rental" || t === "rental_safety") return "Rental Safety Check";
+  if (t === "bayana" || t.includes("bayana")) return "Bayana Safety Check";
   if (t === "full_dd" || t === "full" || t === "full-dd") return "Full Property Due Diligence";
-  if (/sale deed|mutation|fard|SALE_DEED|MUTATION|FARD/i.test(d)) return "Full Property Due Diligence";
-  return humanDocType(d) || "PakkaScan Report";
+  if (/sale deed|mutation|fard|SALE_DEED|MUTATION|FARD/i.test(blob)) return "Full Property Due Diligence";
+  if (/tenancy|rental|lease|TENANCY_AGREEMENT|LEASE_DEED/i.test(blob)) return "Rental Safety Check";
+  return humanDocType(String(docLabel || "")) || "PakkaScan Report";
 }
 function VerdictHero({ verdict, posture, pakkaScore, urduHeadline }: { verdict: string; posture: string; pakkaScore: number; urduHeadline?: string | null }) {
   const style = (() => {
@@ -1192,7 +1211,7 @@ export default function ScanPage() {
 
             <div style={{ marginBottom: "8px" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
-                <h3 style={{ fontSize: "22px", fontWeight: 800, color: "#0f172a", margin: "0 0 4px 0" }}>{reportTitleFor(results.tier, (results.documents?.[0] as any)?.classification?.documentType || (results.documents?.[0] as any)?.documentType || humanDocType((results.documents?.[0] as any)?.classification?.documentType) || (results.documents?.[0] as any)?.type || (results.documents?.[0] as any)?.label)}</h3>
+                <h3 style={{ fontSize: "22px", fontWeight: 800, color: "#0f172a", margin: "0 0 4px 0" }}>{reportTitleFor(results.tier, (results.documents?.[0] as any)?.classification?.documentType || (results.documents?.[0] as any)?.documentType, (results.documents || []).map((d: any) => d?.classification?.documentType || d?.documentType || d?.type || ""))}</h3>
                 {results.referenceCode && (
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px" }}>
                     <div style={{ fontSize: "11px", color: "#64748b", fontFamily: "monospace", backgroundColor: "#f1f5f9", padding: "4px 10px", borderRadius: "6px", border: "1px solid #e2e8f0" }}>
