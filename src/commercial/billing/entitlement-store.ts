@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Neon-backed entitlement + purchase store.
  * Uses the same raw SQL pattern as the rest of the app (src/lib/db.ts).
  *
@@ -208,7 +208,7 @@ export async function updateScanSnapshot(input: {
   await sql`
     UPDATE scan_usage
     SET
-      risk_score = ${input.riskScore},
+      risk_score = ${Math.round(Number(input.riskScore) || 0)},
       risk_label = ${input.riskLabel},
       score_breakdown = ${input.scoreBreakdown ?? null},
       verdict = ${input.verdict ?? null},

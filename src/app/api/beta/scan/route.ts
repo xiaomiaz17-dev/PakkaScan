@@ -231,11 +231,8 @@ function filterResponseByTier(payload: any, tier: string): any {
     };
   }
 
-  // Rental tier: strip multi-doc analysis (they only get 1 real doc anyway)
-  if (tier === "rental") {
-    filtered.crossDoc = null;
-    filtered.combinedVerdict = null;
-  }
+  // Rental multi-file: keep crossDoc / combinedVerdict when computed.
+
 
   // Only Full DD gets the deep-dive explanations (category scores, timeline, evidence appendix)
   if (tier !== "full_dd" && filtered.phase2) {
@@ -851,10 +848,7 @@ export async function POST(request: Request) {
     }
 
     applyTenancyBackfill(_mergedSmartFields, collectAllText(perDocument));
-    const ocrBlobForRisk = (perDocument || [])
-      .map((d: any) => d?.ocr?.text || d?.ocrText || d?.text || "")
-      .filter(Boolean)
-      .join("\n");
+    const ocrBlobForRisk = collectAllText(perDocument || []);
     console.log("[beta/scan] ocrBlob len=" + ocrBlobForRisk.length + " stampFlag=" + !!(_mergedSmartFields && (_mergedSmartFields as any)._stampEvidence) + " attested=" + /attested|oath|wasil|hundred\s+rupees|rs\.?\s*100|central\s*park/i.test(ocrBlobForRisk));
     let riskResult = computeRiskFactors({
       pakkaScore: phase2?.analysis?.pakkaScore ?? 0,
@@ -1048,7 +1042,7 @@ export async function POST(request: Request) {
       crossDoc,
       combinedVerdict,
       urduTranslations,
-      riskScore: riskResult.riskScore,
+      riskScore: Math.round(Number(riskResult.riskScore) || 0),
       riskFactors: riskResult.riskFactors,
       riskLabel: riskResult.riskLabel,
       scoreBreakdown: riskResult.scoreBreakdown,
@@ -1079,7 +1073,7 @@ export async function POST(request: Request) {
       try {
         await updateScanSnapshot({
           referenceCode: scanReferenceCode,
-          riskScore: riskResult.riskScore,
+          riskScore: Math.round(Number(riskResult.riskScore) || 0),
           riskLabel: riskResult.riskLabel,
           scoreBreakdown: riskResult.scoreBreakdown,
           verdict: (combinedVerdict?.verdict || phase2?.analysis?.decision || null) as string | null,

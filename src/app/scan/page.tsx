@@ -580,21 +580,16 @@ function reportTitleFor(
   allDocTypes?: string[] | null
 ): string {
   const t = (reportType || "").toLowerCase();
+  // What they paid labels the product (avoids "Full DD" header on a rental credit)
+  if (t === "rental" || t === "rental_safety") return "Rental Safety Check";
+  if (t === "bayana") return "Bayana Safety Check";
+  if (t === "full_dd" || t === "full" || t === "full-dd") return "Full Property Due Diligence";
   const types = (allDocTypes || []).map((x) => String(x || "").toUpperCase());
   const blob = types.join(" ") + " " + String(docLabel || "");
   const hasSell = /AGREEMENT_TO_SELL|BAYANA|SALE_DEED|TOKEN/.test(blob);
-  const hasLeaseOnly =
-    /TENANCY_AGREEMENT|LEASE_DEED|RENTAL/.test(blob) &&
-    !hasSell &&
-    !/FARD|MUTATION|SALE_DEED|POWER_OF_ATTORNEY/.test(blob);
-  // Sale / transfer context wins over a single LEASE_DEED in the pack
-  if (hasSell && (t === "full_dd" || t === "full" || types.length >= 2)) return "Full Property Due Diligence";
+  if (hasSell && types.length >= 2) return "Full Property Due Diligence";
   if (hasSell) return "Bayana Safety Check";
-  if (hasLeaseOnly || t === "rental" || t === "rental_safety") return "Rental Safety Check";
-  if (t === "bayana" || t.includes("bayana")) return "Bayana Safety Check";
-  if (t === "full_dd" || t === "full" || t === "full-dd") return "Full Property Due Diligence";
-  if (/sale deed|mutation|fard|SALE_DEED|MUTATION|FARD/i.test(blob)) return "Full Property Due Diligence";
-  if (/tenancy|rental|lease|TENANCY_AGREEMENT|LEASE_DEED/i.test(blob)) return "Rental Safety Check";
+  if (/TENANCY_AGREEMENT|LEASE_DEED|RENTAL/.test(blob)) return "Rental Safety Check";
   return humanDocType(String(docLabel || "")) || "PakkaScan Report";
 }
 function VerdictHero({ verdict, posture, pakkaScore, urduHeadline }: { verdict: string; posture: string; pakkaScore: number; urduHeadline?: string | null }) {
@@ -1287,7 +1282,7 @@ export default function ScanPage() {
             {!isTemplateOrPartial && (
               <NextStepsPanel steps={nextSteps} urduTranslations={urduTranslations} />
             )}
-            {results.tier === "rental" && isMultiDoc && (
+            {results.tier === "rental" && isMultiDoc && !crossDoc && (
               <div style={{ marginTop: "20px", padding: "16px 20px", backgroundColor: "#fef3c7", border: "1px solid #fcd34d", borderRadius: "10px", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
                 <div style={{ fontSize: "20px", flexShrink: 0 }}>&#128200;</div>
                 <div style={{ flex: 1, minWidth: "200px" }}>
