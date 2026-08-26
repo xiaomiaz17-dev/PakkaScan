@@ -674,6 +674,25 @@ export async function POST(request: Request) {
               String(c.severity).toLowerCase() === "critical"
           );
         }
+        // P1-date-future-false-positive: drop "future" date mismatches when date is not after today (PK)
+        if (crossDoc?.crossChecks?.length) {
+          const todayPk = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Karachi" }).format(new Date());
+          crossDoc.crossChecks = crossDoc.crossChecks.filter((c: any) => {
+            const cat = String(c.category || "").toLowerCase();
+            const detail = String((c as any).detail || c.finding || (c as any).message || "").toLowerCase();
+            if (cat !== "date" && !detail.includes("future")) return true;
+            if (!/future|falls in the future|relative to the current/i.test(detail)) return true;
+            const iso = detail.match(/\d{4}-\d{2}-\d{2}/g) || [];
+            // If all extracted dates are <= today PK, not a real future anomaly
+            if (iso.length && iso.every((d: string) => d <= todayPk)) return false;
+            return true;
+          });
+          crossDoc.hasCriticalMismatch = crossDoc.crossChecks.some(
+            (c: any) =>
+              String(c.status).toLowerCase() === "mismatch" &&
+              String(c.severity).toLowerCase() === "critical"
+          );
+        }
         combinedVerdict = computeCombinedVerdict(perDocVerdicts, crossDoc.hasCriticalMismatch);
         console.log(
           `[beta/scan] Combined verdict: ${combinedVerdict.verdict} - ${combinedVerdict.reasoning}`
@@ -1242,6 +1261,14 @@ export async function POST(request: Request) {
       (rawPayload as any).phase2.nextSteps = nextSteps;
     }
     (rawPayload as any).nextSteps = nextSteps;
+    // Static Urdu for injected plot-size card (no LLM)
+    if (/plot size|allotment|Re-verify plot/i.test(String(nextSteps?.[0]?.title || ""))) {
+      urduTranslations = {
+        ...urduTranslations,
+        nextStepTitle_0: "ادائیگی سے پہلے پلاٹ کا رقبہ / الاٹمنٹ ریکارڈ دوبارہ تصدیق کریں",
+        nextStepDetail_0: "فارڈ اور بیعانہ/فروخت معاہدے میں رقبے کا فرق ہے۔ بقیہ رقم ادا کرنے سے پہلے درست فارڈ یا ترمیم شدہ معاہدہ حاصل کریں۔",
+      };
+    }
     if ((rawPayload as any).urduTranslations) {
       (rawPayload as any).urduTranslations = urduTranslations;
     }
