@@ -1038,6 +1038,18 @@ export async function POST(request: Request) {
     console.log(
       `[beta/scan] clauses: suspicious=${clauseConcerns.flagged.length} missing=${clauseConcerns.missing.length} (llm+rules ruleHits=${ruleHits.clauses.length})`
     );
+    if (clauseConcerns?.flagged?.length > 1) {
+      const seen = new Set<string>();
+      clauseConcerns.flagged = clauseConcerns.flagged.filter((f: any) => {
+        const blob = `${f.title || ""} ${f.concern || ""}`.toLowerCase();
+        const key = /power of attorney|lawful attorney|general\s*\/?\s*unlimited|\bpoa\b/i.test(blob)
+          ? "poa_cluster"
+          : blob.slice(0, 80);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
     riskResult = mergeRiskFactors(riskResult, clauseConcernsToRiskFactors(clauseConcerns));
     {
       const _cnicBlob = ocrBlobForRisk || "";
@@ -1194,7 +1206,7 @@ export async function POST(request: Request) {
             ? "Re-verify plot size / allotment record before paying balance"
             : `Resolve critical ${cat} mismatch before proceeding`;
         const step = {
-          priority: "do_first",
+          priority: "high",
           title,
           detail: detail || "Cross-document critical mismatch must be resolved in writing before transferring funds.",
         };
@@ -1204,11 +1216,35 @@ export async function POST(request: Request) {
     }
     nextSteps = sanitizeRentalNextSteps(nextSteps, _mergedSmartFields, collectAllText(perDocument));
     if (phase2) (phase2 as any).nextSteps = nextSteps;
+    // Re-index Urdu next-step keys to match final order (inject shifts indices)
+    if (urduTranslations && Object.keys(urduTranslations).length) {
+      const rekeyed: Record<string, string> = {};
+      for (const [k, v] of Object.entries(urduTranslations)) {
+        const m = /^nextStep(Title|Detail)_(\d+)$/.exec(k);
+        if (!m) {
+          rekeyed[k] = v;
+          continue;
+        }
+        // Old list had no injected card; after prepend, old i → i+1 when inject happened
+        // Safer: rebuild from final nextSteps by matching English title in translationInputs is gone.
+        // Shift all nextStep_* up by 1 if first step is our inject (no urdu for index 0).
+        const idx = Number(m[2]);
+        rekeyed[`nextStep${m[1]}_${idx + 1}`] = v;
+      }
+      // Only shift if card 0 looks like our inject (plot size / critical mismatch)
+      const firstTitle = String(nextSteps?.[0]?.title || "");
+      if (/plot size|allotment|critical .*mismatch|Re-verify plot/i.test(firstTitle)) {
+        urduTranslations = rekeyed;
+      }
+    }
     // Payload was built before inject — write final nextSteps into response
     if ((rawPayload as any).phase2) {
       (rawPayload as any).phase2.nextSteps = nextSteps;
     }
     (rawPayload as any).nextSteps = nextSteps;
+    if ((rawPayload as any).urduTranslations) {
+      (rawPayload as any).urduTranslations = urduTranslations;
+    }
     const filteredPayload = filterResponseByTier(rawPayload, entitlementToUse.report_type);
     console.log(`[beta/scan] Tier-filtered response for tier=${entitlementToUse.report_type}`);
     return NextResponse.json(filteredPayload);
