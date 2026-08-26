@@ -525,6 +525,8 @@ export async function POST(request: Request) {
 
     let phase2: ReturnType<typeof runPhase2Analysis> | null = null;
     let nextSteps: any[] = [];
+    let crossDoc: CrossDocResult | null = null;
+    let combinedVerdict: { verdict: string; posture: string; reasoning: string } | null = null;
 
     if (combinedEvidence.length > 0) {
       const _t_phase2 = Date.now();
@@ -540,144 +542,158 @@ export async function POST(request: Request) {
         `missing=${phase2.missingEvidence?.missing?.length ?? 0}`
       );
 
-      // Generate personalized next-steps via LLM advisor.
-      // Uses the first successful document's smart fields for context.
       const firstOk = perDocument.find((d) => d.status === "ok");
-      if (firstOk && firstOk.smartFields && !firstOk.smartFields.extractionError) {
-        try {
-          const missingStrings = stringifyMissing(phase2.missingEvidence);
-          const findingsStrings = stringifyFindings(phase2.analysis.findings);
-          const _t_next = Date.now();
-          const advisorResult = await generateNextSteps({
-            documentType: firstOk.classification.documentType,
-            verdict: phase2.analysis.decision,
-            pakkaScore: phase2.analysis.pakkaScore ?? 0,
-            extractedFacts: firstOk.smartFields,
-            missingEvidence: missingStrings,
-            findings: findingsStrings,
-          });
-          console.log(`[timing] NextSteps LLM: ${Date.now() - _t_next}ms`);
+      const missingStrings = stringifyMissing(phase2.missingEvidence);
+      const findingsStrings = stringifyFindings(phase2.analysis.findings);
+      const successfulDocs = perDocument.filter(
+        (d) => d.status === "ok" && d.smartFields && !d.smartFields.extractionError
+      );
 
-          if (advisorResult.steps.length > 0) {
-            nextSteps = advisorResult.steps;
-            console.log(`[beta/scan] Next-steps: ${advisorResult.steps.length} step(s) via ${advisorResult.model}`);
-          } else {
+      // P1-B: run NextSteps + CrossDoc in parallel
+      const nextStepsPromise = (async (): Promise<any[]> => {
+        if (firstOk && firstOk.smartFields && !firstOk.smartFields.extractionError) {
+          try {
+            const _t_next = Date.now();
+            const advisorResult = await generateNextSteps({
+              documentType: firstOk.classification.documentType,
+              verdict: phase2!.analysis.decision,
+              pakkaScore: phase2!.analysis.pakkaScore ?? 0,
+              extractedFacts: firstOk.smartFields,
+              missingEvidence: missingStrings,
+              findings: findingsStrings,
+            });
+            console.log(`[timing] NextSteps LLM: ${Date.now() - _t_next}ms`);
+            if (advisorResult.steps.length > 0) {
+              console.log(`[beta/scan] Next-steps: ${advisorResult.steps.length} step(s) via ${advisorResult.model}`);
+              return advisorResult.steps;
+            }
             console.warn(`[beta/scan] Next-steps advisor returned no steps: ${advisorResult.error}. Using fallback.`);
-            nextSteps = fallbackNextSteps(missingStrings, findingsStrings);
+            return fallbackNextSteps(missingStrings, findingsStrings);
+          } catch (err: any) {
+            console.warn(`[beta/scan] Next-steps advisor threw:`, err?.message || err);
+            return fallbackNextSteps(missingStrings, findingsStrings);
           }
+        }
+        return [];
+      })();
+
+      const crossDocPromise = (async (): Promise<CrossDocResult | null> => {
+        if (successfulDocs.length < 2) return null;
+        try {
+          const _t_cross = Date.now();
+          const result = await analyzeCrossDocuments(
+            successfulDocs.map((d) => ({
+              fileName: d.fileName,
+              documentType: d.classification?.documentType || "UNKNOWN",
+              smartFields: d.smartFields,
+            }))
+          );
+          console.log(`[timing] CrossDoc LLM: ${Date.now() - _t_cross}ms`);
+          console.log(
+            `[beta/scan] Cross-doc: ${result.crossChecks.length} check(s), ` +
+            `critical mismatch: ${result.hasCriticalMismatch}`
+          );
+          return result;
         } catch (err: any) {
-          console.warn(`[beta/scan] Next-steps advisor threw:`, err?.message || err);
-          nextSteps = fallbackNextSteps(
-            stringifyMissing(phase2.missingEvidence),
-            stringifyFindings(phase2.analysis.findings)
+          console.warn("[beta/scan] Cross-doc analysis threw:", err?.message || err);
+          return {
+            crossChecks: [],
+            overallAssessment: "Cross-document analysis could not complete.",
+            hasCriticalMismatch: false,
+            error: err?.message || "unknown error",
+          };
+        }
+      })();
+
+      const [nsResult, cdResult] = await Promise.all([nextStepsPromise, crossDocPromise]);
+      nextSteps = nsResult;
+      crossDoc = cdResult;
+
+      // Post-process cross-doc (same logic as before)
+      if (crossDoc && successfulDocs.length >= 2) {
+        const perDocVerdicts: string[] = [];
+        if (phase2?.analysis?.decision) perDocVerdicts.push(phase2.analysis.decision);
+        for (const d of successfulDocs) {
+          if (d.completeness?.status === "template") perDocVerdicts.push("PROCEED_WITH_CAUTION");
+        }
+        const _types = successfulDocs.map((d: any) => String(d.classification?.documentType || "").toUpperCase());
+        const _sameTenancyBundle =
+          _types.length >= 2 &&
+          _types.every(
+            (t: string) =>
+              !t || t === "UNKNOWN" || t.includes("TENANCY") || t.includes("RENTAL") || t.includes("LEASE")
+          );
+        if (_sameTenancyBundle && crossDoc.hasCriticalMismatch) {
+          const realClash = (crossDoc.crossChecks || []).some(
+            (c: any) =>
+              String(c.status).toLowerCase() === "mismatch" &&
+              String(c.severity).toLowerCase() === "critical"
+          );
+          if (!realClash) {
+            crossDoc.hasCriticalMismatch = false;
+            console.log("[beta/scan] Cross-doc: ignored critical flag on same-tenancy page bundle");
+          }
+        }
+        if (crossDoc?.crossChecks?.length) {
+          crossDoc.crossChecks = crossDoc.crossChecks.filter((c: any) => {
+            const cat = String(c.category || "").toLowerCase();
+            const detail = String(c.detail || c.finding || c.message || "").toLowerCase();
+            if (cat === "date" || detail.includes("fard")) {
+              if (detail.includes("future") && detail.includes("precedes")) return false;
+              if (detail.includes("future") && detail.includes("typical document")) return false;
+            }
+            return true;
+          });
+          crossDoc.hasCriticalMismatch = crossDoc.crossChecks.some(
+            (c: any) =>
+              String(c.status).toLowerCase() === "mismatch" &&
+              String(c.severity).toLowerCase() === "critical"
           );
         }
-      }
-    }
-
-    // Multi-document cross-check analysis (only runs if 2+ documents successfully processed)
-    let crossDoc: CrossDocResult | null = null;
-    let combinedVerdict: { verdict: string; posture: string; reasoning: string } | null = null;
-
-    const successfulDocs = perDocument.filter((d) => d.status === "ok" && d.smartFields && !d.smartFields.extractionError);
-
-    if (successfulDocs.length >= 2) {
-      try {
-        const _t_cross = Date.now();
-        crossDoc = await analyzeCrossDocuments(
-          successfulDocs.map((d) => ({
-            fileName: d.fileName,
-            documentType: d.classification?.documentType || "UNKNOWN",
-            smartFields: d.smartFields,
-          }))
-        );
-        console.log(`[timing] CrossDoc LLM: ${Date.now() - _t_cross}ms`);
+        combinedVerdict = computeCombinedVerdict(perDocVerdicts, crossDoc.hasCriticalMismatch);
         console.log(
-          `[beta/scan] Cross-doc: ${crossDoc.crossChecks.length} check(s), ` +
-          `critical mismatch: ${crossDoc.hasCriticalMismatch}`
-        );
-      } catch (err: any) {
-        console.warn("[beta/scan] Cross-doc analysis threw:", err?.message || err);
-        crossDoc = {
-          crossChecks: [],
-          overallAssessment: "Cross-document analysis could not complete.",
-          hasCriticalMismatch: false,
-          error: err?.message || "unknown error",
-        };
-      }
-
-      // Compute safety-first combined verdict
-      const perDocVerdicts: string[] = [];
-      if (phase2?.analysis?.decision) perDocVerdicts.push(phase2.analysis.decision);
-      // Also consider each individual document's completeness status as a signal
-      for (const d of successfulDocs) {
-        if (d.completeness?.status === "template") perDocVerdicts.push("PROCEED_WITH_CAUTION");
-      }
-      const _types = successfulDocs.map((d: any) => String(d.classification?.documentType || "").toUpperCase());
-      const _sameTenancyBundle = _types.length >= 2 && _types.every((t: string) => !t || t === "UNKNOWN" || t.includes("TENANCY") || t.includes("RENTAL") || t.includes("LEASE"));
-      if (_sameTenancyBundle && crossDoc.hasCriticalMismatch) {
-        const realClash = (crossDoc.crossChecks || []).some((c: any) => String(c.status).toLowerCase() === "mismatch" && String(c.severity).toLowerCase() === "critical");
-        if (!realClash) {
-          crossDoc.hasCriticalMismatch = false;
-          console.log("[beta/scan] Cross-doc: ignored critical flag on same-tenancy page bundle");
-        }
-      }
-      // Fard-before-agreement is normal; strip false "future" DATE checks
-      if (crossDoc?.crossChecks?.length) {
-        crossDoc.crossChecks = crossDoc.crossChecks.filter((c: any) => {
-          const cat = String(c.category || "").toLowerCase();
-          const detail = String(c.detail || c.finding || c.message || "").toLowerCase();
-          if (cat === "date" || detail.includes("fard")) {
-            if (detail.includes("future") && detail.includes("precedes")) return false;
-            if (detail.includes("future") && detail.includes("typical document")) return false;
-          }
-          return true;
-        });
-        crossDoc.hasCriticalMismatch = crossDoc.crossChecks.some(
-          (c: any) => String(c.status).toLowerCase() === "mismatch" && String(c.severity).toLowerCase() === "critical"
+          `[beta/scan] Combined verdict: ${combinedVerdict.verdict} - ${combinedVerdict.reasoning}`
         );
       }
-      combinedVerdict = computeCombinedVerdict(perDocVerdicts, crossDoc.hasCriticalMismatch);
-      console.log(
-        `[beta/scan] Combined verdict: ${combinedVerdict.verdict} - ${combinedVerdict.reasoning}`
-      );
     }
 
     // Level 1 Urdu translation.
     // Collect all user-facing English strings and translate them in ONE batched LLM call.
-    // Attach the translations map to the response so the UI can render bilingual text.
     const translationInputs: Record<string, string> = {};
 
-    // 1. Verdict headline (single-doc)
     if (phase2?.analysis?.decision) {
       const verdictHeadline = (() => {
         const v = phase2.analysis.decision as string;
         const p = phase2.posture as string;
         if (v === "PROCEED" || p === "CLEAR") return "This document looks safe to move forward with.";
-        if (v === "DO_NOT_PROCEED" || v === "STOP" || v === "BLOCKED" || v === "REJECT" || p === "STOP" || p === "BLOCKED") return "Serious issues found. Do not release money or sign.";
+        if (
+          v === "DO_NOT_PROCEED" ||
+          v === "STOP" ||
+          v === "BLOCKED" ||
+          v === "REJECT" ||
+          p === "STOP" ||
+          p === "BLOCKED"
+        )
+          return "Serious issues found. Do not release money or sign.";
         return "Some evidence is missing. See What To Do Next.";
       })();
       translationInputs["verdictHeadline"] = verdictHeadline;
     }
 
-    // 2. Combined verdict reasoning (multi-doc)
     if (combinedVerdict?.reasoning) {
       translationInputs["combinedReasoning"] = combinedVerdict.reasoning;
     }
 
-    // 3. Cross-doc overall assessment (multi-doc)
     if (crossDoc?.overallAssessment) {
       translationInputs["crossDocAssessment"] = crossDoc.overallAssessment;
     }
 
-    // 4. Per-document AI summaries (first doc gets a stable key; more docs get numbered keys)
     perDocument.forEach((d, i) => {
       if (d.status === "ok" && d.smartFields?.summary) {
         translationInputs["docSummary_" + i] = d.smartFields.summary;
       }
     });
 
-    // 5. Next-step titles + details (LLM-generated action items)
     nextSteps.forEach((step: any, i: number) => {
       if (step?.title) translationInputs["nextStepTitle_" + i] = step.title;
       if (step?.detail) translationInputs["nextStepDetail_" + i] = step.detail;
@@ -689,11 +705,14 @@ export async function POST(request: Request) {
         const _t_urdu = Date.now();
         urduTranslations = await translateToUrduTimed(translationInputs, 25000);
         console.log(`[timing] UrduTranslation LLM: ${Date.now() - _t_urdu}ms`);
-        console.log(`[beta/scan] Urdu: translated ${Object.keys(urduTranslations).length}/${Object.keys(translationInputs).length} string(s)`);
+        console.log(
+          `[beta/scan] Urdu: translated ${Object.keys(urduTranslations).length}/${Object.keys(translationInputs).length} string(s)`
+        );
       } catch (err: any) {
         console.warn("[beta/scan] Urdu translation threw:", err?.message || err);
       }
     }
+
 
     // Record scan for rate limit tracking (regardless of outcome)
     recordScan(clientIp);
