@@ -46,5 +46,26 @@ export function sanitizeRentalNextSteps(steps: any[], fields: any, ocr: string):
       ...out,
     ];
   }
+  // Sale packs: rewrite tenancy role words → sale parties
+  const fin = f.financials || {};
+  const isSale =
+    Number(fin.total_price?.amount || fin.total_price || 0) > 0 ||
+    Number(fin.token_amount?.amount || fin.token_amount || 0) > 0 ||
+    !!(f.parties?.seller || f.parties?.buyer);
+  if (isSale) {
+    out = out.map((s) => {
+      const rewrite = (t: string) =>
+        String(t || "")
+          .replace(/\blessor\b/gi, "seller")
+          .replace(/\blessee\b/gi, "buyer")
+          .replace(/\blandlord\b/gi, "seller")
+          .replace(/\btenant\b/gi, "buyer");
+      return {
+        ...s,
+        title: rewrite(s?.title),
+        detail: rewrite(s?.detail || s?.body),
+      };
+    });
+  }
   return out.slice(0, 6);
 }

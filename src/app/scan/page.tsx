@@ -244,7 +244,15 @@ function SmartFieldsPanel({ data, urduSummary }: { data: any; urduSummary?: stri
 
   if (pr.address) rows.push({ label: "Property Address", value: pr.address });
   if (pr.type) rows.push({ label: "Property Type", value: pr.type });
-  if (pr.area) rows.push({ label: "Area", value: pr.area });
+  {
+    const areaVal = pr.area != null ? String(pr.area).trim() : "";
+    // Suppress when value looks like a unit/flat id, not size (sq ft / marla / sq yd)
+    const looksLikeSize = /\d/.test(areaVal) && /(sq\.?\s*(ft|feet|yd|yard|m)|marla|kanal|acre|m\u00b2|sqm|square)/i.test(areaVal);
+    const looksLikeUnitId = /^(apt|apartment|flat|unit|plot)?\s*[A-Z]?-?\d{1,4}[A-Z]?\b/i.test(areaVal) && !looksLikeSize;
+    if (areaVal && !looksLikeUnitId && (looksLikeSize || areaVal.length > 3)) {
+      rows.push({ label: "Area", value: areaVal });
+    }
+  }
   if (pr.plot_number) rows.push({ label: "Plot Number", value: pr.plot_number });
 
   const isValidDate = (v: any): boolean => {

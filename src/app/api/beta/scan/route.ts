@@ -1116,7 +1116,14 @@ export async function POST(request: Request) {
       urduTranslations,
       riskScore: Math.round(Number(riskResult.riskScore) || 0),
       riskFactors: riskResult.riskFactors,
-      riskLabel: riskResult.riskLabel,
+      // Align label to displayed (rounded) score: 7+ = HIGH
+      riskLabel: (() => {
+        const s = Math.round(Number(riskResult.riskScore) || 0);
+        if (s < 4) return "LOW";
+        if (s < 7) return "MEDIUM";
+        if (s < 9) return "HIGH";
+        return "CRITICAL";
+      })(),
       scoreBreakdown: riskResult.scoreBreakdown,
       chainOfTitle: chainOfTitle,
       valuationComparison: valuationComparison,
