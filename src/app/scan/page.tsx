@@ -268,6 +268,30 @@ function SmartFieldsPanel({ data, urduSummary, packAttorneyName }: { data: any; 
   pushMoney("Balance Due", f.balance_due);
   pushMoney("Stamp Duty", f.stamp_duty);
   pushMoney("Registration Fee", f.registration_fee);
+  {
+    const blob = String(data?.summary || "");
+    if (/outstanding|arrears|dues|maintenance/i.test(blob)) {
+      const m = blob.match(/(?:Rs\.?|PKR)\s*([\d,]+)/i);
+      if (m) {
+        const amt = Number(String(m[1]).replace(/,/g, ""));
+        if (amt >= 1000 && !rows.some((r) => /outstanding|dues/i.test(r.label))) {
+          rows.push({ label: "Total Outstanding Dues", value: "PKR " + amt.toLocaleString() });
+        }
+      }
+    }
+    if (/creek\s+vistas|residents?\s+association|dha\s+karachi/i.test(blob) && !rows.some((r) => /issuing/i.test(r.label))) {
+      rows.push({
+        label: "Issuing Authority",
+        value: /creek\s+vistas/i.test(blob)
+          ? "Creek Vistas Residents Association / DHA Karachi"
+          : "DHA Karachi",
+      });
+    }
+    const nm = blob.match(/\b(DHA\/KHI\/NOC[\w\-\/]+)/i);
+    if (nm && !rows.some((r) => /noc/i.test(r.label))) {
+      rows.push({ label: "NOC / Ref", value: nm[1] });
+    }
+  }
 
   if (pr.address) rows.push({ label: "Property Address", value: pr.address });
   if (pr.type) rows.push({ label: "Property Type", value: pr.type });
