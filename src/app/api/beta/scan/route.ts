@@ -806,6 +806,7 @@ export async function POST(request: Request) {
       .map((d: any) => d?.ocr?.text || d?.ocrText || d?.text || "")
       .filter(Boolean)
       .join("\n");
+    console.log("[beta/scan] ocrBlob len=" + ocrBlobForRisk.length + " stampFlag=" + !!(_mergedSmartFields && (_mergedSmartFields as any)._stampEvidence) + " attested=" + /attested|oath|wasil|hundred\s+rupees|rs\.?\s*100|central\s*park/i.test(ocrBlobForRisk));
     let riskResult = computeRiskFactors({
       pakkaScore: phase2?.analysis?.pakkaScore ?? 0,
       findings: _findingsStr,
