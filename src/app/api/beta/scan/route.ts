@@ -85,7 +85,7 @@ import type { ReportType } from "@/commercial/billing/reports";
 import { computeRiskFactors, mergeRiskFactors } from "@/intelligence/risk-scorer";
 import { backfillTenancySmartFields } from "@/intelligence/tenancy-completeness";
 import { getOfficialValuation, getDeclaredPrice } from "@/intelligence/dc-rate-lookup";
-import { extractClauseConcerns, clauseConcernsToRiskFactors } from "@/intelligence/clause-concerns";
+import { extractClauseConcerns, clauseConcernsToRiskFactors, filterMissingAgainstText } from "@/intelligence/clause-concerns";
 import { detectSuspiciousClauses, suspiciousClausesToRiskFactors } from "@/intelligence/suspicious-clauses";
 import { applyTenancyBackfill } from "@/intelligence/tenancy-backfill";
 import { sanitizeRentalNextSteps } from "@/intelligence/sanitize-next-steps";
@@ -935,6 +935,17 @@ export async function POST(request: Request) {
     }
 
     riskResult = mergeRiskFactors(riskResult, suspiciousClausesToRiskFactors(ruleHits) as any);
+    // Final UX filter: stamp noise + missing-list vs OCR
+    const _finalOcr = String(typeof ocrBlobForRisk !== "undefined" ? ocrBlobForRisk : "") + " " + String(typeof _clauseOcrBlob !== "undefined" ? _clauseOcrBlob : "");
+    const _hasStampPaper = !!((_mergedSmartFields as any)?._stampEvidence) || /attested|oath\s*commissioner|wasil|hundred\s+rupees|rs\.?\s*[=:]?\s*100|central\s*park|stamp\s*paper/i.test(_finalOcr);
+    if (_hasStampPaper) {
+      const kept = (riskResult.riskFactors || []).filter((x: any) => !/stamp\s*\/\s*registration|formalities\s*unclear|rent-law formalities/i.test(String(x?.label || "")));
+      riskResult = mergeRiskFactors({ riskScore: 1, riskLabel: "LOW" as const, riskFactors: [], scoreBreakdown: "Base 1" }, kept);
+    }
+    if (clauseConcerns?.missing?.length) {
+      clauseConcerns.missing = filterMissingAgainstText(clauseConcerns.missing, _finalOcr);
+    }
+    console.log(`[beta/scan] Risk final: score=${riskResult.riskScore}/10 factors=${(riskResult.riskFactors||[]).length} stampPaper=${_hasStampPaper}`);
 
     const rawPayload = {
       success: true,
