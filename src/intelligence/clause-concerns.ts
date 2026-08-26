@@ -2,6 +2,13 @@
  * Normalise LLM suspicious / missing clauses into UI rows + risk factors.
  * Missing protections are evidence-gated when OCR text is provided.
  */
+function stripEngineFlags(s: string): string {
+  return String(s || "")
+    .replace(/\[FLAG:\s*[^\]]*\]/gi, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
 export type FlaggedClause = {
   quote: string;
   concern: string;
@@ -146,7 +153,7 @@ export function extractClauseConcerns(
       if (item == null) continue;
       if (typeof item === "string" && item.trim()) {
         flagged.push({
-          quote: item.trim().slice(0, 280),
+          quote: stripEngineFlags(item.trim()).slice(0, 280),
           concern: "This wording may put you at a disadvantage. Have a lawyer review before paying.",
           severity: severityOf(null, item),
         });
@@ -161,7 +168,7 @@ export function extractClauseConcerns(
         ).trim();
         if (!quote && !concern) continue;
         flagged.push({
-          quote: (quote || concern).slice(0, 280),
+          quote: stripEngineFlags(quote || concern).slice(0, 280),
           concern:
             concern ||
             "This clause may reduce your protection. Confirm with a property lawyer before proceeding.",

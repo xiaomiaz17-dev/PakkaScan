@@ -1244,6 +1244,21 @@ export async function POST(request: Request) {
       }
     }
     nextSteps = sanitizeRentalNextSteps(nextSteps, _mergedSmartFields, collectAllText(perDocument));
+    // Cap DO FIRST (priority=high) to 2 so users are not flooded
+    {
+      let highLeft = 2;
+      nextSteps = (nextSteps || []).map((s: any) => {
+        const p = String(s?.priority || "").toLowerCase();
+        if (p === "high" || p === "do_first" || p === "do first") {
+          if (highLeft > 0) {
+            highLeft--;
+            return { ...s, priority: "high" };
+          }
+          return { ...s, priority: "medium" };
+        }
+        return s;
+      });
+    }
     if (phase2) (phase2 as any).nextSteps = nextSteps;
     // Realign Urdu next-step keys by English title (handles inject + sanitize reorder)
     {

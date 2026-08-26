@@ -87,6 +87,7 @@ export function classifyFromText(text: string): ClassificationHint {
   // P0: high-signal overrides (stop Bayana→PoA, NEC→Sale, Sub-lease→Tenancy cascades)
   const overrides: { re: RegExp; type: DocumentType; cue: string; conf: number }[] = [
     { re: /\b(?:agreement\s+to\s+sell|bayana|earnest\s+money|token\s+money)\b/i, type: "AGREEMENT_TO_SELL", cue: "bayana_override", conf: 0.93 },
+    { re: /\b(?:statement\s+of\s+account|maintenance\s+charges|sinking\s+fund|residents?\s+association|pending\s+arrears|clearance\s+of\s+all\s+association)\b/i, type: "NON_ENCUMBRANCE_CERTIFICATE", cue: "clearance_statement_override", conf: 0.94 },
     { re: /\b(?:non[-\s]?encumbrance|no\s+demand\s+certificate|\bNDC\b|\bNEC\b)\b/i, type: "NON_ENCUMBRANCE_CERTIFICATE", cue: "ndc_nec_override", conf: 0.93 },
     { re: /\b(?:sub[-\s]?lease|registered\s+lease|lease\s+deed)\b/i, type: "LEASE_DEED", cue: "lease_override", conf: 0.92 },
     { re: /\b(?:power\s+of\s+attorney|general\s+power|mukhtar[-\s]?nama)\b/i, type: "GENERAL_POWER_OF_ATTORNEY", cue: "poa_override", conf: 0.9 },
