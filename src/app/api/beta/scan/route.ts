@@ -1633,6 +1633,59 @@ async function postSyncScan(request: Request) {
       });
     }
 
+    // A9C9 sale-pack lock: STOP when sale+CRITICAL; no tenant-notice; no rent/security captions.
+    {
+      const types = (perDocument || []).map((d: any) =>
+        String(d?.classification?.documentType || d?.documentType || "").toUpperCase()
+      );
+      const salePack = types.some((x: string) => /AGREEMENT_TO_SELL|BAYANA|SALE_DEED|TOKEN/.test(x));
+      const tenancyOnly =
+        types.length > 0 &&
+        types.every((x: string) => !x || x === "UNKNOWN" || /TENANCY|RENTAL/.test(x));
+      if (salePack && !tenancyOnly) {
+        if (riskResult?.riskFactors?.length) {
+          riskResult.riskFactors = riskResult.riskFactors.filter(
+            (f: any) => !/common tenant risk|notice period not detected|termination notice period/i.test(String(f.label || "") + " " + String(f.detail || "")),
+          );
+        }
+        const blob = (perDocument || [])
+          .map((d: any) => [d?.ocr?.text, d?.ocrText, d?.smartFields?.summary].filter(Boolean).join("\n"))
+          .join("\n");
+        const m480 = blob.match(/TOTAL\s+OUTSTANDING\s+DUES[:\s]*Rs\.?\s*([0-9,]+)/i);
+        if (m480) {
+          const n = Number(String(m480[1]).replace(/,/g, ""));
+          for (const d of perDocument || []) {
+            const fin = d?.smartFields?.financials;
+            if (fin && n > 0) fin.outstanding_dues = n;
+          }
+        }
+        const stampAfter = /stamp[\s\w]*purchas[\s\w]*after|after the document execution|chronologically invalid/i.test(
+          JSON.stringify(riskResult || {}) + JSON.stringify(crossDoc || {}),
+        );
+        const critical = String(riskResult?.riskLabel || "").toUpperCase() === "CRITICAL" || Number(riskResult?.riskScore) >= 9;
+        if (critical || stampAfter) {
+          combinedVerdict = {
+            verdict: "DO NOT PROCEED",
+            posture: "STOP",
+            reasoning: "Cross-document analysis found a critical inconsistency between the documents you uploaded.",
+          };
+          if (phase2?.analysis) (phase2.analysis as any).decision = "DO_NOT_PROCEED";
+        }
+        const scrub = (s: string) =>
+          String(s || "")
+            .replace(/Rent is not stated on this page\.?\s*/gi, "")
+            .replace(/Security deposit PKR\s*[\d,]+/gi, "Bayana/Token PKR $&".replace(/Security deposit /i, ""))
+            .replace(/[\u0633\u06CC\u06A9\u06CC\u0648\u0631\u0679\u06CC]\s*[\d,]+\s*[\u0631\u0648\u067E\u06D2]/g, "\u0628\u06CC\u0639\u0627\u0646\u06C1 / \u0679\u0648\u06A9\u0646")
+            .replace(/\u0645\u062F\u062A\s*\u0646\u0627\u06D4?/g, "\u0645\u062F\u062A \u062F\u0631\u062C \u0646\u06C1\u06CC\u06BA")
+            .replace(/\u0627\u0633 \u0635\u0641\u062D\u06D2 \u067E\u0631 \u06A9\u0631\u0627\u06CC\u06C1 \u062F\u0631\u062C \u0646\u06C1\u06CC\u06BA[^\s]*/g, "")
+            .trim();
+        for (const d of perDocument || []) {
+          if (d?.smartFields?.summary) d.smartFields.summary = scrub(String(d.smartFields.summary));
+          if (d?.summary) d.summary = scrub(String(d.summary));
+          if (d?.urduSummary) d.urduSummary = scrub(String(d.urduSummary));
+        }
+      }
+    }
     // E28D display-only: repair inverted page badges + stub stay quotes. No score change.
     if (crossDoc?.crossChecks?.length && perDocument?.length) {
       const hasAddr = (d: any) => {
