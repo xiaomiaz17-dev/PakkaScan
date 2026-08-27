@@ -1681,7 +1681,7 @@ async function postSyncScan(request: Request) {
           if (ur?.quote) return { ...f, quote: ur.quote };
           const hit = packText2.split(/[\n\u06D4.]+/).map((l: string) => l.trim()).find((l: string) => {
             const ar = (l.match(/[\u0600-\u06FF]/g) || []).length;
-            return ar >= 12 && /\u0627\u0633\u0679|\u0639\u062F\u0627\u0644\u062A|stay[\s-]*order/i.test(l);
+            return ar >= 12 && /\u0627\u0633\u0679\u06D2|\u0639\u062F\u0627\u0644\u062A|stay[\s-]*order/i.test(l) && !/\u0627\u0633\u0679\u0627\u0645\u067E|stamp\s*paper|\u0633\u0627\u062A \u062F\u0646|\u0642\u0627\u0628\u0644 \u0627\u0633\u062A\u0639\u0645\u0627\u0644/i.test(l);
           });
           if (hit) return { ...f, quote: hit.slice(0, 240) };
         }

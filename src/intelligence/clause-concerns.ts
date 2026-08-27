@@ -239,7 +239,7 @@ export function harvestTenancyClauseFlags(blob: string): FlaggedClause[] {
   if (/court-?waiver|stay\s*order|barred from (?:the\s+)?court|cannot\s+approach\s+(?:the\s+)?court|stay clause/i.test(t)) {
     out.push({
       title: "Court-waiver / stay-order ban",
-      quote: urduLine(/\u0627\u0633\u0679|\u0639\u062F\u0627\u0644\u062A|stay[\s-]*order/i) || "Printed stay-order / court-waiver clause on the tenancy form",
+      quote: urduLine(/\u0627\u0633\u0679\u06D2|\u0639\u062F\u0627\u0644\u062A|stay[\s-]*order/i) || "Printed stay-order / court-waiver clause on the tenancy form",
       concern:
         "Restricts the tenant from seeking a stay order or court protection. Heavily one-sided. Get written confirmation you accept this, or strike it.",
       severity: "high",
