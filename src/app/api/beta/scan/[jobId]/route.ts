@@ -6,7 +6,7 @@ export const maxDuration = 30;
 
 export async function GET(
   _request: Request,
-  context: { params: Promise<{ jobId: string }> | { jobId: string } },
+  context: { params: Promise<{ jobId: string }> },
 ) {
   const session = await getSession();
   if (!session) {
@@ -16,10 +16,7 @@ export async function GET(
     );
   }
 
-  const rawParams = context.params;
-  const params = typeof (rawParams as Promise<{ jobId: string }>).then === "function"
-    ? await (rawParams as Promise<{ jobId: string }>)
-    : (rawParams as { jobId: string });
+  const params = await context.params;
   const jobId = String(params?.jobId || "").trim();
   if (!jobId) {
     return NextResponse.json({ error: "MISSING_JOB_ID" }, { status: 400 });
