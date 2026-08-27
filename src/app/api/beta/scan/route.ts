@@ -690,15 +690,9 @@ export async function POST(request: Request) {
           const anchor = starts[0]; const sameMd = starts.length >= 2 && !!anchor && starts.every((s: any) => s && s.mo === anchor.mo && s.d === anchor.d);
           if (sameMd && years.length >= 2) {
             const blob = (successfulDocs || []).map((d: any) => [d?.ocr?.text, d?.ocrText, d?.smartFields?.summary].filter(Boolean).join(" ")).join("\n");
-            let best = years[0] as number;
-            let bestN = -1;
-            for (const y of years as number[]) {
-              const n = (String(blob).match(new RegExp(String(y), "g")) || []).length;
-              if (n > bestN) { best = y; bestN = n; }
-            }
-            if ((years as number[]).every((y) => (String(blob).match(new RegExp(String(y), "g")) || []).length === bestN)) {
-              best = Math.max(...(years as number[]));
-            }
+            const ymin = Math.min(...(years as number[]));
+            const ymax = Math.max(...(years as number[]));
+            const best = (ymax - ymin <= 2) ? ymax : ymax;
             for (const d of successfulDocs || []) {
               const dates = d?.smartFields?.dates;
               if (!dates) continue;
@@ -1321,6 +1315,36 @@ export async function POST(request: Request) {
     }
 
     riskResult = mergeRiskFactors(riskResult, suspiciousClausesToRiskFactors(ruleHits) as any);
+    {
+      const norm = (v: any) => String(v || "").replace(/\D/g, "");
+      for (const d of perDocument || []) {
+        const p = d?.smartFields?.parties;
+        if (!p) continue;
+        const lc = norm(p.landlord?.cnic || p.landlord?.id);
+        const tc = norm(p.tenant?.cnic || p.tenant?.id);
+        if (lc && tc && lc === tc) {
+          if (p.landlord) { p.landlord.cnic = null; p.landlord.id = null; }
+        }
+      }
+      const kept: any[] = [];
+      const seenLock = { lock: false, stay: false, notice: false };
+      for (const f of riskResult.riskFactors || []) {
+        const l = String(f?.label || "").toLowerCase();
+        let skip = false;
+        if (/lock-?break|break locks|self-help|seize belongings|take the tenant/.test(l)) {
+          if (seenLock.lock) skip = true; else seenLock.lock = true;
+        } else if (/stay order|barred from court|court-waiver|approach a court/.test(l)) {
+          if (seenLock.stay) skip = true; else seenLock.stay = true;
+        } else if (/notice period|termination notice/.test(l)) {
+          if (seenLock.notice) skip = true; else seenLock.notice = true;
+        }
+        if (!skip) kept.push(f);
+      }
+      if (kept.length !== (riskResult.riskFactors || []).length) {
+        riskResult = mergeRiskFactors({ ...riskResult, riskFactors: [] } as any, kept);
+        console.log("[beta/scan] Deduped clause factors ->", riskResult.riskScore, kept.length);
+      }
+    }
     // Final UX filter: stamp noise + missing-list vs OCR
     const _finalOcr = String(typeof ocrBlobForRisk !== "undefined" ? ocrBlobForRisk : "") + " " + String(typeof _clauseOcrBlob !== "undefined" ? _clauseOcrBlob : "");
     const _hasStampPaper = !!((_mergedSmartFields as any)?._stampEvidence) || /attested|oath\s*commissioner|wasil|hundred\s+rupees|rs\.?\s*[=:]?\s*100|central\s*park|stamp\s*paper/i.test(_finalOcr);
