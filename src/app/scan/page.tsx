@@ -8,7 +8,8 @@ import { ValuationComparisonCard } from "@/components/ValuationComparisonCard";
 import { FlaggedClausesPanel } from "@/components/FlaggedClausesPanel";
 import { FeedbackButton } from "@/components/FeedbackButton";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react"
+;
 import { Fraunces, Noto_Nastaliq_Urdu } from "next/font/google";
 import { DOCUMENT_TYPE_OPTIONS, groupedDocumentTypes, type DocumentTypeOption } from "@/lib/document-types";
 import { QRCodeSVG } from "qrcode.react";
