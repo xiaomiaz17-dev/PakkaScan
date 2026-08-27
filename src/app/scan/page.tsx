@@ -362,7 +362,7 @@ function SmartFieldsPanel({ data, urduSummary, packAttorneyName, extraText }: { 
           <div key={i} style={{ backgroundColor: "#ffffff", padding: "10px 12px", borderRadius: "8px", border: r.unverified ? "1px solid #fed7aa" : "1px solid #dcfce7" }}>
             <div style={{ fontSize: "10px", color: r.unverified ? "#92400e" : "#166534", fontWeight: 700, marginBottom: "3px", textTransform: "uppercase", letterSpacing: "0.03em" }}>
               {r.label}
-              {r.unverified && <span style={{ marginLeft: "6px", backgroundColor: "#fef3c7", color: "#92400e", padding: "1px 5px", borderRadius: "4px", fontSize: "9px" }}>UNVERIFIED</span>}
+              {r.unverified && <span style={{ marginLeft: "6px", backgroundColor: "#fef3c7", color: "#92400e", padding: "1px 5px", borderRadius: "4px", fontSize: "9px" }}>CNIC missing in doc</span>}
             </div>
             <div style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a", wordBreak: "break-word" }}>{r.value}</div>
             {r.note && <div style={{ fontSize: "10px", color: "#92400e", marginTop: "4px", fontStyle: "italic" }}>{r.note}</div>}

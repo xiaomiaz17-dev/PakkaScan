@@ -1709,6 +1709,28 @@ async function postSyncScan(request: Request) {
       issuer.issuing_authority = issuer.issuing_authority || (/CDA/i.test(text) ? "CDA" : null);
       issuer.noc_ref = issuer.noc_ref || (text.match(/CDA\/NDC\/[0-9/]+/i) || [null])[0];
     }
+    {
+      const types = (perDocument || []).map((d: any) => String(d?.classification?.documentType || "").toUpperCase());
+      const tenancyPack = types.length > 0 && types.every((x: string) => !x || x === "UNKNOWN" || /TENANCY|RENTAL/.test(x));
+      if (tenancyPack && crossDoc?.crossChecks?.length) {
+        crossDoc.crossChecks = crossDoc.crossChecks.filter((c: any) => {
+          const cat = String(c.category || "").toLowerCase();
+          const st = String(c.status || "").toLowerCase();
+          const finding = String(c.finding || c.detail || "");
+          const continuation = (cat === "financial" || cat === "property") &&
+            /omits|omitted|not mentioned|not stated|separate pages|page 2/i.test(finding);
+          if (continuation && (st === "unverifiable" || st === "mismatch")) return false;
+          return true;
+        });
+      }
+      for (const s of nextSteps || []) {
+        const title = String(s.title || "");
+        if (/lock-break|stay clause/i.test(title) && !s.urduDetail && !s.detailUrdu && !s.detail_urdu) {
+          s.urduDetail = "\u06CC\u06C1 \u0634\u0631\u0627\u0626\u0637 \u067E\u0627\u06A9\u0633\u062A\u0627\u0646\u06CC \u06A9\u0631\u0627\u06CC\u06C1 \u0646\u0627\u0645\u0648\u06BA \u067E\u0631 \u0639\u0627\u0645 \u06C1\u06CC\u06BA\u060C \u0644\u06CC\u06A9\u0646 \u0627\u06CC\u06A9 \u0637\u0631\u0641\u06C1 \u06C1\u06CC\u06BA\u06D4 \u0644\u06A9\u06BE\u0646\u06D2 \u06CC\u0627 \u0645\u0627\u0644\u06A9 \u0633\u06D2 \u062A\u062D\u0631\u06CC\u0631 \u0644\u06CC\u06BA\u060C \u06CC\u0627 \u0645\u0633\u062A\u0646\u062F \u0633\u06D2 \u06A9\u0627\u0679 \u062F\u06CC\u06BA\u06D4";
+        }
+      }
+    }
+
     // rules+utf8
     {
       if (riskResult?.riskFactors?.length) {
