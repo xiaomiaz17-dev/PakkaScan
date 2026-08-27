@@ -208,6 +208,31 @@ export function extractClauseConcerns(
   };
 }
 
+export function harvestTenancyClauseFlags(blob: string): FlaggedClause[] {
+  const t = String(blob || "");
+  if (t.replace(/\s/g, "").length < 20) return [];
+  const out: FlaggedClause[] = [];
+  if (/self-?help|break(?:ing)?\s+(?:the\s+)?lock|lock-?break|repossess/i.test(t)) {
+    out.push({
+      title: "Self-help eviction / lock-break",
+      quote: (t.match(/[^.\n]{0,80}(self-?help|lock-?break|break(?:ing)?\s+(?:the\s+)?lock|repossess)[^.\n]{0,80}/i) || [t.slice(0, 180)])[0].trim(),
+      concern:
+        "Allows the landlord to evict or seize belongings without a court process. Common on Pakistani printed forms but one-sided — strike or accept in writing before relying on this paper.",
+      severity: "high",
+    });
+  }
+  if (/court-?waiver|stay\s*order|barred from (?:the\s+)?court|cannot\s+approach\s+(?:the\s+)?court|stay clause/i.test(t)) {
+    out.push({
+      title: "Court-waiver / stay-order ban",
+      quote: (t.match(/[^.\n]{0,80}(court-?waiver|stay\s*order|barred from|stay clause)[^.\n]{0,80}/i) || [t.slice(0, 180)])[0].trim(),
+      concern:
+        "Restricts the tenant from seeking a stay order or court protection. Heavily one-sided. Get written confirmation you accept this, or strike it.",
+      severity: "high",
+    });
+  }
+  return out;
+}
+
 export function clauseConcernsToRiskFactors(
   concerns: ClauseConcerns
 ): Array<{ label: string; points: number; category: "legal" }> {

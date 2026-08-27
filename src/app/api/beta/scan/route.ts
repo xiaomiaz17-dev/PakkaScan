@@ -117,10 +117,10 @@ import { computeRiskFactors, mergeRiskFactors } from "@/intelligence/risk-scorer
 import { detectCnicTranspositions, cnicTranspositionsToRiskFactors } from "@/intelligence/cnic-validator";
 import { backfillTenancySmartFields } from "@/intelligence/tenancy-completeness";
 import { getOfficialValuation, getDeclaredPrice } from "@/intelligence/dc-rate-lookup";
-import { extractClauseConcerns, clauseConcernsToRiskFactors, filterMissingAgainstText } from "@/intelligence/clause-concerns";
+import { extractClauseConcerns, clauseConcernsToRiskFactors, filterMissingAgainstText, harvestTenancyClauseFlags } from "@/intelligence/clause-concerns";
 import { detectSuspiciousClauses, suspiciousClausesToRiskFactors } from "@/intelligence/suspicious-clauses";
 import { applyTenancyBackfill } from "@/intelligence/tenancy-backfill";
-import { sanitizeRentalNextSteps } from "@/intelligence/sanitize-next-steps";
+import { sanitizeRentalNextSteps, localizeNextStepRoles } from "@/intelligence/sanitize-next-steps";
 import { buildOwnershipTimeline, chainFindingsToRiskFactors } from "@/intelligence/chain-of-title";
 import { validateTemporalRules, temporalViolationsToRiskFactors } from "@/intelligence/temporal-validator";
 
@@ -1030,6 +1030,33 @@ export async function POST(request: Request) {
       .filter(Boolean)
       .join("\n\n");
     const clauseConcerns = extractClauseConcerns(_mergedSmartFields, _clauseOcrBlob);
+    {
+      const _harvestTypes = (perDocument || []).map((d: any) =>
+        String(d?.classification?.documentType || "").toUpperCase()
+      );
+      const _harvestTenancy =
+        _harvestTypes.length > 0 &&
+        _harvestTypes.every(
+          (typ: string) =>
+            !typ || typ === "UNKNOWN" || typ.includes("TENANCY") || typ.includes("RENTAL") || typ.includes("LEASE")
+        );
+      if (_harvestTenancy) {
+        const harvestBlob = [
+          _clauseOcrBlob,
+          String((_mergedSmartFields as any)?.summary || ""),
+          ...((perDocument || []).map((d: any) =>
+            [d?.smartFields?.summary, d?.summary, d?.extraText, d?.ocr?.text].filter(Boolean).join("\n")
+          )),
+        ].join("\n");
+        for (const row of harvestTenancyClauseFlags(harvestBlob)) {
+          const already = clauseConcerns.flagged.some((f: any) =>
+            String(f.title || "").toLowerCase() === String(row.title || "").toLowerCase() ||
+            String(f.quote || "").toLowerCase().includes(String(row.quote || "").toLowerCase().slice(0, 24))
+          );
+          if (!already) clauseConcerns.flagged.push(row);
+        }
+      }
+    }
     // P1-D: server sale-bundle override — strip tenancy-only noise on sale packs
     const _saleBundle = isSaleBundle(perDocument, _mergedSmartFields);
     if (_saleBundle && clauseConcerns?.missing?.length) {
@@ -1056,7 +1083,11 @@ export async function POST(request: Request) {
       };
     }
     const ocrBlob = (perDocument || [])
-      .map((d: any) => d?.ocr?.text || d?.ocrText || d?.text || "")
+      .map((d: any) =>
+        [d?.ocr?.text, d?.ocrText, d?.text, d?.extraText, d?.smartFields?.summary, d?.summary]
+          .filter(Boolean)
+          .join("\n")
+      )
       .filter(Boolean)
       .join("\n");
     const ruleHits = detectSuspiciousClauses({
@@ -1162,6 +1193,24 @@ export async function POST(request: Request) {
     }
     console.log(`[beta/scan] Risk final: score=${riskResult.riskScore}/10 factors=${(riskResult.riskFactors||[]).length} stampPaper=${_hasStampPaper}`);
 
+    {
+      const v = String(combinedVerdict?.verdict || combinedVerdict?.posture || phase2?.analysis?.decision || "")
+        .toUpperCase()
+        .replace(/\s+/g, "_");
+      const stop = v === "DO_NOT_PROCEED" || v === "STOP" || v === "BLOCKED" || v === "REJECT";
+      if (stop && Number(riskResult.riskScore) < 9) {
+        const gap = 9 - Number(riskResult.riskScore || 0);
+        riskResult = mergeRiskFactors(riskResult, [
+          {
+            label: "Hard-stop verdict locks risk at CRITICAL — do not treat a medium score as permission to proceed",
+            points: -Math.max(gap, 0.5),
+            category: "document",
+          },
+        ]);
+        console.log("[beta/scan] STOP verdict forced risk to", riskResult.riskScore, riskResult.riskLabel);
+      }
+    }
+
     const rawPayload = {
       success: true,
       referenceCode: scanReferenceCode,
@@ -1245,11 +1294,22 @@ export async function POST(request: Request) {
       if (topXd) {
         const detail = String((topXd as any).detail || topXd.finding || (topXd as any).message || "").slice(0, 200);
         const cat = String(topXd.category || "property");
+        const _packTypes = (perDocument || []).map((d: any) =>
+          String(d?.classification?.documentType || d?.documentType || "").toUpperCase()
+        );
+        const _tenancyPack =
+          _packTypes.length > 0 &&
+          _packTypes.every(
+            (typ: string) =>
+              !typ || typ === "UNKNOWN" || typ.includes("TENANCY") || typ.includes("RENTAL") || typ.includes("LEASE")
+          );
         const title =
           /area|sq\.?\s*y|dimension|size/i.test(detail + cat)
             ? "Re-verify plot size / allotment record before paying balance"
             : (/date|stamp/i.test(detail + cat)
-            ? "Ask the seller or agent for a written explanation of the stamp vs execution date mismatch"
+            ? (_tenancyPack
+              ? "Ask the landlord or agent for a written explanation of the date mismatch across pages"
+              : "Ask the seller or agent for a written explanation of the stamp vs execution date mismatch")
             : `Resolve critical ${cat} mismatch before proceeding`);
         const step = {
           priority: "high",
@@ -1261,6 +1321,27 @@ export async function POST(request: Request) {
       }
     }
     nextSteps = sanitizeRentalNextSteps(nextSteps, _mergedSmartFields, collectAllText(perDocument));
+    {
+      const types = (perDocument || []).map((d: any) =>
+        String(d?.classification?.documentType || d?.documentType || "").toUpperCase()
+      );
+      const tenancy =
+        types.length > 0 &&
+        types.every(
+          (typ: string) =>
+            !typ || typ === "UNKNOWN" || typ.includes("TENANCY") || typ.includes("RENTAL") || typ.includes("LEASE")
+        );
+      const sale = types.some((typ: string) => /AGREEMENT_TO_SELL|BAYANA|SALE_DEED|TOKEN/.test(typ));
+      nextSteps = localizeNextStepRoles(nextSteps, tenancy ? "tenancy" : sale ? "sale" : "unknown");
+    }
+    {
+      const v = String(combinedVerdict?.verdict || combinedVerdict?.posture || "").toUpperCase().replace(/\s+/g, "_");
+      if (v === "DO_NOT_PROCEED" || v === "STOP" || v === "BLOCKED" || v === "REJECT") {
+        nextSteps = (nextSteps || []).filter(
+          (s: any) => !/keep a signed copy|signed copy for your records/i.test(String(s?.title || "") + " " + String(s?.detail || ""))
+        );
+      }
+    }
     // Cap DO FIRST (priority=high) to 2 so users are not flooded
     {
       let highLeft = 2;

@@ -16,6 +16,8 @@ import { getCnicDistrict } from "@/intelligence/cnic-districts";
 import WhatsAppFAB from "@/components/WhatsAppFAB";
 import WhatsAppShareButton from "@/components/WhatsAppShareButton";
 import OwnershipTimeline from "@/components/OwnershipTimeline";
+import { harvestTenancyClauseFlags } from "@/intelligence/clause-concerns";
+import { localizeNextStepRoles } from "@/intelligence/sanitize-next-steps";
 
 type SessionUser = { email: string; name: string | null };
 
@@ -1360,7 +1362,26 @@ export default function ScanPage() {
             )}
             {crossDoc && <CrossDocPanel crossDoc={crossDoc} urduAssessment={urduTranslations["crossDocAssessment"]} />}
             {!isTemplateOrPartial && (
-              <NextStepsPanel steps={nextSteps} urduTranslations={urduTranslations} />
+              <NextStepsPanel
+                steps={(() => {
+                  const types = (results?.documents || []).map((d: any) =>
+                    String(d?.classification?.documentType || d?.documentType || d?.type || "").toUpperCase()
+                  );
+                  const tenancy =
+                    types.length > 0 &&
+                    types.every(
+                      (typ: string) =>
+                        !typ ||
+                        typ === "UNKNOWN" ||
+                        typ.includes("TENANCY") ||
+                        typ.includes("RENTAL") ||
+                        typ.includes("LEASE")
+                    );
+                  const sale = types.some((typ: string) => /AGREEMENT_TO_SELL|BAYANA|SALE_DEED|TOKEN/.test(typ));
+                  return localizeNextStepRoles(nextSteps, tenancy ? "tenancy" : sale ? "sale" : "unknown");
+                })()}
+                urduTranslations={urduTranslations}
+              />
             )}
             {results.tier === "rental" && isMultiDoc && !crossDoc && (
               <div style={{ marginTop: "20px", padding: "16px 20px", backgroundColor: "#fef3c7", border: "1px solid #fcd34d", borderRadius: "10px", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>

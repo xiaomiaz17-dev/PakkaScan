@@ -46,12 +46,16 @@ export function sanitizeRentalNextSteps(steps: any[], fields: any, ocr: string):
       ...out,
     ];
   }
-  // Sale packs: rewrite tenancy role words → sale parties
+  // Sale packs: rewrite tenancy role words → sale parties.
+  // Do not flip roles when landlord/tenant facts are present (tenancy scanned on a Bayana credit).
   const fin = f.financials || {};
+  const looksTenancy = !!(f.parties?.landlord || f.parties?.tenant) ||
+    /tenancy|kiraaya|kiraya|landlord|tenant/i.test(text);
   const isSale =
-    Number(fin.total_price?.amount || fin.total_price || 0) > 0 ||
-    Number(fin.token_amount?.amount || fin.token_amount || 0) > 0 ||
-    !!(f.parties?.seller || f.parties?.buyer);
+    !looksTenancy &&
+    (Number(fin.total_price?.amount || fin.total_price || 0) > 0 ||
+      Number(fin.token_amount?.amount || fin.token_amount || 0) > 0 ||
+      !!(f.parties?.seller || f.parties?.buyer));
   if (isSale) {
     out = out.map((s) => {
       const rewrite = (t: string) =>
@@ -79,4 +83,31 @@ export function sanitizeRentalNextSteps(steps: any[], fields: any, ocr: string):
     });
   }
   return out.slice(0, 6);
+}
+
+export function localizeNextStepRoles(steps: any[], pack: "tenancy" | "sale" | "unknown"): any[] {
+  if (!Array.isArray(steps) || pack === "unknown") return steps || [];
+  const rewrite = (t: string) => {
+    let s = String(t || "");
+    if (pack === "tenancy") {
+      s = s
+        .replace(/\bsellers?\b/gi, "landlord")
+        .replace(/\bbuyers?\b/gi, "tenant")
+        .replace(/\bvendor\b/gi, "landlord")
+        .replace(/\bvendee\b/gi, "tenant");
+    } else if (pack === "sale") {
+      s = s
+        .replace(/\blessor\b/gi, "seller")
+        .replace(/\blessee\b/gi, "buyer")
+        .replace(/\blandlords?\b/gi, "seller")
+        .replace(/\btenants?\b/gi, "buyer");
+    }
+    return s;
+  };
+  return steps.map((step) => ({
+    ...step,
+    title: rewrite(step?.title),
+    detail: rewrite(step?.detail || step?.body),
+    body: step?.body != null ? rewrite(step.body) : step?.body,
+  }));
 }
