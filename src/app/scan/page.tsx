@@ -954,7 +954,7 @@ export default function ScanPage() {
   let posture = results?.phase2?.posture || "CAUTIOUS";
   let pakkaScore = results?.phase2?.result?.pakkaScore ?? 0;
   // F5: CRITICAL risk must never show a soft PROCEED WITH CAUTION hero
-  if ((results?.riskLabel === "CRITICAL") && verdict !== "DO_NOT_PROCEED" && verdict !== "STOP" && verdict !== "BLOCKED" && verdict !== "REJECT") {
+  const _tenancyPack = (results?.documents || []).some((d: any) => /TENANCY|LEASE|RENTAL/i.test(String(d?.classification?.documentType || ""))); if (!_tenancyPack && (results?.riskLabel === "CRITICAL") && verdict !== "DO_NOT_PROCEED" && verdict !== "STOP" && verdict !== "BLOCKED" && verdict !== "REJECT") {
     verdict = "DO_NOT_PROCEED";
     posture = "DO_NOT_PROCEED";
   }
@@ -997,7 +997,7 @@ export default function ScanPage() {
   const combinedVerdictRaw = results?.combinedVerdict ?? null;
   const _docsN = results?.documents?.length ?? 0;
   let combinedVerdict = combinedVerdictRaw;
-  if (combinedVerdict && results?.riskLabel === "CRITICAL" && combinedVerdict.verdict !== "DO_NOT_PROCEED") {
+  if (!_tenancyPack && combinedVerdict && results?.riskLabel === "CRITICAL" && combinedVerdict.verdict !== "DO_NOT_PROCEED") {
     combinedVerdict = { ...combinedVerdict, verdict: "DO_NOT_PROCEED", posture: "DO_NOT_PROCEED", reasoning: combinedVerdict.reasoning || "Critical risk factors detected." };
   }
   if (combinedVerdict && (_flaggedHi || results?.riskLabel === "HIGH" || results?.riskLabel === "CRITICAL")) {
