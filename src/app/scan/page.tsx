@@ -1580,6 +1580,15 @@ export default function ScanPage() {
                           clientHash = Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
                         } catch { /* subtle may be unavailable on non-secure contexts */ }
                         if (hdr && /^[a-f0-9]{64}$/i.test(hdr)) setPdfHashForCopy(hdr.toLowerCase());
+                        const persist = (hdr && /^[a-f0-9]{64}$/i.test(hdr) ? hdr : clientHash || "").toLowerCase();
+                        if (persist && results.referenceCode) {
+                          fetch("/api/beta/report/hash", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ referenceCode: results.referenceCode, sha256: persist }),
+                            credentials: "same-origin",
+                          }).catch(() => {});
+                        }
                         else if (clientHash) setPdfHashForCopy(clientHash);
                         const url = URL.createObjectURL(blob);
                         const a = document.createElement("a");
