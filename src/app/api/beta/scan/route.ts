@@ -658,6 +658,25 @@ export async function POST(request: Request) {
             console.log("[beta/scan] Cross-doc: ignored critical flag on same-tenancy page bundle");
           }
         }
+        if (_sameTenancyBundle && crossDoc?.crossChecks?.length) {
+          crossDoc.crossChecks = crossDoc.crossChecks.map((c: any) => {
+            const cat = String(c.category || "").toLowerCase();
+            const finding = String(c.finding || c.detail || c.message || "").toLowerCase();
+            const continuation =
+              (cat === "financial" || cat === "property" || cat === "other") &&
+              /0\s*pkr|as 0|not mentioned|omits|omitted|absent|missing from|does not mention|only on (page|document) 1|inherit/i.test(finding);
+            if (continuation && String(c.status).toLowerCase() === "mismatch") {
+              return { ...c, status: "unverifiable", severity: "info" };
+            }
+            return c;
+          });
+          crossDoc.hasCriticalMismatch = crossDoc.crossChecks.some(
+            (c: any) =>
+              String(c.status).toLowerCase() === "mismatch" &&
+              String(c.severity).toLowerCase() === "critical"
+          );
+          console.log("[beta/scan] Cross-doc: continuation filter, critical=", crossDoc.hasCriticalMismatch);
+        }
         if (crossDoc?.crossChecks?.length) {
           crossDoc.crossChecks = crossDoc.crossChecks.filter((c: any) => {
             const cat = String(c.category || "").toLowerCase();
@@ -748,6 +767,11 @@ export async function POST(request: Request) {
       try {
         const _t_urdu = Date.now();
         urduTranslations = await translateToUrduTimed(translationInputs, 12000);
+        const scrub = (s: string) => String(s || "").replace(/p[eé]riode/gi, "period");
+        for (const k of Object.keys(urduTranslations)) urduTranslations[k] = scrub(urduTranslations[k]);
+        for (const d of perDocument || []) {
+          if (d?.smartFields?.summary) d.smartFields.summary = scrub(String(d.smartFields.summary));
+        }
         console.log(`[timing] UrduTranslation LLM: ${Date.now() - _t_urdu}ms`);
         console.log(
           `[beta/scan] Urdu: translated ${Object.keys(urduTranslations).length}/${Object.keys(translationInputs).length} string(s)`

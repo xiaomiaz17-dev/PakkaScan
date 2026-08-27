@@ -212,7 +212,7 @@ export function harvestTenancyClauseFlags(blob: string): FlaggedClause[] {
   const t = String(blob || "");
   if (t.replace(/\s/g, "").length < 20) return [];
   const out: FlaggedClause[] = [];
-  if (/self-?help|break(?:ing)?\s+(?:the\s+)?lock|lock-?break|repossess/i.test(t)) {
+  if (/self-?help|break(?:ing)?\s+(?:the\s+)?lock|lock-?break|repossess|\u0642\u0641\u0644|\u062A\u0627\u0644\u0627|\u0633\u0627\u0645\u0627\u0646/i.test(t)) {
     out.push({
       title: "Self-help eviction / lock-break",
       quote: (t.match(/[^.\n]{0,80}(self-?help|lock-?break|break(?:ing)?\s+(?:the\s+)?lock|repossess)[^.\n]{0,80}/i) || [t.slice(0, 180)])[0].trim(),
