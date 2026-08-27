@@ -1679,7 +1679,25 @@ async function postSyncScan(request: Request) {
         }
       }
     }
-        // rules+utf8
+        {
+      const blob = (perDocument || []).map((d: any) => String(d?.ocr?.text || d?.ocrText || "")).join("\n");
+      if (clauseConcerns?.flagged?.length && blob) {
+        clauseConcerns.flagged = clauseConcerns.flagged.map((f: any) => {
+          let q = String(f.quote || "");
+          const stub = /shall stand 10\b|receive payment \(hig/i.test(q) || (/[a-z0-9]$/i.test(q) && q.length < 80);
+          if (!stub) return f;
+          const needle = q.replace(/\s+/g, " ").slice(0, 28);
+          const idx = blob.toLowerCase().indexOf(needle.toLowerCase());
+          const idx2 = blob.toLowerCase().indexOf("shall stand");
+          const at = idx >= 0 ? idx : idx2;
+          if (at < 0) return f;
+          const take = blob.slice(at, at + 320).replace(/\s+/g, " ").trim();
+          const end = Math.max(take.lastIndexOf("."), take.lastIndexOf("\u06D4"));
+          return { ...f, quote: end > 40 ? take.slice(0, end + 1) : take };
+        });
+      }
+    }
+    // rules+utf8
     {
       if (riskResult?.riskFactors?.length) {
         riskResult.riskFactors = dedupeByRuleId(
@@ -1763,7 +1781,9 @@ async function postSyncScan(request: Request) {
       }
     }
     // E28D display-only: repair inverted page badges + stub stay quotes. No score change.
-    if (crossDoc?.crossChecks?.length && perDocument?.length) {
+    const _typesForE28 = (perDocument || []).map((d: any) => String(d?.classification?.documentType || "").toUpperCase());
+    const _tenancyE28 = _typesForE28.length > 0 && _typesForE28.every((x: string) => !x || x === "UNKNOWN" || /TENANCY|RENTAL/.test(x));
+    if (_tenancyE28 && crossDoc?.crossChecks?.length && perDocument?.length) {
       const hasAddr = (d: any) => {
         const a = String(d?.smartFields?.property?.address || d?.smartFields?.property?.full_address || "").trim();
         return !!(a && !/^not mentioned$/i.test(a) && a.length >= 8);
