@@ -885,6 +885,8 @@ export async function POST(request: Request) {
           .replace(/listed as 0 on Page 2/gi, "omitted / not mentioned on Page 2")
           .replace(/as 0 PKR/gi, "not mentioned")
           .replace(/are marked as 0/gi, "are omitted / not mentioned")
+          .replace(/missing standard clauses/gi, "unmentioned/omitted")
+          .replace(/noted as missing standard clauses on Page 2 due to multi-page document split/gi, "noted as unmentioned/omitted on Page 2 (multi-page agreement)")
           .replace(/\s{2,}/g, " ")
           .trim();
         for (const k of Object.keys(urduTranslations)) urduTranslations[k] = scrub(urduTranslations[k]);
