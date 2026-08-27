@@ -950,7 +950,9 @@ async function postSyncScan(request: Request) {
 
     perDocument.forEach((d, i) => {
       if (d.status === "ok" && d.smartFields?.summary) {
-        {
+        const typ = String(d.classification?.documentType || d.documentType || "").toUpperCase();
+        const tenancyDoc = /TENANCY|RENTAL/.test(typ);
+        if (tenancyDoc) {
           const dt = d.smartFields.dates || {};
           const fin = d.smartFields.financials || {};
           const prop = d.smartFields.property || {};
@@ -969,6 +971,13 @@ async function postSyncScan(request: Request) {
           if (addr && !/^not mentioned$/i.test(addr)) bits.push("Property: " + addr + ".");
           else bits.push("Address is not stated on this page.");
           d.smartFields.summary = bits.join(" ");
+        } else {
+          d.smartFields.summary = String(d.smartFields.summary || "")
+            .replace(/Rent is not stated on this page\.?/gi, "")
+            .replace(/Security deposit PKR/gi, "Bayana/Token PKR")
+            .replace(/\u0645\u062F\u062A\s*\u0646\u0627\u06D4?/g, "")
+            .replace(/\s{2,}/g, " ")
+            .trim();
         }
         translationInputs["docSummary_" + i] = d.smartFields.summary;
       }
@@ -1003,6 +1012,17 @@ async function postSyncScan(request: Request) {
           if (d?.smartFields?.summary) d.smartFields.summary = scrub(String(d.smartFields.summary));
         }
         (perDocument || []).forEach((d: any, i: number) => {
+          const typ = String(d?.classification?.documentType || d?.documentType || "").toUpperCase();
+          const tenancyDoc = /TENANCY|RENTAL/.test(typ);
+          if (!tenancyDoc) {
+            const keep = String(urduTranslations["docSummary_" + i] || d?.smartFields?.summary || "")
+              .replace(/\u0645\u062F\u062A\s*\u0646\u0627\u06D4?/g, "")
+              .replace(/\u0627\u0633 \u0635\u0641\u062D\u06D2 \u067E\u0631 \u06A9\u0631\u0627\u06CC\u06C1[^\u06D4.]*\u06D4?/g, "")
+              .replace(/\u0633\u06CC\u06A9\u06CC\u0648\u0631\u0679\u06CC/g, "\u0628\u06CC\u0639\u0627\u0646\u06C1/\u0679\u0648\u06A9\u0646");
+            urduTranslations["docSummary_" + i] = keep;
+            if (d.smartFields) d.smartFields.summaryUrdu = keep;
+            return;
+          }
           const dt = d?.smartFields?.dates || {};
           const fin = d?.smartFields?.financials || {};
           const prop = d?.smartFields?.property || {};
@@ -1633,6 +1653,16 @@ async function postSyncScan(request: Request) {
       });
     }
 
+    for (const d of perDocument || []) {
+      const typ = String(d?.classification?.documentType || "").toUpperCase();
+      const text = String(d?.ocr?.text || d?.ocrText || "");
+      const m = text.match(/TOTAL\s+OUTSTANDING\s+DUES[:\s]*Rs\.?\s*([0-9,]+)/i) || text.match(/outstanding\s+dues[:\s]*Rs\.?\s*([0-9,]+)/i);
+      if (!m) continue;
+      const n = Number(String(m[1]).replace(/,/g, ""));
+      if (!n || n < 1000) continue;
+      if (!d.smartFields) continue;
+      d.smartFields.financials = { ...(d.smartFields.financials || {}), outstanding_dues: n, total_outstanding_dues: n };
+    }
     // A9C9 sale-pack lock: STOP when sale+CRITICAL; no tenant-notice; no rent/security captions.
     {
       const types = (perDocument || []).map((d: any) =>
