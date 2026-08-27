@@ -26,9 +26,9 @@ export function sanitizeRentalNextSteps(steps: any[], fields: any, ocr: string):
         return {
           ...s,
           priority: "important",
-          title: "Note the lock-break and stay clauses",
+          title: "Note the landlord lock-break and stay clauses",
           detail:
-            "These terms are common on Pakistani tenancy forms but they are one-sided. Get written confirmation you accept them, or strike them, before you rely on this paper.",
+            "These terms are common on Pakistani tenancy forms but they are one-sided. Get written confirmation from the landlord that you accept them, or strike them, before you rely on this paper.",
         };
       }
       return s;
@@ -39,9 +39,9 @@ export function sanitizeRentalNextSteps(steps: any[], fields: any, ocr: string):
     out = [
       {
         priority: "important",
-        title: "Note the lock-break and stay clauses",
+        title: "Note the landlord lock-break and stay clauses",
         detail:
-          "These terms are common on Pakistani tenancy forms but they are one-sided. Get written confirmation you accept them, or strike them, before you rely on this paper.",
+          "These terms are common on Pakistani tenancy forms but they are one-sided. Get written confirmation from the landlord that you accept them, or strike them, before you rely on this paper.",
       },
       ...out,
     ];
