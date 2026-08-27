@@ -219,10 +219,18 @@ export function harvestTenancyClauseFlags(blob: string): FlaggedClause[] {
     });
     return line ? line.slice(0, 240) : "";
   };
-  if (/self-?help|break(?:ing)?\s+(?:the\s+)?lock|lock-?break|repossess|\u0642\u0641\u0644|\u062A\u0627\u0644\u0627|\u0633\u0627\u0645\u0627\u0646/i.test(t)) {
+  if (/one month|ایک ماہ قبل|تحریری نوٹس|notice/i.test(t) && /خالی|vacat|terminat/i.test(t)) {
+    out.push({
+      title: "Termination / notice terms",
+      quote: urduLine(/ایک ماہ قبل|تحریری نوٹس|خالی کروانا/i) || "One-month written notice clause",
+      concern: "Standard notice to vacate. Confirm both parties must give the same one-month written notice.",
+      severity: "medium",
+    });
+  }
+  if (/self-?help|break(?:ing)?\s+(?:the\s+)?lock|lock-?break|repossess|\u0642\u0641\u0644|\u062A\u0627\u0644\u0627|\u0642\u0641\u0644 \u0634\u06A9\u0646/i.test(t)) {
     out.push({
       title: "Self-help eviction / lock-break",
-      quote: urduLine(/[\u0642\u0641\u0644\u062A\u0627\u0644\u0627\u0633\u0627\u0645\u0627\u0646]|lock|belonging|repossess/i) || "Printed lock-break / belongings clause on the tenancy form",
+      quote: urduLine(/\u0642\u0641\u0644|\u062A\u0627\u0644\u0627|\u0642\u0641\u0644 \u0634\u06A9\u0646|lock-?break/i) || "Printed lock-break / belongings clause on the tenancy form",
       concern:
         "Allows the landlord to evict or seize belongings without a court process. Common on Pakistani printed forms but one-sided — strike or accept in writing before relying on this paper.",
       severity: "high",

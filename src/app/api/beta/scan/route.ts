@@ -879,8 +879,12 @@ export async function POST(request: Request) {
         const scrub = (s: string) => String(s || "")
           .replace(/p[eé]riode/gi, "period")
           .replace(/[\u0400-\u04FF]+/g, "")
-          .replace(/due to page split/gi, "details are on the other page of this agreement")
-          .replace(/due to page[- ]by[- ]page extraction limits/gi, "details are on the other page of this agreement")
+          .replace(/due to page split/gi, "details appear on the other page")
+          .replace(/due to page[- ]by[- ]page extraction limits/gi, "details appear on the other page")
+          .replace(/marked as 0 on Page 2/gi, "omitted / not mentioned on Page 2")
+          .replace(/listed as 0 on Page 2/gi, "omitted / not mentioned on Page 2")
+          .replace(/as 0 PKR/gi, "not mentioned")
+          .replace(/are marked as 0/gi, "are omitted / not mentioned")
           .replace(/\s{2,}/g, " ")
           .trim();
         for (const k of Object.keys(urduTranslations)) urduTranslations[k] = scrub(urduTranslations[k]);
