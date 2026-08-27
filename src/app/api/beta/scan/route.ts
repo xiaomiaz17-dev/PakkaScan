@@ -1680,8 +1680,30 @@ async function postSyncScan(request: Request) {
         }
         return f;
       });
+      clauseConcerns.flagged = clauseConcerns.flagged.map((f: any) => {
+        const blob = String(f.title || "") + " " + String(f.concern || "") + " " + String(f.quote || "");
+        let title = String(f.title || "").trim();
+        if (!title || /^concerning clause$/i.test(title)) {
+          if (/stay|court-waiver|barred from court|عدالت/i.test(blob)) title = "Court stay waiver";
+          else if (/lock-?break|self-help|seize|belongings|قفل|تالہ/i.test(blob)) title = "Lock-break / property seizure";
+          else if (/notice|terminat|خالی/i.test(blob)) title = "Termination / notice terms";
+        }
+        return title ? { ...f, title } : f;
+      });
+      const seenCat: Record<string, boolean> = {};
+      clauseConcerns.flagged = clauseConcerns.flagged.filter((f: any) => {
+        const blob = (String(f.title || "") + " " + String(f.concern || "")).toLowerCase();
+        const cat = /stay|court-waiver|barred from court/.test(blob) ? "stay"
+          : /lock-?break|self-help|seize|belongings|قفل/.test(blob) ? "lock"
+          : /notice|terminat/.test(blob) ? "notice"
+          : "other:" + blob.slice(0, 40);
+        if (seenCat[cat]) return false;
+        seenCat[cat] = true;
+        return true;
+      });
     }
 
+    // 3308 title+dedupe
     const rawPayload = {
       success: true,
       referenceCode: scanReferenceCode,
