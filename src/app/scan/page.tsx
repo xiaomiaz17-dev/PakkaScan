@@ -1431,7 +1431,7 @@ export default function ScanPage() {
                   </div>
 
                   {doc.smartFields && !doc.smartFields.extractionError ? (
-                    <SmartFieldsPanel data={doc.smartFields} extraText={String((doc as any).ocr?.text || (doc as any).ocrText || "")} packAttorneyName={findPackAttorneyName(results.documents)} urduSummary={urduTranslations["docSummary_" + i]} />
+                    <SmartFieldsPanel data={doc.smartFields} extraText={String((doc as any).ocr?.text || (doc as any).ocrText || "")} packAttorneyName={findPackAttorneyName(results.documents)} urduSummary={(doc.smartFields as any)?.summaryUrdu || urduTranslations["docSummary_" + i]} />
                   ) : (
                     <div style={{ fontSize: "12px", color: "#64748b", fontStyle: "italic", marginTop: "8px" }}>
                       {doc.smartFields?.extractionError || "Analysing this document type requires additional support. Structured extraction was not available."}
