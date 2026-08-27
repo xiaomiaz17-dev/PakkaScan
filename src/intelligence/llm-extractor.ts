@@ -588,6 +588,7 @@ export async function extractSmartFields(
         const response = await genAI.models.generateContent({
           model: modelName,
           contents: [{ role: "user", parts: [{ text: prompt }] }],
+          config: { temperature: 0 },
         });
 
         const raw = response.text || "";
