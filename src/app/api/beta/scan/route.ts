@@ -102,6 +102,7 @@ import {
   failBetaScanJob,
 } from "@/lib/beta-scan-jobs";
 import { coerceToScanFact } from "@/lib/scan-fact";
+import { decodeUtf8, clipSentence, ruleIdFromText, dedupeByRuleId } from "@/lib/scan-rules";
 import { runOcr } from "@/intelligence/ocr-router";
 import { classifyFromText } from "@/intelligence/document-classifier";
 import { classifyDocument } from "@/ingestion/classifier";
@@ -1678,7 +1679,37 @@ async function postSyncScan(request: Request) {
         }
       }
     }
-        // A9C9 sale-pack lock: STOP when sale+CRITICAL; no tenant-notice; no rent/security captions.
+        // rules+utf8
+    {
+      if (riskResult?.riskFactors?.length) {
+        riskResult.riskFactors = dedupeByRuleId(
+          riskResult.riskFactors.map((f: any) => ({
+            ...f,
+            rule_id: f.rule_id || ruleIdFromText(String(f.label || "") + " " + String(f.detail || "")),
+            label: clipSentence(String(f.label || ""), 220),
+          })),
+        );
+      }
+      if (clauseConcerns?.flagged?.length) {
+        clauseConcerns.flagged = dedupeByRuleId(
+          clauseConcerns.flagged.map((f: any) => ({
+            ...f,
+            rule_id: f.rule_id || ruleIdFromText(String(f.title || "") + " " + String(f.concern || "") + " " + String(f.quote || "")),
+            quote: clipSentence(String(f.quote || ""), 280),
+          })),
+        );
+      }
+      for (const s of nextSteps || []) {
+        for (const k of ["urduTitle", "urduDetail", "titleUrdu", "detailUrdu", "title_urdu", "detail_urdu"]) {
+          if (s[k]) s[k] = decodeUtf8(String(s[k]));
+        }
+      }
+      for (const d of perDocument || []) {
+        if (d?.smartFields?.summaryUrdu) d.smartFields.summaryUrdu = decodeUtf8(String(d.smartFields.summaryUrdu));
+        if ((d as any)?.urduSummary) (d as any).urduSummary = decodeUtf8(String((d as any).urduSummary));
+      }
+    }
+    // A9C9 sale-pack lock: STOP when sale+CRITICAL; no tenant-notice; no rent/security captions.
     {
       const types = (perDocument || []).map((d: any) =>
         String(d?.classification?.documentType || d?.documentType || "").toUpperCase()
