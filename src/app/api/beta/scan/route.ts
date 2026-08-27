@@ -741,6 +741,17 @@ export async function POST(request: Request) {
             if (/2024 vs 2026|conflicting execution/i.test(ass)) {
               crossDoc.overallAssessment = "The documents are two pages of the same tenancy agreement. Dates were aligned on the same day and month. Financial and property details appear on the parties page only.";
             }
+            const signed = (successfulDocs || []).map((d: any) => String(d?.smartFields?.dates?.execution_date || d?.smartFields?.dates?.signed_on || d?.smartFields?.dates?.signedOn || "")).filter((s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s));
+            if (signed.length >= 2 && signed.some((s: string) => s !== signed[0])) {
+              const checks = crossDoc.crossChecks || [];
+              checks.push({
+                category: "date",
+                status: "mismatch",
+                severity: "info",
+                finding: "Signed-on dates differ across pages (" + signed.join(" vs ") + "). Start/end term still aligns.",
+              });
+              crossDoc.crossChecks = checks;
+            }
           }
         }
         if (crossDoc?.crossChecks?.length) {
@@ -867,12 +878,10 @@ export async function POST(request: Request) {
         (perDocument || []).forEach((d: any, i: number) => {
           const en = String(d?.smartFields?.summary || translationInputs["docSummary_" + i] || "");
           if (!/not stated on this page/i.test(en)) return;
-          const ur = String(urduTranslations["docSummary_" + i] || "");
-          if (/40,?000|64,?000|1799|40000|64000/.test(ur)) {
-            urduTranslations["docSummary_" + i] = "اس صفحے پر کرایہ درج نہیں۔ اس صفحے پر پتہ درج نہیں۔ مدت " +
-              String(d?.smartFields?.dates?.start_date || "") + " تا " +
-              String(d?.smartFields?.dates?.end_date || "") + "۔";
-          }
+          urduTranslations["docSummary_" + i] =
+            "اس صفحے پر کرایہ درج نہیں۔ اس صفحے پر پتہ درج نہیں۔ مدت " +
+            String(d?.smartFields?.dates?.start_date || "") + " تا " +
+            String(d?.smartFields?.dates?.end_date || "") + "۔";
         });
         if (crossDoc?.crossChecks?.length) {
           crossDoc.crossChecks = crossDoc.crossChecks.map((c: any) => ({
@@ -1276,13 +1285,29 @@ export async function POST(request: Request) {
     console.log(
       `[beta/scan] clauses: suspicious=${clauseConcerns.flagged.length} missing=${clauseConcerns.missing.length} (llm+rules ruleHits=${ruleHits.clauses.length})`
     );
-    clauseConcerns.flagged = (clauseConcerns.flagged || []).map((f: any) => {
-      const q = String(f.quote || "");
-      const ar = (q.match(/[\u0600-\u06FF]/g) || []).length;
-      const stub = /language present on the tenancy form|Printed (lock-break|stay-order)/i.test(q) || ar > 0 && ar < 12;
-      if (!stub) return f;
-      return { ...f, quote: "" };
-    });
+    {
+      const packOcr = collectAllText(perDocument || []);
+      const windowAt = (needles: string[]) => {
+        for (const n of needles) {
+          const idx = packOcr.indexOf(n);
+          if (idx < 0) continue;
+          const slice = packOcr.slice(Math.max(0, idx - 24), idx + 160).replace(/\s+/g, " ").trim();
+          if ((slice.match(/[\u0600-\u06FF]/g) || []).length >= 12) return slice;
+        }
+        return "";
+      };
+      const lockQ = windowAt(["قفل", "تالہ", "سامان", "تالا"]);
+      const stayQ = windowAt(["سٹے", "اسٹے", "عدالت", "سٹے آرڈر"]);
+      clauseConcerns.flagged = (clauseConcerns.flagged || []).map((f: any) => {
+        const title = String(f.title || f.concern || "");
+        let q = String(f.quote || "").trim();
+        const ar = (q.match(/[\u0600-\u06FF]/g) || []).length;
+        const bad = !q || q === "--" || /language present|Printed (lock-break|stay-order)/i.test(q) || (ar > 0 && ar < 12);
+        if (/lock|self-help|belonging/i.test(title) && bad) q = lockQ;
+        if (/stay|court/i.test(title) && bad) q = stayQ;
+        return { ...f, quote: q };
+      });
+    }
     {
       const hasDuration = (perDocument || []).some((d: any) => {
         const dt = d?.smartFields?.dates || {};
