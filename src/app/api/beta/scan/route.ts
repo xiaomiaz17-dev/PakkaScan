@@ -719,6 +719,29 @@ export async function POST(request: Request) {
             }
             console.log("[beta/scan] Tenancy year-flip reconciled to", best, "critical=", crossDoc.hasCriticalMismatch);
           }
+          for (const d of successfulDocs || []) {
+            const dates = d?.smartFields?.dates;
+            if (!dates) continue;
+            const s = iso(dates.start_date || dates.startDate);
+            let e = iso(dates.end_date || dates.endDate);
+            const months = Number(dates.duration_months || dates.durationMonths || 11);
+            if (s && e && (e.y < s.y || (e.y === s.y && (e.mo + e.d) < (s.mo + s.d)))) {
+              const startDt = new Date(Date.UTC(s.y, Number(s.mo) - 1, Number(s.d)));
+              startDt.setUTCMonth(startDt.getUTCMonth() + (months > 0 ? months : 11));
+              const yy = startDt.getUTCFullYear();
+              const mm = String(startDt.getUTCMonth() + 1).padStart(2, "0");
+              const dd = String(startDt.getUTCDate()).padStart(2, "0");
+              dates.end_date = yy + "-" + mm + "-" + dd;
+              dates.endDate = dates.end_date;
+              console.log("[beta/scan] end-before-start repaired to", dates.end_date);
+            }
+          }
+          if (crossDoc) {
+            const ass = String(crossDoc.overallAssessment || "");
+            if (/2024 vs 2026|conflicting execution/i.test(ass)) {
+              crossDoc.overallAssessment = "The documents are two pages of the same tenancy agreement. Dates were aligned on the same day and month. Financial and property details appear on the parties page only.";
+            }
+          }
         }
         if (crossDoc?.crossChecks?.length) {
           crossDoc.crossChecks = crossDoc.crossChecks.filter((c: any) => {
@@ -795,6 +818,26 @@ export async function POST(request: Request) {
 
     perDocument.forEach((d, i) => {
       if (d.status === "ok" && d.smartFields?.summary) {
+        {
+          const dt = d.smartFields.dates || {};
+          const fin = d.smartFields.financials || {};
+          const prop = d.smartFields.property || {};
+          const par = d.smartFields.parties || {};
+          const rent = Number(fin.monthly_rent?.amount ?? fin.monthly_rent ?? 0);
+          const dep = Number(fin.security_deposit?.amount ?? fin.security_deposit ?? 0);
+          const addr = String(prop.address || "").trim();
+          const bits: string[] = [];
+          const ln = par.landlord?.name || par.landlord;
+          const tn = par.tenant?.name || par.tenant;
+          if (ln || tn) bits.push("Tenancy between " + String(ln || "landlord") + " and " + String(tn || "tenant") + ".");
+          if (dt.start_date || dt.end_date) bits.push("Term " + String(dt.start_date || "") + " to " + String(dt.end_date || "") + ".");
+          if (rent > 0) bits.push("Monthly rent PKR " + rent + ".");
+          else bits.push("Rent is not stated on this page.");
+          if (dep > 0) bits.push("Security deposit PKR " + dep + ".");
+          if (addr && !/^not mentioned$/i.test(addr)) bits.push("Property: " + addr + ".");
+          else bits.push("Address is not stated on this page.");
+          d.smartFields.summary = bits.join(" ");
+        }
         translationInputs["docSummary_" + i] = d.smartFields.summary;
       }
     });

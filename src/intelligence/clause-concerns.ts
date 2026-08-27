@@ -212,10 +212,14 @@ export function harvestTenancyClauseFlags(blob: string): FlaggedClause[] {
   const t = String(blob || "");
   if (t.replace(/\s/g, "").length < 20) return [];
   const out: FlaggedClause[] = [];
+  const urduLine = (re: RegExp) => {
+    const line = t.split(/[\n\u06D4.]+/).find((l) => re.test(l) && /[\u0600-\u06FF]/.test(l));
+    return line ? line.trim().slice(0, 240) : "";
+  };
   if (/self-?help|break(?:ing)?\s+(?:the\s+)?lock|lock-?break|repossess|\u0642\u0641\u0644|\u062A\u0627\u0644\u0627|\u0633\u0627\u0645\u0627\u0646/i.test(t)) {
     out.push({
       title: "Self-help eviction / lock-break",
-      quote: (t.match(/[^.\n]{0,80}(self-?help|lock-?break|break(?:ing)?\s+(?:the\s+)?lock|repossess)[^.\n]{0,80}/i) || [t.slice(0, 180)])[0].trim(),
+      quote: urduLine(/[\u0642\u0641\u0644\u062A\u0627\u0644\u0627\u0633\u0627\u0645\u0627\u0646]|lock|belonging|repossess/i) || "Printed lock-break / belongings clause on the tenancy form",
       concern:
         "Allows the landlord to evict or seize belongings without a court process. Common on Pakistani printed forms but one-sided — strike or accept in writing before relying on this paper.",
       severity: "high",
@@ -224,7 +228,7 @@ export function harvestTenancyClauseFlags(blob: string): FlaggedClause[] {
   if (/court-?waiver|stay\s*order|barred from (?:the\s+)?court|cannot\s+approach\s+(?:the\s+)?court|stay clause/i.test(t)) {
     out.push({
       title: "Court-waiver / stay-order ban",
-      quote: (t.match(/[^.\n]{0,80}(court-?waiver|stay\s*order|barred from|stay clause)[^.\n]{0,80}/i) || [t.slice(0, 180)])[0].trim(),
+      quote: urduLine(/[\u0627\u0633\u0679\u06D2\u0639\u062F\u0627\u0644\u062A]|stay\s*order|court/i) || "Printed stay-order / court-waiver clause on the tenancy form",
       concern:
         "Restricts the tenant from seeking a stay order or court protection. Heavily one-sided. Get written confirmation you accept this, or strike it.",
       severity: "high",

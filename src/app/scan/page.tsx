@@ -648,7 +648,8 @@ function reportTitleFor(
   const types = (allDocTypes || []).map((x) => String(x || "").toUpperCase());
   const blob = types.join(" ") + " " + String(docLabel || "");
   const hasSell = /AGREEMENT_TO_SELL|BAYANA|SALE_DEED|TOKEN/.test(blob);
-  // Option B: content-aware display title. Billing/entitlement (results.tier) unchanged.
+  const hasTenancy = /TENANCY|LEASE_DEED|\bLEASE\b|RENTAL|KIRAYA|KIRAAYA/.test(blob);
+  if (hasTenancy) return "Rental Safety Check";
   if (hasSell) {
     if (t === "full_dd" || t === "full" || t === "full-dd") return "Full Property Due Diligence";
     return "Property Sale Safety Check";
@@ -656,7 +657,6 @@ function reportTitleFor(
   if (t === "rental" || t === "rental_safety") return "Rental Safety Check";
   if (t === "bayana") return "Bayana Safety Check";
   if (t === "full_dd" || t === "full" || t === "full-dd") return "Full Property Due Diligence";
-  if (/TENANCY_AGREEMENT|LEASE_DEED|RENTAL/.test(blob)) return "Rental Safety Check";
   return humanDocType(String(docLabel || "")) || "PakkaScan Report";
 }
 function VerdictHero({ verdict, posture, pakkaScore, urduHeadline }: { verdict: string; posture: string; pakkaScore: number; urduHeadline?: string | null }) {
@@ -1357,7 +1357,7 @@ export default function ScanPage() {
               )}
             />
             <FeedbackButton referenceCode={results?.referenceCode} />
-            {results?.chainOfTitle && (
+            {results?.chainOfTitle && !(results?.documents || []).some((d: any) => /TENANCY|LEASE|RENTAL/i.test(String(d?.classification?.documentType || ""))) && (
               <OwnershipTimeline result={results.chainOfTitle} tier={results.tier ?? undefined} />
             )}
             {crossDoc && <CrossDocPanel crossDoc={crossDoc} urduAssessment={urduTranslations["crossDocAssessment"]} />}
