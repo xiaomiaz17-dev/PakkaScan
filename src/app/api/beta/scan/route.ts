@@ -1118,6 +1118,39 @@ export async function POST(request: Request) {
       ocrText: ocrBlob,
       smartFields: _mergedSmartFields,
     });
+    {
+      const packText = ocrBlob + "\n" + collectAllText(perDocument || []);
+      const tenancyPack = (perDocument || []).every((d: any) => {
+        const typ = String(d?.classification?.documentType || "").toUpperCase();
+        return !typ || typ === "UNKNOWN" || /TENANCY|RENTAL|LEASE/.test(typ);
+      });
+      if (tenancyPack) {
+        for (const row of harvestTenancyClauseFlags(packText)) {
+          const already = clauseConcerns.flagged.some((f: any) =>
+            String(f.title || "").toLowerCase() === String(row.title || "").toLowerCase()
+          );
+          if (!already) clauseConcerns.flagged.push(row);
+        }
+        if (/stay\s*order|اسٹے|عدالت|قفل|تالہ|lock-?break|self-?help|repossess/i.test(packText)) {
+          if (!clauseConcerns.flagged.some((f: any) => /stay|court/i.test(String(f.title || f.concern || "")))) {
+            clauseConcerns.flagged.push({
+              title: "Court-waiver / stay-order ban",
+              quote: "Tenant stay-order / court-waiver language present on the tenancy form",
+              concern: "Restricts the tenant from seeking a stay order or court protection. Heavily one-sided.",
+              severity: "high",
+            });
+          }
+          if (!clauseConcerns.flagged.some((f: any) => /lock|self-help/i.test(String(f.title || f.concern || "")))) {
+            clauseConcerns.flagged.push({
+              title: "Self-help eviction / lock-break",
+              quote: "Landlord lock-break / belongings language present on the tenancy form",
+              concern: "Allows the landlord to break locks and take belongings without a court eviction process.",
+              severity: "high",
+            });
+          }
+        }
+      }
+    }
     // Map rule hits into clauseConcerns.flagged shape
     for (const h of ruleHits.clauses) {
       const already = clauseConcerns.flagged.some(
@@ -1233,6 +1266,23 @@ export async function POST(request: Request) {
         ]);
         console.log("[beta/scan] STOP verdict forced risk to", riskResult.riskScore, riskResult.riskLabel);
       }
+    }
+
+    try {
+      (perDocument || []).sort((a: any, b: any) =>
+        String(a?.fileName || "").localeCompare(String(b?.fileName || ""), undefined, { numeric: true, sensitivity: "base" })
+      );
+    } catch {}
+    if (crossDoc?.crossChecks?.length) {
+      crossDoc.crossChecks = crossDoc.crossChecks.map((c: any) => {
+        const f = String(c.finding || c.detail || "");
+        const cleaned = f
+          .replace(/\s*due to page[- ]by[- ]page extraction limits\.?/gi, "")
+          .replace(/\s*listed as 0 on Page 2[^.]*\./gi, " not repeated on the clause page.")
+          .replace(/\s{2,}/g, " ")
+          .trim();
+        return { ...c, finding: cleaned || c.finding };
+      });
     }
 
     const rawPayload = {
