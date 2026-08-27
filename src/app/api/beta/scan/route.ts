@@ -1168,6 +1168,35 @@ export async function POST(request: Request) {
     console.log(
       `[beta/scan] clauses: suspicious=${clauseConcerns.flagged.length} missing=${clauseConcerns.missing.length} (llm+rules ruleHits=${ruleHits.clauses.length})`
     );
+    {
+      const hasDuration = (perDocument || []).some((d: any) => {
+        const dt = d?.smartFields?.dates || {};
+        const n = Number(dt.duration_months || dt.durationMonths || 0);
+        return n > 0 || (dt.start_date && dt.end_date) || (dt.startDate && dt.endDate);
+      });
+      if (hasDuration) {
+        clauseConcerns.flagged = (clauseConcerns.flagged || []).filter((f: any) =>
+          !/duration.{0,40}missing|missing.{0,40}duration|term \/ duration not detected|no defined tenancy duration/i.test(
+            `${f.title || ""} ${f.concern || ""} ${f.quote || ""}`
+          )
+        );
+        for (const d of perDocument || []) {
+          if (d?.smartFields?.summary) {
+            d.smartFields.summary = String(d.smartFields.summary).replace(/\s*with no defined tenancy duration\.?/gi, "");
+          }
+        }
+      }
+      const tenancy = (perDocument || []).every((d: any) => {
+        const typ = String(d?.classification?.documentType || "").toUpperCase();
+        return !typ || typ === "UNKNOWN" || /TENANCY|RENTAL|LEASE/.test(typ);
+      });
+      if (tenancy) {
+        const rewrite = (s: string) => String(s || "").replace(/Seller'?s?\s*\/\s*Landlord/gi, "Landlord").replace(/\bSeller'?s\b/gi, "Landlord's");
+        clauseConcerns.flagged = (clauseConcerns.flagged || []).map((f: any) => ({
+          ...f, title: rewrite(f.title), concern: rewrite(f.concern), quote: rewrite(f.quote),
+        }));
+      }
+    }
     if (clauseConcerns?.flagged?.length > 1) {
       const seen = new Set<string>();
       clauseConcerns.flagged = clauseConcerns.flagged.filter((f: any) => {
