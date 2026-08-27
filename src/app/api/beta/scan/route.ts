@@ -102,7 +102,7 @@ import {
   failBetaScanJob,
 } from "@/lib/beta-scan-jobs";
 import { coerceToScanFact } from "@/lib/scan-fact";
-import { decodeUtf8, clipSentence, ruleIdFromText, dedupeByRuleId } from "@/lib/scan-rules";
+import { decodeUtf8, clipSentence, ruleIdFromText, dedupeByRuleId, walkUtf8, snapQuote } from "@/lib/scan-rules";
 import { runOcr } from "@/intelligence/ocr-router";
 import { classifyFromText } from "@/intelligence/document-classifier";
 import { classifyDocument } from "@/ingestion/classifier";
@@ -1697,6 +1697,18 @@ async function postSyncScan(request: Request) {
         });
       }
     }
+    for (const d of perDocument || []) {
+      const text = String(d?.ocr?.text || (d as any)?.ocrText || "");
+      if (!/no demand certificate|\bNDC\b/i.test(text)) continue;
+      d.smartFields = d.smartFields || {};
+      d.smartFields.financials = d.smartFields.financials || {};
+      if (/dues cleared|tax paid/i.test(text)) {
+        (d.smartFields as any).clearance_status = "NDC: dues cleared (CDA)";
+      }
+      const issuer = d.smartFields as any;
+      issuer.issuing_authority = issuer.issuing_authority || (/CDA/i.test(text) ? "CDA" : null);
+      issuer.noc_ref = issuer.noc_ref || (text.match(/CDA\/NDC\/[0-9/]+/i) || [null])[0];
+    }
     // rules+utf8
     {
       if (riskResult?.riskFactors?.length) {
@@ -1713,7 +1725,7 @@ async function postSyncScan(request: Request) {
           clauseConcerns.flagged.map((f: any) => ({
             ...f,
             rule_id: f.rule_id || ruleIdFromText(String(f.title || "") + " " + String(f.concern || "") + " " + String(f.quote || "")),
-            quote: clipSentence(String(f.quote || ""), 280),
+            quote: snapQuote(clipSentence(String(f.quote || ""), 280)),
           })),
         );
       }
@@ -2035,7 +2047,7 @@ async function postSyncScan(request: Request) {
     if ((rawPayload as any).urduTranslations) {
       (rawPayload as any).urduTranslations = urduTranslations;
     }
-    const filteredPayload = filterResponseByTier(rawPayload, entitlementToUse.report_type);
+    const filteredPayload = walkUtf8(filterResponseByTier(rawPayload, entitlementToUse.report_type));
     console.log(`[beta/scan] Tier-filtered response for tier=${entitlementToUse.report_type}`);
     return NextResponse.json(filteredPayload);
   } catch (error: any) {

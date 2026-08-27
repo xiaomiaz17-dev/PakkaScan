@@ -59,3 +59,21 @@ export function dedupeByRuleId<T extends { rule_id?: string; label?: string; tit
   }
   return out;
 }
+export function walkUtf8(v: any, depth = 0): any {
+  if (depth > 12 || v == null) return v;
+  if (typeof v === "string") return decodeUtf8(v);
+  if (Array.isArray(v)) return v.map((x) => walkUtf8(x, depth + 1));
+  if (typeof v === "object") {
+    const o: any = Array.isArray(v) ? [] : { ...v };
+    for (const k of Object.keys(v)) o[k] = walkUtf8(v[k], depth + 1);
+    return o;
+  }
+  return v;
+}
+
+export function snapQuote(s: string): string {
+  let t = String(s || "").replace(/\s+/g, " ").trim();
+  t = t.replace(/^h(?=e balance)/i, "Th");
+  t = t.replace(/^he balance/i, "The balance");
+  return t;
+}
