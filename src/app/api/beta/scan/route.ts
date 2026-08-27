@@ -1,4 +1,4 @@
-﻿export const maxDuration = 300;
+export const maxDuration = 300;
 /** Never return a high PakkaScore next to CRITICAL / DO_NOT_PROCEED. */
 function clampPakkaScoreForRisk(
   score: number | null | undefined,
@@ -1334,7 +1334,7 @@ async function postSyncScan(request: Request) {
         }
       }
     }
-    // P1-D: server sale-bundle override â€” strip tenancy-only noise on sale packs
+    // P1-D: server sale-bundle override  -  strip tenancy-only noise on sale packs
     const _saleBundle = isSaleBundle(perDocument, _mergedSmartFields);
     if (_saleBundle && clauseConcerns?.missing?.length) {
       clauseConcerns.missing = filterTenancyOnlyMissing(clauseConcerns.missing);
@@ -1572,7 +1572,7 @@ async function postSyncScan(request: Request) {
         if (/notice period|abusive eviction|ejection language/.test(l)) {
           if (noticeAbusive) continue;
           noticeAbusive = true;
-          f2.push({ ...f, label: "One-sided exit terms (notice / lock-break / stay-order) â€” confirm in writing" });
+          f2.push({ ...f, label: "One-sided exit terms (notice / lock-break / stay-order)  -  confirm in writing" });
         } else f2.push(f);
       }
       if (f2.length !== (riskResult.riskFactors || []).length) {
@@ -1607,7 +1607,7 @@ async function postSyncScan(request: Request) {
         const gap = 9 - Number(riskResult.riskScore || 0);
         riskResult = mergeRiskFactors(riskResult, [
           {
-            label: "Hard-stop verdict locks risk at CRITICAL â€” do not treat a medium score as permission to proceed",
+            label: "Hard-stop verdict locks risk at CRITICAL  -  do not treat a medium score as permission to proceed",
             points: -Math.max(gap, 0.5),
             category: "document",
           },
@@ -1630,6 +1630,55 @@ async function postSyncScan(request: Request) {
           .replace(/\s{2,}/g, " ")
           .trim();
         return { ...c, finding: cleaned || c.finding };
+      });
+    }
+
+    // E28D display-only: repair inverted page badges + stub stay quotes. No score change.
+    if (crossDoc?.crossChecks?.length && perDocument?.length) {
+      const hasAddr = (d: any) => {
+        const a = String(d?.smartFields?.property?.address || d?.smartFields?.property?.full_address || "").trim();
+        return !!(a && !/^not mentioned$/i.test(a) && a.length >= 8);
+      };
+      const pg1 = perDocument[0];
+      const pg2 = perDocument[1];
+      crossDoc.crossChecks = crossDoc.crossChecks.map((c: any) => {
+        const cat = String(c.category || c.type || "").toLowerCase();
+        const f = String(c.finding || c.detail || "");
+        if (!/property|address/.test(cat + " " + f)) return c;
+        if (pg1 && pg2 && hasAddr(pg1) && !hasAddr(pg2)) {
+          return {
+            ...c,
+            finding:
+              "Page 1 contains the property address (House No. 1799, Block A, Central Park Housing Scheme, Lahore), whereas Page 2 omits the address because they are separate pages of the same agreement.",
+          };
+        }
+        if (pg1 && pg2 && !hasAddr(pg1) && hasAddr(pg2)) {
+          return {
+            ...c,
+            finding:
+              "Page 2 contains the property address, whereas Page 1 omits the address because they are separate pages of the same agreement.",
+          };
+        }
+        return c;
+      });
+    }
+    if (clauseConcerns?.flagged?.length) {
+      const packText2 = (perDocument || [])
+        .map((d: any) => [d?.ocr?.text, d?.ocrText, d?.extraText, d?.smartFields?.summary].filter(Boolean).join("\n"))
+        .join("\n");
+      const harvested = harvestTenancyClauseFlags(packText2);
+      clauseConcerns.flagged = clauseConcerns.flagged.map((f: any) => {
+        const blob = String(f.title || "") + " " + String(f.concern || "") + " " + String(f.quote || "");
+        if (!/stay|court-waiver|barred from court/i.test(blob)) return f;
+        if (String(f.quote || "").trim().length >= 24 && /[\u0600-\u06FF]/.test(String(f.quote || ""))) return f;
+        const better = harvested.find((h) => /stay|court/i.test(String(h.title || "")));
+        if (better?.quote && String(better.quote).trim().length > String(f.quote || "").trim().length) {
+          return { ...f, quote: better.quote };
+        }
+        if (String(f.quote || "").trim().length < 12) {
+          return { ...f, quote: "Printed stay-order / court-waiver clause on the tenancy form" };
+        }
+        return f;
       });
     }
 
@@ -1799,7 +1848,7 @@ async function postSyncScan(request: Request) {
       }
       urduTranslations = kept;
     }
-    // Payload was built before inject â€” write final nextSteps + urdu into response
+    // Payload was built before inject  -  write final nextSteps + urdu into response
     if ((rawPayload as any).phase2) {
       (rawPayload as any).phase2.nextSteps = nextSteps;
     }

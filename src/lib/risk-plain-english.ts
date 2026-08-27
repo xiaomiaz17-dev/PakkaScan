@@ -32,13 +32,13 @@ export function plainEnglishRiskMeaning(
   }
   if (score <= 4 || label === "MEDIUM") {
     return (
-      "What this means: The verdict can still be PROCEED when there are no hard blockers. Risk level flags softer gaps — review the factors below and close them (IDs, formalities, or contract terms) with the other party or a lawyer before you rely on this paper." +
+      "What this means: The verdict can still be PROCEED when there are no hard blockers. Risk level flags softer gaps  -  review the factors below and close them (IDs, formalities, or contract terms) with the other party or a lawyer before you rely on this paper." +
       topHint
     );
   }
   if (score <= 7 || label === "HIGH") {
     return (
-      "What this means: Several material risks were found. Do not treat this as a green light — resolve the items below (or get legal advice) before transferring money or signing further." +
+      "What this means: Several material risks were found. Do not treat this as a green light  -  resolve the items below (or get legal advice) before transferring money or signing further." +
       topHint
     );
   }
