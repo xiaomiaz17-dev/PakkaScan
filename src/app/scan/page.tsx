@@ -647,8 +647,8 @@ function reportTitleFor(
   const t = (reportType || "").toLowerCase();
   const types = (allDocTypes || []).map((x) => String(x || "").toUpperCase());
   const blob = types.join(" ") + " " + String(docLabel || "");
-  const hasSell = /AGREEMENT_TO_SELL|BAYANA|SALE_DEED|TOKEN/.test(blob);
-  const hasTenancy = /TENANCY|LEASE_DEED|\bLEASE\b|RENTAL|KIRAYA|KIRAAYA/.test(blob);
+  const hasSell = /AGREEMENT_TO_SELL|SALE_DEED|REGISTERED_SALE|\bBAYANA\b/.test(blob);
+  const hasTenancy = /TENANCY|KIRAYA|KIRAAYA|RENTAL/.test(blob);
   if (hasSell) {
     if (t === "full_dd" || t === "full" || t === "full-dd") return "Full Property Due Diligence";
     return "Property Sale Safety Check";
@@ -1314,7 +1314,7 @@ export default function ScanPage() {
 
             <div style={{ marginBottom: "8px" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
-                <h3 style={{ fontSize: "22px", fontWeight: 800, color: "#0f172a", margin: "0 0 4px 0" }}>{reportTitleFor(results.tier, (results.documents?.[0] as any)?.classification?.documentType || (results.documents?.[0] as any)?.documentType, (results.documents || []).map((d: any) => d?.classification?.documentType || d?.documentType || d?.type || ""))}</h3>
+                <h3 style={{ fontSize: "22px", fontWeight: 800, color: "#0f172a", margin: "0 0 4px 0" }}>{reportTitleFor(results.tier, (results.documents?.[0] as any)?.classification?.documentType || (results.documents?.[0] as any)?.documentType, (results.documents || []).flatMap((d: any) => [d?.classification?.documentType || d?.documentType || d?.type || "", d?.fileName || d?.filename || ""]))}</h3>
                 {results.referenceCode && (
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px" }}>
                     <div style={{ fontSize: "11px", color: "#64748b", fontFamily: "monospace", backgroundColor: "#f1f5f9", padding: "4px 10px", borderRadius: "6px", border: "1px solid #e2e8f0" }}>
