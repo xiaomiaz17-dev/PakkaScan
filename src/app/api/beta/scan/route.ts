@@ -101,6 +101,7 @@ import {
   completeBetaScanJob,
   failBetaScanJob,
 } from "@/lib/beta-scan-jobs";
+import { coerceToScanFact } from "@/lib/scan-fact";
 import { runOcr } from "@/intelligence/ocr-router";
 import { classifyFromText } from "@/intelligence/document-classifier";
 import { classifyDocument } from "@/ingestion/classifier";
@@ -1663,7 +1664,21 @@ async function postSyncScan(request: Request) {
       if (!d.smartFields) continue;
       d.smartFields.financials = { ...(d.smartFields.financials || {}), outstanding_dues: n, total_outstanding_dues: n };
     }
-    // A9C9 sale-pack lock: STOP when sale+CRITICAL; no tenant-notice; no rent/security captions.
+    for (const d of perDocument || []) {
+      if (d.smartFields) {
+        (d as any).scanFact = coerceToScanFact({
+          documentType: d.classification?.documentType || (d as any).documentType,
+          smartFields: d.smartFields,
+          ocrText: String(d.ocr?.text || (d as any).ocrText || ""),
+        });
+        const dues = (d as any).scanFact?.financials?.outstanding_dues?.amount;
+        if (dues != null && d.smartFields.financials) {
+          d.smartFields.financials.outstanding_dues = dues;
+          (d.smartFields.financials as any).total_outstanding_dues = dues;
+        }
+      }
+    }
+        // A9C9 sale-pack lock: STOP when sale+CRITICAL; no tenant-notice; no rent/security captions.
     {
       const types = (perDocument || []).map((d: any) =>
         String(d?.classification?.documentType || d?.documentType || "").toUpperCase()
