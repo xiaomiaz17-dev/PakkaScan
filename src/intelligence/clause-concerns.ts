@@ -213,8 +213,11 @@ export function harvestTenancyClauseFlags(blob: string): FlaggedClause[] {
   if (t.replace(/\s/g, "").length < 20) return [];
   const out: FlaggedClause[] = [];
   const urduLine = (re: RegExp) => {
-    const line = t.split(/[\n\u06D4.]+/).find((l) => re.test(l) && /[\u0600-\u06FF]/.test(l));
-    return line ? line.trim().slice(0, 240) : "";
+    const line = t.split(/[\n\u06D4.]+/).map((l) => l.trim()).find((l) => {
+      const ar = (l.match(/[\u0600-\u06FF]/g) || []).length;
+      return ar >= 12 && re.test(l);
+    });
+    return line ? line.slice(0, 240) : "";
   };
   if (/self-?help|break(?:ing)?\s+(?:the\s+)?lock|lock-?break|repossess|\u0642\u0641\u0644|\u062A\u0627\u0644\u0627|\u0633\u0627\u0645\u0627\u0646/i.test(t)) {
     out.push({
