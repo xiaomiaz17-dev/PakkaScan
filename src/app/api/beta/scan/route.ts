@@ -1,4 +1,4 @@
-export const maxDuration = 300;
+﻿export const maxDuration = 300;
 /** Never return a high PakkaScore next to CRITICAL / DO_NOT_PROCEED. */
 function clampPakkaScoreForRisk(
   score: number | null | undefined,
@@ -94,7 +94,13 @@ function filterTenancyOnlyMissing(missing: string[]): string[] {
   return missing.filter((m) => !tenancyOnly.test(String(m)));
 }
 
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
+import {
+  insertBetaScanJob,
+  markBetaScanJobRunning,
+  completeBetaScanJob,
+  failBetaScanJob,
+} from "@/lib/beta-scan-jobs";
 import { runOcr } from "@/intelligence/ocr-router";
 import { classifyFromText } from "@/intelligence/document-classifier";
 import { classifyDocument } from "@/ingestion/classifier";
@@ -236,13 +242,13 @@ function stringifyFindings(findings: any): string[] {
   });
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 // Tier-based response filtering.
 // Rental: minimal report - no cross-doc, no combined verdict, next steps capped at 3
 // Bayana: adds cross-doc + combined verdict, next steps capped at 5
 // Full DD: everything, no caps
 // Assistant Q&A is removed for ALL tiers - users are directed to WhatsApp support.
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 function filterResponseByTier(payload: any, tier: string): any {
   const filtered = { ...payload };
 
@@ -292,14 +298,117 @@ function filterNextStepsAgainstFields(steps: any[], fields: any): any[] {
   const addr = f.property?.address || f.property?.location;
   return (steps || []).filter((s) => {
     const t = `${s?.title || ""} `.toLowerCase();
-    if (rent && /rent|کرایہ/.test(t) && /missing|add |clarif/.test(t)) return false;
-    if (dep && /deposit|سیکیورٹی/.test(t) && /missing|add |clarif/.test(t)) return false;
-    if (addr && /address|پتہ/.test(t) && /missing|add |include/.test(t)) return false;
+    if (rent && /rent|Ú©Ø±Ø§ÛŒÛ/.test(t) && /missing|add |clarif/.test(t)) return false;
+    if (dep && /deposit|Ø³ÛŒÚ©ÛŒÙˆØ±Ù¹ÛŒ/.test(t) && /missing|add |clarif/.test(t)) return false;
+    if (addr && /address|Ù¾ØªÛ/.test(t) && /missing|add |include/.test(t)) return false;
     return true;
   });
 }
 
+async function runQueuedScanJob(
+  jobId: string,
+  request: Request,
+): Promise<void> {
+  try {
+    await markBetaScanJobRunning(jobId, "OC");
+    const res = await postSyncScan(request);
+    const body = await res.json().catch(() => null);
+    if (!res.ok) {
+      await failBetaScanJob(
+        jobId,
+        String(body?.message || body?.error || `scan_failed_${res.status}`),
+      );
+      return;
+    }
+    await completeBetaScanJob(jobId, body);
+  } catch (err: any) {
+    console.error("[beta/scan] queued job failed", jobId, err?.message || err);
+    await failBetaScanJob(jobId, String(err?.message || err || "WORKER_ERROR"));
+  }
+}
+
 export async function POST(request: Request) {
+  const url = new URL(request.url);
+  const forceSync = url.searchParams.get("sync") === "1";
+  if (forceSync) {
+    return postSyncScan(request);
+  }
+
+  const rawBody = await request.arrayBuffer();
+  const headerInit = new Headers(request.headers);
+  const rebuild = (syncQuery: boolean) => {
+    const u = new URL(request.url);
+    if (syncQuery) u.searchParams.set("sync", "1");
+    return new Request(u.toString(), {
+      method: "POST",
+      headers: headerInit,
+      body: rawBody.slice(0),
+    });
+  };
+
+  try {
+    const preview = rebuild(false);
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json(
+        { error: "NOT_SIGNED_IN", message: "Please sign in to use PakkaScan." },
+        { status: 401 },
+      );
+    }
+    const unused = await getUnusedEntitlements(session.userId);
+    if (unused.length === 0) {
+      return NextResponse.json(
+        {
+          error: "NO_ENTITLEMENT",
+          message: "You need to purchase a scan credit before analysing documents.",
+          redirectTo: "/#pricing",
+        },
+        { status: 402 },
+      );
+    }
+
+    const formData = await preview.formData();
+    const files = formData.getAll("files") as File[];
+    const rawHints = formData.getAll("documentTypeHints");
+    const documentTypeHints: string[] = rawHints.map((h) => (typeof h === "string" ? h : ""));
+    if (!files || files.length === 0) {
+      return NextResponse.json({ error: "NO_DOCUMENTS" }, { status: 400 });
+    }
+    for (const file of files) {
+      if (!ALLOWED_TYPES.has(file.type)) {
+        return NextResponse.json({ error: "UNSUPPORTED_CONTENT_TYPE", details: file.type }, { status: 400 });
+      }
+      if (file.size > MAX_UPLOAD_BYTES) {
+        return NextResponse.json({ error: "UPLOAD_TOO_LARGE" }, { status: 413 });
+      }
+    }
+
+    const storedFiles = await Promise.all(
+      files.map(async (file) => ({
+        name: file.name,
+        type: file.type || "application/octet-stream",
+        data: Buffer.from(await file.arrayBuffer()).toString("base64"),
+      })),
+    );
+    const jobId = randomUUID();
+    await insertBetaScanJob({
+      id: jobId,
+      userId: session.userId,
+      entitlementId: unused[0]?.id ?? null,
+      cookieHeader: request.headers.get("cookie"),
+      files: storedFiles,
+      hints: documentTypeHints,
+    });
+
+    after(() => runQueuedScanJob(jobId, rebuild(true)));
+    return NextResponse.json({ jobId, status: "queued" }, { status: 202 });
+  } catch (err: any) {
+    console.warn("[beta/scan] async enqueue failed, using sync path:", err?.message || err);
+    return postSyncScan(rebuild(true));
+  }
+}
+
+async function postSyncScan(request: Request) {
   const _t_scan_total = Date.now();
 
   try {
@@ -877,7 +986,7 @@ export async function POST(request: Request) {
         const _t_urdu = Date.now();
         urduTranslations = await translateToUrduTimed(translationInputs, 12000);
         const scrub = (s: string) => String(s || "")
-          .replace(/p[eé]riode/gi, "period")
+          .replace(/p[eÃ©]riode/gi, "period")
           .replace(/[\u0400-\u04FF]+/g, "")
           .replace(/due to page split/gi, "details appear on the other page")
           .replace(/due to page[- ]by[- ]page extraction limits/gi, "details appear on the other page")
@@ -1225,7 +1334,7 @@ export async function POST(request: Request) {
         }
       }
     }
-    // P1-D: server sale-bundle override — strip tenancy-only noise on sale packs
+    // P1-D: server sale-bundle override â€” strip tenancy-only noise on sale packs
     const _saleBundle = isSaleBundle(perDocument, _mergedSmartFields);
     if (_saleBundle && clauseConcerns?.missing?.length) {
       clauseConcerns.missing = filterTenancyOnlyMissing(clauseConcerns.missing);
@@ -1275,7 +1384,7 @@ export async function POST(request: Request) {
           );
           if (!already) clauseConcerns.flagged.push(row);
         }
-        if (/stay\s*order|اسٹے|عدالت|قفل|تالہ|lock-?break|self-?help|repossess/i.test(packText)) {
+        if (/stay\s*order|Ø§Ø³Ù¹Û’|Ø¹Ø¯Ø§Ù„Øª|Ù‚ÙÙ„|ØªØ§Ù„Û|lock-?break|self-?help|repossess/i.test(packText)) {
           if (!clauseConcerns.flagged.some((f: any) => /stay|court/i.test(String(f.title || f.concern || "")))) {
             clauseConcerns.flagged.push({
               title: "Court-waiver / stay-order ban",
@@ -1323,8 +1432,8 @@ export async function POST(request: Request) {
         }
         return "";
       };
-      const lockQ = windowAt(["قفل", "تالہ", "سامان", "تالا"]);
-      const stayQ = windowAt(["سٹے", "اسٹے", "عدالت", "سٹے آرڈر"]);
+      const lockQ = windowAt(["Ù‚ÙÙ„", "ØªØ§Ù„Û", "Ø³Ø§Ù…Ø§Ù†", "ØªØ§Ù„Ø§"]);
+      const stayQ = windowAt(["Ø³Ù¹Û’", "Ø§Ø³Ù¹Û’", "Ø¹Ø¯Ø§Ù„Øª", "Ø³Ù¹Û’ Ø¢Ø±ÚˆØ±"]);
       clauseConcerns.flagged = (clauseConcerns.flagged || []).map((f: any) => {
         const title = String(f.title || f.concern || "");
         let q = String(f.quote || "").trim();
@@ -1463,7 +1572,7 @@ export async function POST(request: Request) {
         if (/notice period|abusive eviction|ejection language/.test(l)) {
           if (noticeAbusive) continue;
           noticeAbusive = true;
-          f2.push({ ...f, label: "One-sided exit terms (notice / lock-break / stay-order) — confirm in writing" });
+          f2.push({ ...f, label: "One-sided exit terms (notice / lock-break / stay-order) â€” confirm in writing" });
         } else f2.push(f);
       }
       if (f2.length !== (riskResult.riskFactors || []).length) {
@@ -1498,7 +1607,7 @@ export async function POST(request: Request) {
         const gap = 9 - Number(riskResult.riskScore || 0);
         riskResult = mergeRiskFactors(riskResult, [
           {
-            label: "Hard-stop verdict locks risk at CRITICAL — do not treat a medium score as permission to proceed",
+            label: "Hard-stop verdict locks risk at CRITICAL â€” do not treat a medium score as permission to proceed",
             points: -Math.max(gap, 0.5),
             category: "document",
           },
@@ -1685,12 +1794,12 @@ export async function POST(request: Request) {
       });
       // Static Urdu for injected plot-size card if still missing
       if (/plot size|allotment|Re-verify plot/i.test(String(nextSteps?.[0]?.title || "")) && !kept["nextStepTitle_0"]) {
-        kept["nextStepTitle_0"] = "ادائیگی سے پہلے پلاٹ کا رقبہ / الاٹمنٹ ریکارڈ دوبارہ تصدیق کریں";
-        kept["nextStepDetail_0"] = "فارڈ اور بیعانہ/فروخت معاہدے میں رقبے کا فرق ہے۔ بقیہ رقم ادا کرنے سے پہلے درست فارڈ یا ترمیم شدہ معاہدہ حاصل کریں۔";
+        kept["nextStepTitle_0"] = "Ø§Ø¯Ø§Ø¦ÛŒÚ¯ÛŒ Ø³Û’ Ù¾ÛÙ„Û’ Ù¾Ù„Ø§Ù¹ Ú©Ø§ Ø±Ù‚Ø¨Û / Ø§Ù„Ø§Ù¹Ù…Ù†Ù¹ Ø±ÛŒÚ©Ø§Ø±Úˆ Ø¯ÙˆØ¨Ø§Ø±Û ØªØµØ¯ÛŒÙ‚ Ú©Ø±ÛŒÚº";
+        kept["nextStepDetail_0"] = "ÙØ§Ø±Úˆ Ø§ÙˆØ± Ø¨ÛŒØ¹Ø§Ù†Û/ÙØ±ÙˆØ®Øª Ù…Ø¹Ø§ÛØ¯Û’ Ù…ÛŒÚº Ø±Ù‚Ø¨Û’ Ú©Ø§ ÙØ±Ù‚ ÛÛ’Û” Ø¨Ù‚ÛŒÛ Ø±Ù‚Ù… Ø§Ø¯Ø§ Ú©Ø±Ù†Û’ Ø³Û’ Ù¾ÛÙ„Û’ Ø¯Ø±Ø³Øª ÙØ§Ø±Úˆ ÛŒØ§ ØªØ±Ù…ÛŒÙ… Ø´Ø¯Û Ù…Ø¹Ø§ÛØ¯Û Ø­Ø§ØµÙ„ Ú©Ø±ÛŒÚºÛ”";
       }
       urduTranslations = kept;
     }
-    // Payload was built before inject — write final nextSteps + urdu into response
+    // Payload was built before inject â€” write final nextSteps + urdu into response
     if ((rawPayload as any).phase2) {
       (rawPayload as any).phase2.nextSteps = nextSteps;
     }
@@ -1723,6 +1832,7 @@ function buildEvidenceFromExtracted(documentId: string, fields: any[], documentT
     warnings: [],
   }) as any;
 }
+
 
 
 

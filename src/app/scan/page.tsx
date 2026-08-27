@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 
 
@@ -611,7 +611,7 @@ function RiskScoreCard({ riskScore, riskLabel, riskFactors, scoreBreakdown }: {
         <div style={{ borderTop: "1px solid " + c.border, paddingTop: "12px" }}>
           <div style={{ fontSize: "12px", fontWeight: 700, color: c.text, marginBottom: "8px" }}>Contributing Factors:</div>
           <p style={{ fontSize: "12px", color: c.text, opacity: 0.85, margin: "0 0 8px", lineHeight: 1.45 }}>
-            Verdict is about hard blockers. Risk level is about softer gaps and formalities — they are not the same score.
+            Verdict is about hard blockers. Risk level is about softer gaps and formalities â€” they are not the same score.
           </p>
           <ul style={{ margin: 0, paddingLeft: "0", listStyle: "none" }}>
             {riskFactors.map((f, i) => (
@@ -711,7 +711,7 @@ function VerdictHero({ verdict, posture, pakkaScore, urduHeadline }: { verdict: 
         )}
       </div>
       <div style={{ textAlign: "right", flexShrink: 0 }}>
-        <div style={{ fontSize: "11px", fontWeight: 800, color: style.color, letterSpacing: "0.1em", marginBottom: "2px", opacity: 0.75 }}>CONFIDENCE (0–100)</div>
+        <div style={{ fontSize: "11px", fontWeight: 800, color: style.color, letterSpacing: "0.1em", marginBottom: "2px", opacity: 0.75 }}>CONFIDENCE (0â€“100)</div>
         <div style={{ fontSize: "36px", fontWeight: 900, color: style.color, lineHeight: 1 }}>{Math.round(pakkaScore)}<span style={{ fontSize: "16px", opacity: 0.7 }}>/100</span></div>
       
         <div style={{ fontSize: "10px", fontWeight: 600, color: style.color, opacity: 0.75, marginTop: 4, maxWidth: 130, lineHeight: 1.35 }}>
@@ -903,7 +903,35 @@ export default function ScanPage() {
       const text = await response.text();
       let payload: any = null;
       try { payload = text ? JSON.parse(text) : null; } catch { throw new Error("Server returned an invalid response."); }
-      if (!response.ok) {
+      if (response.status === 202 && payload?.jobId) {
+        const started = Date.now();
+        const timeoutMs = 5 * 60 * 1000;
+        let jobPayload: any = payload;
+        while (Date.now() - started < timeoutMs) {
+          await new Promise((r) => setTimeout(r, 1500));
+          const st = await fetch("/api/beta/scan/" + encodeURIComponent(payload.jobId), { credentials: "same-origin" });
+          const stText = await st.text();
+          try { jobPayload = stText ? JSON.parse(stText) : null; } catch { throw new Error("Server returned an invalid job status."); }
+          if (!st.ok) {
+            const code = jobPayload?.error || "INTERNAL_ERROR";
+            throw new Error(code === "JOB_NOT_FOUND" ? "Scan job was not found." : "Scan status failed: " + code);
+          }
+          const stageMap: Record<string, number> = { IN: 0, OC: 1, AI: 2, PI: 3, RA: 4, RP: 5 };
+          if (jobPayload?.stage && stageMap[jobPayload.stage] != null) {
+            setCurrentStageIndex(stageMap[jobPayload.stage]);
+          }
+          if (jobPayload?.status === "completed") {
+            payload = jobPayload.result;
+            break;
+          }
+          if (jobPayload?.status === "failed") {
+            throw new Error(jobPayload.error || "Scan failed.");
+          }
+        }
+        if (jobPayload?.status !== "completed" || !payload || payload.status === "queued") {
+          throw new Error("Scan timed out. Please try again.");
+        }
+      } else if (!response.ok) {
         // Handle no-entitlement case (Payment Required)
         if (response.status === 402) {
           alert(payload?.message || "You need to purchase a scan credit before analysing documents.");
@@ -1328,7 +1356,7 @@ export default function ScanPage() {
                 }}
               >
                 Complex or low-confidence scan detected (OCR {Math.round(ocrConf)}%).
-                Fields may be incomplete — do not treat blank amounts as confirmed zeros.
+                Fields may be incomplete â€” do not treat blank amounts as confirmed zeros.
                 Prefer a clearer photo or PDF if the verdict looks empty.
               </div>
             )}
@@ -1635,6 +1663,7 @@ export default function ScanPage() {
     </div>
   );
 }
+
 
 
 
