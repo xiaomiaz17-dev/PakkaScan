@@ -1675,8 +1675,15 @@ async function postSyncScan(request: Request) {
         if (better?.quote && String(better.quote).trim().length > String(f.quote || "").trim().length) {
           return { ...f, quote: better.quote };
         }
-        if (String(f.quote || "").trim().length < 12) {
-          return { ...f, quote: "Printed stay-order / court-waiver clause on the tenancy form" };
+        const printed = /printed stay-order|court-waiver clause on the tenancy form/i.test(String(f.quote || ""));
+        if (printed || String(f.quote || "").trim().length < 24) {
+          const ur = harvested.find((h) => /[\u0600-\u06FF]/.test(String(h.quote || "")) && /stay|court|waiver/i.test(String(h.title || "")));
+          if (ur?.quote) return { ...f, quote: ur.quote };
+          const hit = packText2.split(/[\n\u06D4.]+/).map((l: string) => l.trim()).find((l: string) => {
+            const ar = (l.match(/[\u0600-\u06FF]/g) || []).length;
+            return ar >= 12 && /\u0627\u0633\u0679|\u0639\u062F\u0627\u0644\u062A|stay[\s-]*order/i.test(l);
+          });
+          if (hit) return { ...f, quote: hit.slice(0, 240) };
         }
         return f;
       });
@@ -1704,6 +1711,7 @@ async function postSyncScan(request: Request) {
     }
 
     // 3308 title+dedupe
+    // 20FF stay-quote prefer Urdu
     const rawPayload = {
       success: true,
       referenceCode: scanReferenceCode,
