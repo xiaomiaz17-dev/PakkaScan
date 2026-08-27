@@ -904,8 +904,9 @@ export default function ScanPage() {
       try { payload = text ? JSON.parse(text) : null; } catch { throw new Error("Server returned an invalid response."); }
       if (response.status === 202 && payload?.jobId) {
         const started = Date.now();
-        const timeoutMs = 5 * 60 * 1000;
+        const timeoutMs = 8 * 60 * 1000;
         let jobPayload: any = payload;
+        let usedSyncFallback = false;
         while (Date.now() - started < timeoutMs) {
           await new Promise((r) => setTimeout(r, 1500));
           const st = await fetch("/api/beta/scan/" + encodeURIComponent(payload.jobId), { credentials: "same-origin" });
@@ -925,6 +926,19 @@ export default function ScanPage() {
           }
           if (jobPayload?.status === "failed") {
             throw new Error(jobPayload.error || "Scan failed.");
+          }
+          if (!usedSyncFallback && Date.now() - started > 20000 && (jobPayload?.status === "queued" || jobPayload?.status === "running")) {
+            usedSyncFallback = true;
+            const syncRes = await fetch("/api/beta/scan?sync=1", { method: "POST", body: formData, credentials: "same-origin" });
+            const syncText = await syncRes.text();
+            let syncPayload: any = null;
+            try { syncPayload = syncText ? JSON.parse(syncText) : null; } catch { throw new Error("Server returned an invalid response."); }
+            if (!syncRes.ok) {
+              throw new Error(syncPayload?.message || syncPayload?.error || "Scan failed.");
+            }
+            payload = syncPayload;
+            jobPayload = { status: "completed", result: syncPayload };
+            break;
           }
         }
         if (jobPayload?.status !== "completed" || !payload || payload.status === "queued") {
