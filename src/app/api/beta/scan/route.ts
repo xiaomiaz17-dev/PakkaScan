@@ -767,10 +767,22 @@ export async function POST(request: Request) {
       try {
         const _t_urdu = Date.now();
         urduTranslations = await translateToUrduTimed(translationInputs, 12000);
-        const scrub = (s: string) => String(s || "").replace(/p[eé]riode/gi, "period");
+        const scrub = (s: string) => String(s || "")
+          .replace(/p[eé]riode/gi, "period")
+          .replace(/[\u0400-\u04FF]+/g, "")
+          .replace(/due to page split/gi, "details are on the other page of this agreement")
+          .replace(/due to page[- ]by[- ]page extraction limits/gi, "details are on the other page of this agreement")
+          .replace(/\s{2,}/g, " ")
+          .trim();
         for (const k of Object.keys(urduTranslations)) urduTranslations[k] = scrub(urduTranslations[k]);
         for (const d of perDocument || []) {
           if (d?.smartFields?.summary) d.smartFields.summary = scrub(String(d.smartFields.summary));
+        }
+        if (crossDoc?.crossChecks?.length) {
+          crossDoc.crossChecks = crossDoc.crossChecks.map((c: any) => ({
+            ...c,
+            finding: scrub(String(c.finding || c.detail || "")),
+          }));
         }
         console.log(`[timing] UrduTranslation LLM: ${Date.now() - _t_urdu}ms`);
         console.log(
