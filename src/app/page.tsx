@@ -40,7 +40,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "What about my privacy?",
-    a: "Documents you upload are processed in memory only. Nothing is written to disk. Extracted text is cached in server memory for 24 hours to speed up re-scans, then automatically wiped. We never store your original PDF or image files. Your account email and scan history are stored in a secure Postgres database.",
+    a: "Uploads are processed to produce your report. We do not sell your files. Account email, scan history, and a PDF hash record may be kept so you can reopen or verify a report. Original files are not used as a public archive. See Security and Privacy for retention.",
   },
   {
     q: "How does PakkaScan protect my CNIC and land details?",
@@ -398,7 +398,7 @@ export default function LandingPage() {
             Don&apos;t hand over your <span style={{ color: "#d4af37" }}>deposit</span> until PakkaScan has read the fine print you didn&apos;t.
           </h1>
           <p className="pks-hero-tagline" style={{ fontSize: "17px", color: "#f1f5f9", lineHeight: 1.65, maxWidth: "580px", margin: "0 auto 36px auto", fontWeight: 500 }}>
-            AI-powered document verification for Pakistani property transactions. Upload your Bayana, Fard, or Sale Deed. Get a bilingual verdict, typically within a few minutes.
+            AI-powered document verification for Pakistani property transactions. Upload your Bayana, Fard, or Sale Deed. Get a bilingual verdict. Most scans finish in a few minutes; busy periods can take longer.
           </p>
           <div className="pks-hero-ctas" style={{ display: "flex", gap: "14px", justifyContent: "center", flexWrap: "wrap", marginBottom: "28px" }}>
             <a href="/scan" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "16px 32px", backgroundColor: "#16a34a", color: "#ffffff", fontWeight: 700, fontSize: "15px", borderRadius: "12px", textDecoration: "none", boxShadow: "0 4px 16px rgba(22,163,74,0.35)" }}>
@@ -419,7 +419,7 @@ export default function LandingPage() {
         <div className="pks-trust-grid" style={{ maxWidth: "1100px", margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "32px" }}>
           {[
             { icon: "EN\u2022UR", title: "Bilingual reports", desc: "Verdicts and key summaries in English and Urdu (Nastaliq) where available." },
-            { icon: "AI", title: "Anti-hallucination guard", desc: "CNICs verified character-by-character against the source. Fabricated data stripped." },
+            { icon: "AI", title: "Anti-hallucination guard", desc: "CNIC digits checked against the uploaded page (not NADRA). Invented numbers are dropped." },
             { icon: "VERIFY", title: "Public verification", desc: "Every report gets a QR + reference code. Anyone can confirm authenticity at pakkascan.com/verify - no login, no document contents shared." },
           ].map((item, i) => (
             <div key={i} style={{ textAlign: "center" }}>
@@ -489,8 +489,8 @@ export default function LandingPage() {
           </div>
           <div className="pks-price-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px" }}>
             {([
-              { name: "Rental Safety Check", pricePkr: "499", priceUsd: "4.99", reportType: "rental" as ReportType, includes: ["Tenancy Agreement analysis", "Landlord CNIC verification", "Missing evidence checklist", "Verdict + up to 3 next steps", "Email summary + WhatsApp support"], desc: "For renters signing a new tenancy.", highlight: false },
-              { name: "Bayana Safety Check", pricePkr: "1,499", priceUsd: "9.99", reportType: "bayana" as ReportType, includes: ["Bayana / Agreement to Sell", "Seller CNIC verification", "Current Fard (Ownership Record)", "Cross-document reasoning", "Combined verdict + up to 5 next steps", "Full email report + WhatsApp support"], desc: "Before you hand over any token money.", highlight: true },
+              { name: "Rental Safety Check", pricePkr: "499", priceUsd: "4.99", reportType: "rental" as ReportType, includes: ["Tenancy Agreement analysis", "Landlord CNIC consistency check", "Missing evidence checklist", "Verdict + up to 3 next steps", "Email summary + WhatsApp support"], desc: "For renters signing a new tenancy.", highlight: false },
+              { name: "Bayana Safety Check", pricePkr: "1,499", priceUsd: "9.99", reportType: "bayana" as ReportType, includes: ["Bayana / Agreement to Sell", "Seller CNIC consistency check", "Current Fard (Ownership Record)", "Cross-document reasoning", "Combined verdict + up to 5 next steps", "Full email report + WhatsApp support"], desc: "Before you hand over any token money.", highlight: true },
               { name: "Full Property Due Diligence", pricePkr: "2,999", priceUsd: "19.99", reportType: "full_dd" as ReportType, includes: ["Registered Sale Deed + Fard + Mutation", "Seller CNIC + Non-Encumbrance Certificate", "Full 5-file cross-verification", "Category scores + timeline + evidence appendix", "Verdict + up to 10 next steps", "Priority WhatsApp support"], desc: "For property purchases at Sale Deed stage.", highlight: false },
             ]).map((tier, i) => (
               <div key={i} className={tier.highlight ? "pks-pricing-card pks-pricing-card-highlight" : "pks-pricing-card"} style={{ backgroundColor: "#ffffff", border: tier.highlight ? "2px solid #16a34a" : "1px solid #e2e8f0", borderRadius: "16px", padding: "28px", position: "relative", boxShadow: tier.highlight ? "0 10px 25px -5px rgba(22,163,74,0.15)" : "0 4px 6px -1px rgba(0,0,0,0.02)", transition: "transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease" }}>
@@ -603,7 +603,7 @@ export default function LandingPage() {
           </div>
 
           <p style={{ fontSize: "13px", color: "#64748b", textAlign: "center", marginTop: "20px", maxWidth: "700px", marginLeft: "auto", marginRight: "auto", lineHeight: 1.6 }}>
-            PakkaScan doesn&rsquo;t replace a property lawyer for a Rs 5 crore commercial deal or an active dispute. But for the 90% of everyday property paperwork &mdash; tenancy agreements, Bayanas, plot purchases &mdash; it gives you a lawyer-grade check in under a minute.
+            PakkaScan doesn&rsquo;t replace a property lawyer for a Rs 5 crore commercial deal or an active dispute. But for the 90% of everyday property paperwork &mdash; tenancy agreements, Bayanas, plot purchases &mdash; it gives you a structured second look before you pay.
           </p>
         </div>
       </section>

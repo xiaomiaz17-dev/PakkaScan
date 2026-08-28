@@ -74,7 +74,7 @@ export default function AboutPage() {
               {[
                 { badge: "EN—UR", title: "Bilingual Integrity", desc: "English and Urdu (Nastaliq) support on reports where text can be extracted." },
                 { badge: "AI", title: "Anti-Hallucination", desc: "CNICs cross-checked character-by-character against the source document." },
-                { badge: "0", title: "Zero Retention", desc: "Document files processed in memory only and never stored to disk." },
+                { badge: "0", title: "No file marketplace", desc: "Document files processed in memory only and not kept as a public file archive." },
               ].map((item, i) => (
                 <div key={i} style={{ textAlign: "center", padding: "16px" }}>
                   <div style={{ display: "inline-block", padding: "6px 14px", backgroundColor: "#0b132b", color: "#ffffff", fontSize: "12px", fontWeight: 900, borderRadius: "8px", letterSpacing: "0.05em", marginBottom: "10px" }}>{item.badge}</div>

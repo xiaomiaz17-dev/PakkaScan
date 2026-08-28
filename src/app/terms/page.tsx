@@ -70,7 +70,7 @@ export default function TermsPage() {
           <p style={pStyle}>Refunds are handled case-by-case. We will consider refunds if PakkaScan produced clearly incorrect information (e.g., fabricated a CNIC number), or a technical failure prevented the report from generating. Refund requests should be sent via WhatsApp or email within 7 days of the scan.</p>
 
           <h2 style={h2Style}>7. Payment</h2>
-          <p style={pStyle}>Payment is required per report (see Pricing page for current tiers). Your first scan is provided free of charge to allow you to evaluate report quality before paying.</p>
+          <p style={pStyle}>Payment is required per report (see Pricing page for current tiers). Each paid credit unlocks one analysis session. Use the public sample report to evaluate quality before you buy.</p>
 
           <h2 style={h2Style}>8. Account and Session</h2>
           <p style={pStyle}>Access to PakkaScan requires signing in with a valid email address. You are responsible for maintaining the confidentiality of your account.</p>
