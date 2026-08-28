@@ -1153,7 +1153,7 @@ export default function ScanPage() {
           LEGAL DUE DILIGENCE <span style={{ margin: "0 6px", color: "#16a34a" }}>*</span> AI-POWERED
         </div>
         <h1 style={{ fontSize: "30px", fontWeight: 800, color: "#ffffff", textAlign: "center", maxWidth: "640px", lineHeight: 1.3, margin: 0 }}>
-          Don&apos;t hand over <span style={{ color: "#d4af37" }}>bayana</span> until PakkaScan has read the fine print you didn&apos;t.
+          Don&apos;t hand over <span style={{ color: "#d4af37" }}>deposit</span> until PakkaScan has read the fine print you didn&apos;t.
         </h1>
       </div>
 
