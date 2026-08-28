@@ -36,6 +36,6 @@ export function inferRentFromText(text: string): number | null {
 export function stripIdentityNoise(text: string): string {
   return String(text || "")
     .split(/\n+/)
-    .filter((line) => !/\b\d{5}-\d{7}-\d\b/.test(line) && !/NADRA|NATIONAL IDENTITY|Date of Birth|HO\/W CHAI/i.test(line))
+    .filter((line) => !/\b\d{5}-\d{7}-\d\b/.test(line) && !/NADRA|NATIONAL IDENTITY|Date of Birth|STAMP VENDOR|MIZAN|Rupees 50|HO\/W CHAI|Identity Number/i.test(line))
     .join("\n");
 }

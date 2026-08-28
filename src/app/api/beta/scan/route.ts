@@ -1749,6 +1749,15 @@ async function postSyncScan(request: Request) {
         if (d.classification) (d.classification as any).documentType = "TENANCY_AGREEMENT";
       }
     }
+    if (clauseConcerns?.flagged?.length) {
+      clauseConcerns.flagged = clauseConcerns.flagged.filter((f: any) => {
+        const q = String(f.quote || "") + " " + String(f.title || "");
+        const noise = /Identity Number|NADRA|STAMP VENDOR|Date of Birth|MIZAN TAHIR/i.test(q);
+        const stay = /stay|court/i.test(String(f.title || "") + " " + String(f.concern || ""));
+        if (stay && noise && !/\u0627\u0633\u0679\u06D2|stay[\s-]*order|mazaz nah/i.test(q)) return false;
+        return true;
+      });
+    }
     // rules+utf8
     {
       if (riskResult?.riskFactors?.length) {

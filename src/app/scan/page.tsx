@@ -650,6 +650,7 @@ function reportTitleFor(
   const blob = types.join(" ") + " " + String(docLabel || "");
   const hasSell = /AGREEMENT_TO_SELL|SALE_DEED|REGISTERED_SALE|\bBAYANA\b/.test(blob);
   const hasTenancy = /TENANCY|KIRAYA|KIRAAYA|RENTAL/.test(blob);
+  if (hasTenancy && !hasSell) return "Rental Safety Check";
   if (hasSell) {
     if (t === "full_dd" || t === "full" || t === "full-dd") return "Full Property Due Diligence";
     return "Property Sale Safety Check";
