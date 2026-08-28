@@ -4,7 +4,7 @@ import sharp from "sharp";
 const apiKey = process.env.GEMINI_API_KEY || "";
 const genAI = apiKey ? new GoogleGenAI({ apiKey }) : null;
 
-const OCR_MODELS = ["gemini-3.6-flash", "gemini-2.5-flash", "gemini-flash-lite-latest"];
+const OCR_MODELS = ["gemini-3.6-flash", "gemini-flash-lite-latest"];
 const MAX_CONCURRENCY = 3;
 
 // --- Retry / timeout tuning ---
