@@ -88,6 +88,7 @@ export function classifyFromText(text: string): ClassificationHint {
   const overrides: { re: RegExp; type: DocumentType; cue: string; conf: number }[] = [
     { re: /\b(?:agreement\s+to\s+sell|bayana|earnest\s+money|token\s+money)\b/i, type: "AGREEMENT_TO_SELL", cue: "bayana_override", conf: 0.93 },
     { re: /\b(?:statement\s+of\s+account|maintenance\s+charges|sinking\s+fund|residents?\s+association|pending\s+arrears|clearance\s+of\s+all\s+association)\b/i, type: "NON_ENCUMBRANCE_CERTIFICATE", cue: "clearance_statement_override", conf: 0.94 },
+    { re: /\b(?:tenancy\s+agreement|agreement\s+of\s+tenancy|land\s*lord|\btenant\b|demised\s+premises|monthly\s+rent)\b/i, type: "TENANCY_AGREEMENT", cue: "tenancy_title_override", conf: 0.96 },
     { re: /\b(?:non[-\s]?encumbrance|no\s+demand\s+certificate|\bNDC\b|\bNEC\b)\b/i, type: "NON_ENCUMBRANCE_CERTIFICATE", cue: "ndc_nec_override", conf: 0.93 },
     { re: /\b(?:sub[-\s]?lease|registered\s+lease|lease\s+deed)\b/i, type: "LEASE_DEED", cue: "lease_override", conf: 0.92 },
     { re: /\b(?:power\s+of\s+attorney|general\s+power|mukhtar[-\s]?nama)\b/i, type: "GENERAL_POWER_OF_ATTORNEY", cue: "poa_override", conf: 0.9 },
@@ -95,6 +96,9 @@ export function classifyFromText(text: string): ClassificationHint {
   for (const o of overrides) {
     if (o.re.test(text)) {
       // Don't call PoA if strong bayana signals also present
+            if (o.type === "NON_ENCUMBRANCE_CERTIFICATE" && /\b(?:tenancy\s+agreement|land\s*lord|\btenant\b|demised\s+premises|monthly\s+rent)\b/i.test(text)) {
+        continue;
+      }
       if (o.type === "GENERAL_POWER_OF_ATTORNEY" && /\b(?:agreement\s+to\s+sell|bayana|earnest)\b/i.test(text)) {
         continue;
       }

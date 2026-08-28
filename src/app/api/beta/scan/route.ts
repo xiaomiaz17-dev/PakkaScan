@@ -102,6 +102,7 @@ import {
   failBetaScanJob,
 } from "@/lib/beta-scan-jobs";
 import { coerceToScanFact } from "@/lib/scan-fact";
+import { inferRentFromText, stripIdentityNoise } from "@/lib/rent-words";
 import { decodeUtf8, clipSentence, ruleIdFromText, dedupeByRuleId, walkUtf8, snapQuote } from "@/lib/scan-rules";
 import { runOcr } from "@/intelligence/ocr-router";
 import { classifyFromText } from "@/intelligence/document-classifier";
@@ -132,7 +133,7 @@ import { sanitizeRentalNextSteps, localizeNextStepRoles } from "@/intelligence/s
 import { buildOwnershipTimeline, chainFindingsToRiskFactors } from "@/intelligence/chain-of-title";
 import { validateTemporalRules, temporalViolationsToRiskFactors } from "@/intelligence/temporal-validator";
 
-const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
+const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
 const ALLOWED_TYPES = new Set([
   "application/pdf",
   "image/png",
@@ -1731,6 +1732,23 @@ async function postSyncScan(request: Request) {
       }
     }
 
+    for (const d of perDocument || []) {
+      const raw = String(d?.ocr?.text || (d as any)?.ocrText || "");
+      const clean = stripIdentityNoise(raw);
+      if (d.ocr) d.ocr = { ...d.ocr, text: clean };
+      const rent = inferRentFromText(raw + " " + clean);
+      if (rent && d.smartFields) {
+        d.smartFields.financials = d.smartFields.financials || {};
+        const cur = Number((d.smartFields.financials as any).monthly_rent?.amount ?? (d.smartFields.financials as any).monthly_rent ?? 0);
+        if (!cur || cur < 1000 || cur === 323) {
+          (d.smartFields.financials as any).monthly_rent = { amount: rent, currency: "PKR" };
+        }
+      }
+      const typ = String(d?.classification?.documentType || "");
+      if (/NON_ENCUMBRANCE|CLEARANCE|NEC/i.test(typ) && /tenancy agreement|land\s*lord|demised premises/i.test(raw)) {
+        if (d.classification) (d.classification as any).documentType = "TENANCY_AGREEMENT";
+      }
+    }
     // rules+utf8
     {
       if (riskResult?.riskFactors?.length) {

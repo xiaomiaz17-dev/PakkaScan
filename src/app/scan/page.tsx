@@ -969,7 +969,7 @@ export default function ScanPage() {
         const map: Record<string, string> = {
           NO_DOCUMENTS: "Please upload at least one file.",
           UNSUPPORTED_CONTENT_TYPE: "That file type is not supported.",
-          UPLOAD_TOO_LARGE: "Files must be under 15MB.",
+          UPLOAD_TOO_LARGE: "Files must be under 4MB. Use a JPEG/PNG page scan.",
           NOT_SIGNED_IN: "Please sign in to use PakkaScan.",
           INTERNAL_ERROR: "Something went wrong on the server. Please try again.",
         };
@@ -1206,7 +1206,7 @@ export default function ScanPage() {
             <input type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.webp,.tiff" onChange={handleFileChange} style={{ display: "none" }} />
           </label>
           <div style={{ fontSize: "12px", color: "#94a3b8", marginTop: "16px", fontFamily: "monospace" }}>
-            or drag &amp; drop &middot; PDF, JPG, PNG up to 15MB
+            or drag &amp; drop &middot; PDF, JPG, PNG up to 4MB (photos auto-compress)
           </div>
         </div>
 
