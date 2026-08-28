@@ -985,6 +985,34 @@ export default function ScanPage() {
         throw new Error(map[code] || "Scan failed: " + code);
       }
       setResults(payload as BackendResponse);
+      const ref = (payload as any)?.referenceCode;
+      if (ref) {
+        fetch("/api/beta/report/pdf", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            referenceCode: ref,
+            reportType: (payload as any)?.tier || "SCAN",
+            verdict: (payload as any)?.combinedVerdict?.verdict || (payload as any)?.phase2?.result?.decision,
+            riskLabel: (payload as any)?.riskLabel,
+            riskScore: (payload as any)?.riskScore,
+            verifyUrl: "https://www.pakkascan.com/verify/" + ref,
+          }),
+          credentials: "same-origin",
+        }).then(async (res) => {
+          if (!res.ok) return;
+          const buf = await res.arrayBuffer();
+          const digest = await crypto.subtle.digest("SHA-256", buf);
+          const hex = Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
+          setPdfHashForCopy(hex);
+          fetch("/api/beta/report/hash", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ referenceCode: ref, sha256: hex }),
+            credentials: "same-origin",
+          }).catch(() => {});
+        }).catch(() => {});
+      }
     } catch (err: any) {
       console.error("[scan]", err);
       setError(err?.message || "Analysis failed.");
