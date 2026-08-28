@@ -1758,6 +1758,15 @@ async function postSyncScan(request: Request) {
         return true;
       });
     }
+    {
+      const flags = clauseConcerns?.flagged || [];
+      const hasExitCard = flags.some((f: any) => /stay|lock-?break|court-waiver|notice/i.test(String(f.title || "")));
+      if (!hasExitCard && riskResult?.riskFactors?.length) {
+        riskResult.riskFactors = riskResult.riskFactors.filter((f: any) =>
+          !/one-sided exit terms|stay-order|lock-break/i.test(String(f.label || ""))
+        );
+      }
+    }
     // rules+utf8
     {
       if (riskResult?.riskFactors?.length) {
