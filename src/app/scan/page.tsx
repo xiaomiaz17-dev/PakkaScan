@@ -887,6 +887,14 @@ export default function ScanPage() {
     setCurrentStageIndex(-1);
   };
 
+  useEffect(() => {
+    if (!results?.referenceCode) return;
+    const ref = results.referenceCode;
+    fetch("/api/beta/report/hash?ref=" + encodeURIComponent(ref))
+      .then((r) => r.json())
+      .then((j) => { if (j?.sha256) setPdfHashForCopy(String(j.sha256)); })
+      .catch(() => {});
+  }, [results?.referenceCode]);
   const handleScan = async () => {
     if (!files || files.length === 0) return;
     setIsAnalyzing(true);

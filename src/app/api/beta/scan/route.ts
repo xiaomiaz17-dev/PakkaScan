@@ -1789,6 +1789,18 @@ async function postSyncScan(request: Request) {
         });
       }
     }
+    {
+      const urduPlot = "\u067E\u0644\u0627\u0679 / \u0641\u0631\u062F \u06A9\u0627 \u0631\u0642\u0628\u06C1 \u0627\u0648\u0631 \u0639\u0644\u0627\u0642\u06C1 \u0646\u0627\u0645\u06C1 \u0633\u06D2 \u0645\u06CC\u0644 \u06A9\u0631\u06CC\u06BA\u060C \u0628\u0642\u06CC\u06C1 \u0631\u0642\u0645 \u0627\u062F\u0627 \u06A9\u0631\u0646\u06D2 \u0633\u06D2 \u067E\u06C1\u0644\u06D2 \u062A\u0635\u062F\u06CC\u0642 \u06A9\u0631\u06CC\u06BA\u06D4";
+      for (const s of nextSteps || []) {
+        const title = String(s.title || s.enTitle || "");
+        if (/plot size|allotment record|square yards|re-verify plot/i.test(title)) {
+          s.urduDetail = urduPlot;
+          s.detailUrdu = urduPlot;
+          s.detail_urdu = urduPlot;
+          s.urduTitle = "\u0628\u0642\u06CC\u06C1 \u0627\u062F\u0627\u06CC\u06AF\u06CC \u0633\u06D2 \u067E\u06C1\u0644\u06D2 \u067E\u0644\u0627\u0679 \u0646\u0627\u067E \u06A9\u0631\u06CC\u06BA";
+        }
+      }
+    }
     // rules+utf8
     {
       if (riskResult?.riskFactors?.length) {
