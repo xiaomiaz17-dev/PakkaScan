@@ -736,8 +736,8 @@ function NextStepsPanel({ steps, urduTranslations }: { steps: NextStep[]; urduTr
       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
         {steps.map((s, i) => {
           const ps = priorityStyle(s.priority);
-          const urTitle = urduTranslations?.["nextStepTitle_" + i];
-          const urDetail = urduTranslations?.["nextStepDetail_" + i];
+          const urTitleRaw = urduTranslations?.["nextStepTitle_" + i]; const urTitle = /[\u0600-\u06FF]/.test(String(urTitleRaw || "")) ? urTitleRaw : undefined;
+          const urDetailRaw = urduTranslations?.["nextStepDetail_" + i]; const urDetail = /[\u0600-\u06FF]/.test(String(urDetailRaw || "")) ? urDetailRaw : undefined;
           const urduCombined = [urTitle, urDetail].filter(Boolean).join("\n\n") || null;
           return (
             <div key={i} style={{ backgroundColor: ps.bg, border: "1px solid " + ps.border, borderRadius: "12px", padding: "14px 16px", display: "flex", gap: "14px", alignItems: "flex-start" }}>
