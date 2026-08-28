@@ -1767,6 +1767,28 @@ async function postSyncScan(request: Request) {
         );
       }
     }
+    {
+      const badUrdu = (s: string) => !s || /[\uFFFD]/.test(s) || (s.length > 8 && !/[\u0600-\u06FF]/.test(s) && /[\?]{3,}|[\u25A1\uFFFD]/.test(s));
+      for (const s of nextSteps || []) {
+        for (const k of ["urduDetail", "detailUrdu", "detail_urdu", "urduTitle", "titleUrdu"]) {
+          if (s[k] && badUrdu(String(s[k]))) s[k] = "\u067E\u0644\u0627\u0679 \u0633\u0627\u0626\u0632 / \u0641\u0631\u062F \u0627\u0648\u0631 \u0639\u0644\u0627\u0642\u06C1 \u06A9\u06CC \u0631\u06CC\u06A9\u0627\u0631\u0688 \u062A\u0635\u062F\u06CC\u0642 \u06A9\u0631\u06CC\u06BA\u060C \u0628\u0642\u06CC\u06C1 \u0631\u0642\u0645 \u0627\u062F\u0627 \u06A9\u0631\u0646\u06D2 \u0633\u06D2 \u067E\u06C1\u0644\u06D2 \u0645\u06CC\u0644 \u0645\u06CC\u0686\u06D4";
+        }
+      }
+      if (clauseConcerns?.flagged?.length) {
+        const seen = new Set<string>();
+        clauseConcerns.flagged = clauseConcerns.flagged.filter((f: any) => {
+          const blob = String(f.title || "") + " " + String(f.concern || "");
+          const key = /power of attorney|mukhtar|general poa|unlimited/i.test(blob)
+            ? "poa"
+            : /forfeit/i.test(blob)
+            ? "forfeit"
+            : String(f.rule_id || f.title || "").toLowerCase();
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+      }
+    }
     // rules+utf8
     {
       if (riskResult?.riskFactors?.length) {
