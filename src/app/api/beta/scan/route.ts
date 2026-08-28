@@ -1,4 +1,21 @@
 export const maxDuration = 300;
+
+async function withBudget<T>(p: Promise<T>, ms: number, fallback: T, label: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      p,
+      new Promise<T>((_, rej) => {
+        timer = setTimeout(() => rej(new Error(label + " budget " + ms + "ms")), ms);
+      }),
+    ]);
+  } catch (e: any) {
+    console.warn("[beta/scan]", label, e?.message || e);
+    return fallback;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
 /** Never return a high PakkaScore next to CRITICAL / DO_NOT_PROCEED. */
 function clampPakkaScoreForRisk(
   score: number | null | undefined,
@@ -608,7 +625,7 @@ async function postSyncScan(request: Request) {
 
         const _t_smart = Date.now();
         const smartFields = backfillTenancySmartFields(
-          await extractSmartFields(classification.documentType, ocr.text),
+          await withBudget(extractSmartFields(classification.documentType, ocr.text), 25000, {} as any, "extractSmartFields " + file.name),
           ocr.text || ""
         );
         console.log(`[timing] SmartFields LLM (${file.name}): ${Date.now() - _t_smart}ms`);
