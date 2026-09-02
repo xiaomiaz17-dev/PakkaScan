@@ -28,7 +28,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Is PakkaScan a substitute for a lawyer?",
-    a: "No. PakkaScan is an assistive tool â€” not a licensed lawyer or certified legal counsel. For very high-value transactions, always confirm your paperwork with a qualified lawyer and directly with the relevant authority (NADRA, Sub-Registrar, Patwari). PakkaScan helps you know when your papers look clean, and when you need a second opinion.",
+    a: "No. PakkaScan is an assistive tool  -  not a licensed lawyer or certified legal counsel. For very high-value transactions, always confirm your paperwork with a qualified lawyer and directly with the relevant authority (NADRA, Sub-Registrar, Patwari). PakkaScan helps you know when your papers look clean, and when you need a second opinion.",
   },
   {
     q: "What documents can PakkaScan read?",
@@ -36,7 +36,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "What if PakkaScan misses something?",
-    a: "PakkaScan flags what it finds AND what it can't verify. If a critical field is missing (like a CNIC that was fabricated by the AI or a document too blurry to read), PakkaScan tells you clearly and adds it to the 'What To Do Next' checklist. When in doubt, message us on WhatsApp â€” a real person will help.",
+    a: "PakkaScan flags what it finds AND what it can't verify. If a critical field is missing (like a CNIC that was fabricated by the AI or a document too blurry to read), PakkaScan tells you clearly and adds it to the 'What To Do Next' checklist. When in doubt, message us on WhatsApp  -  a real person will help.",
   },
   {
     q: "What about my privacy?",
@@ -283,7 +283,7 @@ function PricingCta({
     return <a href="/login" style={cardBtnStyle}>Sign in to Buy</a>;
   }
 
-  // PAID MODE: signed in â€” show BOTH buttons (Raast disabled, Card active)
+  // PAID MODE: signed in  -  show BOTH buttons (Raast disabled, Card active)
   async function handleCardClick() {
     setLoading(true);
     try {
@@ -398,7 +398,7 @@ export default function LandingPage() {
             Don&apos;t hand over your <span style={{ color: "#d4af37" }}>deposit</span> until PakkaScan has read the fine print you didn&apos;t.
           </h1>
           <p className="pks-hero-tagline" style={{ fontSize: "17px", color: "#f1f5f9", lineHeight: 1.65, maxWidth: "580px", margin: "0 auto 36px auto", fontWeight: 500 }}>
-            AI-powered document verification for Pakistani property transactions. Upload your Bayana, Fard, or Sale Deed. Get a bilingual verdict. Most scans finish in a few minutes; busy periods can take longer.
+            Buyer-side check of the papers you were handed - parties, dates, money, and clause flags in English and Urdu. Most scans finish in minutes; busy periods can take longer.
           </p>
           <div className="pks-hero-ctas" style={{ display: "flex", gap: "14px", justifyContent: "center", flexWrap: "wrap", marginBottom: "28px" }}>
             <a href="/scan" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "16px 32px", backgroundColor: "#16a34a", color: "#ffffff", fontWeight: 700, fontSize: "15px", borderRadius: "12px", textDecoration: "none", boxShadow: "0 4px 16px rgba(22,163,74,0.35)" }}>
@@ -452,8 +452,8 @@ export default function LandingPage() {
           <div className="pks-how-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "20px" }}>
             {[
               { num: "01", title: "Upload", desc: "Upload your Bayana, Fard, Sale Deed, CNIC, or any Pakistani property document. Phone photos work fine." },
-              { num: "02", title: "Analyse", desc: "AI reads key clauses in English and Urdu, cross-checks the details, and flags gaps it can detect." },
-              { num: "03", title: "Verdict", desc: "Clear bilingual verdict - Proceed, Proceed With Caution, or Do Not Proceed - with concrete next steps." },
+              { num: "02", title: "Analyse", desc: "Cross-checks parties, dates, and amounts across files; checks CNIC digits on the page; flags one-sided clauses." },
+              { num: "03", title: "Verdict", desc: "Proceed, Proceed With Caution, or Do Not Proceed - plus next steps you can paste into WhatsApp." },
               { num: "04", title: "Verify", desc: "Every report gets a QR code + reference. Share with landlord or buyer - they scan to confirm authenticity, no login." },
             ].map((step, i) => (
               <Card key={i}>
@@ -543,12 +543,12 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* COMPARISON TABLE â€” anchor value vs traditional lawyer */}
+      {/* COMPARISON TABLE  -  anchor value vs traditional lawyer */}
       <section style={{ padding: "72px 24px", backgroundColor: "#ffffff" }}>
         <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: "40px" }}>
             <h2 style={{ fontSize: "32px", fontWeight: 800, color: "#0f172a", margin: "0 0 12px 0", letterSpacing: "-0.02em" }}>Why not just hire a lawyer?</h2>
-            <p style={{ fontSize: "15px", color: "#64748b", margin: 0, maxWidth: "600px", marginLeft: "auto", marginRight: "auto" }}>You should â€” for the big stuff. But most property checks don&rsquo;t need a Rs 50,000 retainer. Lawyers send formal memos; PakkaScan gives bilingual flags you can paste straight into WhatsApp with an agent.</p>
+            <p style={{ fontSize: "15px", color: "#64748b", margin: 0, maxWidth: "600px", marginLeft: "auto", marginRight: "auto" }}>You should  -  for the big stuff. But most property checks don&rsquo;t need a Rs 50,000 retainer. Lawyers send formal memos; PakkaScan gives bilingual flags you can paste straight into WhatsApp with an agent.</p>
           </div>
 
           <div style={{ overflowX: "auto", border: "1px solid #e2e8f0", borderRadius: "12px" }}>
@@ -612,13 +612,13 @@ export default function LandingPage() {
       <section style={{ padding: "64px 24px", backgroundColor: "#ffffff" }}>
         <div style={{ maxWidth: "1000px", margin: "0 auto", textAlign: "center" }}>
           <h2 style={{ fontSize: "24px", fontWeight: 800, color: "#0f172a", margin: "0 0 12px 0", letterSpacing: "-0.02em" }}>What We Scan</h2>
-          <p style={{ fontSize: "14px", color: "#64748b", margin: "0 0 32px 0" }}>All Pakistani property documents supported. Auto-detected â€” no need to sort first.</p>
+          <p style={{ fontSize: "14px", color: "#64748b", margin: "0 0 32px 0" }}>All Pakistani property documents supported. Auto-detected  -  no need to sort first.</p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", justifyContent: "center" }}>
             {["Bayana / Agreement to Sell", "Registered Sale Deed", "Tenancy Agreement", "CNIC / NICOP / POC", "Fard (Ownership)", "Mutation (Sale)", "Mutation (Gift)", "Mutation (Mortgage)", "Mutation (Inheritance)", "Power of Attorney", "Gift Deed (Hiba)", "Non-Encumbrance Certificate"].map((doc, i) => (
               <div key={i} style={{ padding: "10px 16px", backgroundColor: "#f0fdf4", color: "#166534", fontSize: "13px", fontWeight: 600, border: "1px solid #bbf7d0", borderRadius: "8px" }}>{doc}</div>
             ))}
           </div>
-          <p style={{ fontSize: "13px", color: "#64748b", marginTop: "20px" }}>Have a different document? Upload it anyway â€” our auto-detection engine will parse and highlight key terms.</p>
+          <p style={{ fontSize: "13px", color: "#64748b", marginTop: "20px" }}>Have a different document? Upload it anyway  -  our auto-detection engine will parse and highlight key terms.</p>
         </div>
       </section>
 
@@ -671,7 +671,7 @@ export default function LandingPage() {
             <p style={{ fontSize: "15px", color: "#64748b", margin: 0, maxWidth: "600px", marginLeft: "auto", marginRight: "auto" }}>Real feedback from Karachi beta testers who used PakkaScan before hitting sign on their paperwork.</p>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "20px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "20px" }}>
             {[
               {
                 headline: "Saved me from a major headache before giving token money.",
